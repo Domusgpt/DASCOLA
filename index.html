@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D'Ascola Seafood | Est. 1893 Santos, Brazil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+/*═══ PALETTE ═══*/
+:root{
+  --deep:#050B12;--verde:#003B2E;--verde-b:#006847;--ouro:#C9A84C;--ouro-lt:#E0C872;
+  --azul:#1B3A5C;--creme:#F0EBE0;--creme-w:#E8DFC8;--pearl:#F8F6F0;--graf:#1A1A1A;--graf-l:#555;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{overflow-x:hidden}
+body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--deep);color:var(--creme);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--deep)}::-webkit-scrollbar-thumb{background:var(--ouro);border-radius:2px}
+
+/*═══ FIXED VIB3 CANVAS ═══*/
+#vib3{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/*═══ GRAIN ═══*/
+.grain{position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:150px}
+
+/*═══ LOADER ═══*/
+#loader{position:fixed;inset:0;z-index:10000;background:var(--deep);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;transition:opacity .6s}
+#loader.hide{opacity:0;pointer-events:none}
+.ld-txt{font-family:'Josefin Sans',sans-serif;font-weight:200;letter-spacing:.5em;text-transform:uppercase;font-size:clamp(.65rem,.85vw,.8rem);color:var(--ouro)}
+.ld-bar{width:140px;height:1px;background:rgba(255,255,255,.06);overflow:hidden}
+.ld-fill{height:100%;width:0;background:var(--ouro);animation:ldf 2s ease-out forwards}
+@keyframes ldf{to{width:100%}}
+
+/*═══ INTRO SCROLL SPACE — 1200vh ═══*/
+#intro{height:1200vh;position:relative}
+#introPin{height:100vh;position:relative;overflow:hidden}
+
+/*═══ CURTAINS ═══*/
+.curt{position:absolute;z-index:20;background:var(--deep);will-change:transform}
+.curt-t{top:0;left:0;right:0;height:51%}
+.curt-b{bottom:0;left:0;right:0;height:51%}
+.curt-line{position:absolute;z-index:21;top:50%;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--ouro),transparent);transform:scaleX(0);will-change:transform}
+
+/*═══ DIAMOND ═══*/
+.diamond{position:absolute;z-index:3;top:50%;left:50%;width:55vw;height:32vh;transform:translate(-50%,-50%) scale(.6);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:linear-gradient(135deg,var(--ouro),#8B6914);opacity:0}
+
+/*═══ SWORDFISH WATERMARK ═══*/
+.hero-fish{position:absolute;z-index:4;top:50%;left:50%;width:min(72vw,720px);transform:translate(-50%,-50%);opacity:0}
+
+/*═══ WATER PHOTO ═══*/
+.water-bg{position:absolute;inset:0;z-index:1;opacity:0}
+.water-bg img{width:100%;height:100%;object-fit:cover;filter:brightness(.2) saturate(.5)}
+.water-bg::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,59,46,.2),transparent 60%),linear-gradient(180deg,rgba(5,11,18,.5) 0%,transparent 40%,transparent 60%,rgba(5,11,18,.6) 100%)}
+
+/*═══ MASTHEAD ═══*/
+.mast{position:absolute;z-index:30;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 2rem}
+.m-pre{font-family:'Josefin Sans',sans-serif;font-weight:200;letter-spacing:.9em;text-transform:uppercase;font-size:clamp(.6rem,.8vw,.75rem);color:var(--ouro);opacity:0;transform:translateY(20px)}
+.m-title{font-family:'UnifrakturCook',cursive;font-size:clamp(3rem,8.5vw,9.5rem);color:var(--creme);line-height:1;text-shadow:0 4px 80px rgba(0,0,0,.8),0 0 140px rgba(201,168,76,.12);opacity:0;transform:translateY(30px) scale(.93);letter-spacing:.02em}
+.m-rule{width:0;height:1px;margin:1rem 0;background:linear-gradient(90deg,transparent,var(--ouro),transparent);opacity:0}
+.m-sub{font-family:'Josefin Sans',sans-serif;font-weight:100;letter-spacing:.65em;text-transform:uppercase;font-size:clamp(.6rem,.8vw,.75rem);color:var(--ouro-lt);opacity:0;transform:translateY(14px)}
+.m-tag{font-family:'Cormorant Garamond',serif;font-size:clamp(.95rem,1.6vw,1.4rem);font-weight:300;font-style:italic;color:rgba(240,235,224,.65);margin-top:1.3rem;opacity:0;transform:translateY(12px);max-width:520px}
+.m-cue{position:absolute;bottom:4vh;left:50%;transform:translateX(-50%);z-index:31;display:flex;flex-direction:column;align-items:center;gap:.3rem;opacity:0}
+.m-cue span{font-family:'Josefin Sans',sans-serif;font-weight:200;font-size:.58rem;letter-spacing:.5em;text-transform:uppercase;color:var(--ouro);opacity:.55}
+.m-cue .ln{width:1px;height:28px;background:var(--ouro);opacity:.35;animation:cpulse 2.2s ease-in-out infinite}
+@keyframes cpulse{0%,100%{transform:scaleY(1);opacity:.2}50%{transform:scaleY(1.5);opacity:.65}}
+
+/*═══ SECTION SPACES ═══*/
+.ss{position:relative}
+.sp{height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+
+/*═══ WATER DIVIDERS ═══*/
+.wd{position:relative;height:35vh;overflow:hidden}
+.wd img{width:100%;height:100%;object-fit:cover;filter:brightness(.18) saturate(.4)}
+.wd::after{content:'';position:absolute;inset:0}
+.wd-1::after{background:linear-gradient(180deg,var(--deep) 0%,transparent 30%,transparent 70%,rgba(0,59,46,.95) 100%)}
+.wd-2::after{background:linear-gradient(180deg,rgba(5,11,18,.95) 0%,transparent 30%,transparent 70%,var(--creme) 100%)}
+.wd-3::after{background:linear-gradient(180deg,var(--creme) 0%,transparent 30%,transparent 70%,rgba(0,59,46,.95) 100%)}
+.wd-4::after{background:linear-gradient(180deg,rgba(0,59,46,.95) 0%,transparent 30%,transparent 70%,rgba(5,11,18,.95) 100%)}
+.wd-txt{position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;opacity:0}
+.wd-txt h2{font-family:'UnifrakturCook',cursive;font-size:clamp(1.5rem,3.5vw,3rem);color:var(--ouro)}
+.wd-txt p{font-family:'Josefin Sans',sans-serif;font-weight:200;letter-spacing:.4em;text-transform:uppercase;font-size:clamp(.6rem,.8vw,.75rem);color:var(--creme-w);margin-top:.5rem}
+
+/*═══ SECTION BACKGROUNDS ═══*/
+.bg-v{background:rgba(0,59,46,.94)}
+.bg-v::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 45%,rgba(0,104,71,.25),transparent 55%),radial-gradient(ellipse at 75% 35%,rgba(27,58,92,.15),transparent 50%)}
+.bg-d{background:rgba(5,11,18,.93)}
+.bg-d::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(201,168,76,.03),transparent 55%)}
+.bg-c{background:var(--creme);color:var(--graf)}
+.bg-c::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--verde-b),var(--ouro),#457B9D)}
+.bg-o{background:rgba(5,11,18,.93)}
+.bg-h{background:rgba(0,59,46,.92)}
+.bg-h::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23C9A84C' fill-opacity='.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+
+/*═══ CONTENT CONTAINERS ═══*/
+.sc{position:relative;z-index:10;max-width:1080px;width:100%;padding:0 2.5rem}
+.sc-c{text-align:center;max-width:720px;margin:0 auto}
+.acc{font-family:'Josefin Sans',sans-serif;font-weight:200;letter-spacing:.5em;text-transform:uppercase;font-size:clamp(.6rem,.8vw,.75rem);color:var(--ouro);display:block;margin-bottom:.7rem}
+.sh{font-family:'UnifrakturCook',cursive;font-size:clamp(2rem,4.5vw,4.2rem);color:var(--ouro);margin-bottom:1rem;line-height:1.1}
+.sh-c{color:var(--verde)}
+.stx{font-size:clamp(.9rem,1.1vw,1.05rem);line-height:1.85;font-weight:300;margin-bottom:1rem}
+.stx-l{color:var(--creme-w)}
+.stx-d{color:var(--graf-l)}
+
+/*═══ PHILOSOPHY ═══*/
+.phil{display:grid;grid-template-columns:1fr 1fr;gap:4.5rem;align-items:center}
+.pvis{position:relative;display:flex;align-items:center;justify-content:center;min-height:300px}
+.pring{position:absolute;border-radius:50%;opacity:0}
+.pring:nth-child(1){width:280px;height:280px;border:1px solid var(--ouro)}
+.pring:nth-child(2){width:210px;height:210px;border:1px solid #00875A}
+.pring:nth-child(3){width:130px;height:130px;border:1px solid #457B9D}
+.pfish{position:relative;z-index:2;width:240px;opacity:0}
+
+/*═══ VALUES HORIZ ═══*/
+.vtrk{display:flex;width:max-content}
+.vc{width:100vw;height:100vh;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:2.5rem}
+.vi{max-width:520px;text-align:center;opacity:0;transform:translateY(22px)}
+.vn{font-family:'Josefin Sans',sans-serif;font-weight:100;font-size:5.5rem;color:var(--ouro);opacity:.1;line-height:1;margin-bottom:-1rem}
+.vt{font-family:'UnifrakturCook',cursive;font-size:clamp(1.7rem,3.2vw,2.8rem);color:var(--creme);margin-bottom:.9rem}
+.vd{font-size:clamp(.9rem,1.1vw,1.05rem);line-height:1.85;color:var(--creme-w);font-weight:300;max-width:430px;margin:0 auto}
+
+/*═══ PRODUCT CARDS ═══*/
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;max-width:960px;width:100%}
+.pc{background:var(--pearl);border:1px solid rgba(0,59,46,.05);padding:2rem 1.5rem;text-align:center;overflow:hidden;opacity:0;transform:translateY(35px);transition:transform .5s cubic-bezier(.23,1,.32,1),box-shadow .5s cubic-bezier(.23,1,.32,1)}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--verde-b),var(--ouro));transform:scaleX(0);transition:transform .5s cubic-bezier(.23,1,.32,1);transform-origin:left}
+.pc:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,59,46,.1)}
+.pc:hover::before{transform:scaleX(1)}
+.pc h3{font-family:'UnifrakturCook',cursive;font-size:1.3rem;color:var(--verde);margin-bottom:.5rem}
+.pc p{font-size:clamp(.85rem,1vw,1rem);color:var(--graf-l);line-height:1.75;font-weight:300}
+
+/*═══ STATS ═══*/
+.stg{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;max-width:780px;width:100%;margin-top:2rem}
+.st{text-align:center;opacity:0;transform:translateY(25px)}
+.st-n{font-family:'Josefin Sans',sans-serif;font-weight:200;font-size:clamp(1.8rem,3.2vw,3rem);color:var(--ouro);line-height:1}
+.st-l{font-family:'Josefin Sans',sans-serif;font-weight:300;font-size:clamp(.6rem,.75vw,.72rem);letter-spacing:.2em;text-transform:uppercase;color:var(--creme-w);margin-top:.3rem}
+
+/*═══ HOW WE WORK ═══*/
+.hwg{display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;max-width:800px;width:100%}
+.hwc{padding:2rem;background:rgba(255,255,255,.02);border:1px solid rgba(201,168,76,.06);overflow:hidden;opacity:0;transform:translateY(25px)}
+.hwc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--verde-b),var(--ouro));opacity:0;transition:opacity .4s}
+.hwc:hover::after{opacity:1}
+.hwc h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.15rem;color:var(--ouro-lt);margin-bottom:.5rem}
+.hwc p{font-size:clamp(.85rem,1vw,1rem);color:var(--creme-w);font-weight:300;line-height:1.75}
+
+/*═══ CONTACT ═══*/
+.ctg{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;max-width:720px;width:100%;text-align:center;margin-top:1.5rem}
+.cti h3{font-family:'Josefin Sans',sans-serif;font-weight:300;letter-spacing:.3em;text-transform:uppercase;font-size:clamp(.6rem,.75vw,.72rem);color:var(--ouro);margin-bottom:.4rem}
+.cti p,.cti a{font-size:clamp(.85rem,1vw,1rem);color:var(--creme-w);font-weight:300;text-decoration:none;transition:color .3s}
+.cti a:hover{color:var(--ouro)}
+.ftr{text-align:center;padding:1.5rem 0 0;border-top:1px solid rgba(201,168,76,.06);max-width:720px;width:100%;margin-top:1.5rem}
+.ftr-logo{font-family:'UnifrakturCook',cursive;font-size:1.2rem;color:var(--ouro);margin-bottom:.3rem}
+.ftr p{font-family:'Josefin Sans',sans-serif;font-weight:200;font-size:.6rem;letter-spacing:.2em;color:#444}
+
+/*═══ RESPONSIVE ═══*/
+@media(max-width:900px){
+  .phil{grid-template-columns:1fr;gap:2rem;text-align:center}
+  .pvis{display:none}
+  .pgrid{grid-template-columns:1fr;max-width:400px;margin:0 auto}
+  .stg{grid-template-columns:1fr 1fr}
+  .hwg{grid-template-columns:1fr}
+  .ctg{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<canvas id="vib3"></canvas>
+
+<!-- LOADER -->
+<div id="loader">
+  <svg width="90" height="45" viewBox="0 0 200 80" fill="none" style="animation:ldsw 2s ease-in-out infinite">
+    <path d="M20 40 L55 37 Q65 28 80 25 Q100 20 125 25 Q150 30 168 40 Q150 50 125 55 Q100 60 80 55 Q65 52 55 43 L20 40Z" stroke="#C9A84C" stroke-width="1" fill="none" opacity=".5"/>
+    <line x1="20" y1="40" x2="2" y2="39" stroke="#C9A84C" stroke-width=".7" opacity=".35"/>
+    <path d="M90 25 Q95 10 108 22" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/>
+    <path d="M168 40 Q178 30 190 24 M168 40 Q178 50 190 56" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/>
+    <circle cx="62" cy="37" r="1.8" fill="#C9A84C" opacity=".35"/>
+  </svg>
+  <style>@keyframes ldsw{0%,100%{transform:translateX(-3px) rotate(-1deg)}50%{transform:translateX(3px) rotate(1deg)}}</style>
+  <div class="ld-txt">D'Ascola Seafood</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<!-- ═══ INTRO 1200vh ═══ -->
+<div id="intro">
+  <div id="introPin">
+    <div class="water-bg" id="wbg"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80&auto=format" alt=""></div>
+    <div class="curt curt-t" id="ct"></div>
+    <div class="curt curt-b" id="cb"></div>
+    <div class="curt-line" id="cl"></div>
+    <div class="diamond" id="dia"></div>
+    <div class="hero-fish" id="hf">
+      <svg viewBox="0 0 650 240" fill="none"><path d="M60 120 L125 115 Q155 85 210 73 Q275 58 345 65 Q415 72 465 97 Q492 111 510 120 Q492 129 465 143 Q415 168 345 175 Q275 182 210 167 Q155 155 125 125 L60 120Z" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".12"/><line x1="60" y1="120" x2="0" y2="118" stroke="#C9A84C" stroke-width=".4" opacity=".08"/><path d="M240 73 Q253 30 283 60" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".08"/><path d="M510 120 Q537 92 565 78 M510 120 Q537 148 565 162" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".08"/><circle cx="143" cy="113" r="4" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".1"/><path d="M150 120 Q330 108 500 120" stroke="#C9A84C" stroke-width=".25" fill="none" opacity=".05" stroke-dasharray="8 15"/></svg>
+    </div>
+    <div class="mast">
+      <span class="m-pre" id="mp">Est. 1893 · Santos, Brazil</span>
+      <h1 class="m-title" id="mt">D'Ascola Seafood</h1>
+      <div class="m-rule" id="mr"></div>
+      <p class="m-sub" id="ms">Fresh from Brazil · Delivered to Your Door</p>
+      <p class="m-tag" id="mg">Premium fresh seafood, air-freighted daily from Brazilian waters to the finest markets on the U.S. East Coast.</p>
+    </div>
+    <div class="m-cue" id="mc"><span>Scroll</span><div class="ln"></div></div>
+  </div>
+</div>
+
+<!-- WATER DIVIDER 1 -->
+<div class="wd wd-1"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=70&auto=format" alt=""><div class="wd-txt" id="wt1"><h2>Fresh. Every Day.</h2><p>From Brazilian waters to your door in 24 hours</p></div></div>
+
+<!-- PHILOSOPHY 250vh -->
+<div class="ss" id="phil" style="height:250vh"><div class="sp bg-v" id="philP">
+  <div class="sc"><div class="phil">
+    <div>
+      <span class="acc" id="pa">Our Operation</span>
+      <h2 class="sh" id="ph">Direct from Brazil</h2>
+      <p class="stx stx-l" id="pp1">D'Ascola Seafood is a premier fresh seafood distributor connecting the rich fishing grounds of Brazil directly to the top wholesale markets and restaurants on the U.S. East Coast. Every shipment is air-freighted overnight — packed fresh, never frozen — and delivered to your door with full documentation.</p>
+      <p class="stx stx-l" id="pp2">With decades of relationships in both Brazilian fisheries and the American marketplace, we deliver swordfish, tuna, yellowtail, snapper, and specialty catch with the reliability and traceability that serious buyers demand.</p>
+    </div>
+    <div class="pvis">
+      <div class="pring"></div><div class="pring"></div><div class="pring"></div>
+      <svg class="pfish" viewBox="0 0 380 160" fill="none"><path d="M30 80 L75 76 Q95 55 130 47 Q170 36 220 42 Q270 48 310 67 Q335 78 350 80 Q335 82 310 93 Q270 112 220 118 Q170 124 130 113 Q95 105 75 84 L30 80Z" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/><line x1="30" y1="80" x2="2" y2="79" stroke="#C9A84C" stroke-width=".5" opacity=".2"/><path d="M150 47 Q158 22 180 40" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/><path d="M350 80 Q368 62 388 52 M350 80 Q368 98 388 108" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/><circle cx="88" cy="75" r="2.5" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/></svg>
+    </div>
+  </div></div>
+</div></div>
+
+<!-- VALUES 300vh -->
+<div class="ss" id="vals" style="height:300vh"><div class="sp bg-d" id="valP">
+  <div class="vtrk" id="vtrk">
+    <div class="vc"><div class="vi"><div class="vn">01</div><h3 class="vt">Tradition</h3><p class="vd">Rooted in generations of Brazilian fishing heritage. Victor D'Ascola's hands-on relationships with fishermen and buyers ensure every shipment meets the highest standard.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">02</div><h3 class="vt">Logistics</h3><p class="vd">Air-freighted overnight from Santos, Brazil via dedicated cold-chain corridors. Every box arrives with AWB tracking, packing lists, and weight documentation.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">03</div><h3 class="vt">Integrity</h3><p class="vd">Complete transparency on every shipment. Species, box count, weight, AWB numbers, and pricing — documented and communicated before your fish even lands.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">04</div><h3 class="vt">Reliability</h3><p class="vd">Daily deliveries to the East Coast's top distributors and markets. Consistent volume, consistent quality. When Victor sends a forecast, you can plan your week around it.</p></div></div>
+  </div>
+</div></div>
+
+<!-- WATER DIVIDER 2 -->
+<div class="wd wd-2"><img src="https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=70&auto=format" alt=""></div>
+
+<!-- PRODUCTS 200vh -->
+<div class="ss" id="prods" style="height:200vh"><div class="sp bg-c" id="prodP">
+  <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2rem">
+    <div class="sc-c"><h2 class="sh sh-c" id="prH">Our Catch</h2><p class="stx stx-d" id="prP">Fresh, whole fish from Brazil — air-freighted and delivered daily to the U.S. East Coast.</p></div>
+    <div class="pgrid" id="prG">
+      <div class="pc"><h3>Swordfish</h3><p>Our flagship. Fresh whole swordfish shipped daily in multi-box loads. Consistent supply for the East Coast's top distributors.</p></div>
+      <div class="pc"><h3>Tuna</h3><p>Yellowfin and bigeye tuna, whole and fresh. Sashimi-quality from deep Brazilian waters, delivered with individual fish weights.</p></div>
+      <div class="pc"><h3>Yellowtail & Snapper</h3><p>Yellowtail, lane snapper, pink porgy, strawberry grouper, and golden tilefish. Graded by size, boxed at 26–29 lbs.</p></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- WATER DIVIDER 3 -->
+<div class="wd wd-3"><img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1920&q=60&auto=format" alt=""></div>
+
+<!-- HERITAGE 250vh -->
+<div class="ss" id="heri" style="height:250vh"><div class="sp bg-h" id="heriP">
+  <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem">
+    <div class="sc-c">
+      <span class="acc" id="ha">Our Heritage</span>
+      <h2 class="sh" id="hh">A Legacy of the Sea</h2>
+      <p class="stx stx-l" id="hp">Since 1893, the D'Ascola family has worked the waters and markets of Brazil. Today, Victor D'Ascola continues that legacy — sourcing the finest fresh catch from Santos and shipping direct to America's most respected seafood distributors.</p>
+    </div>
+    <div class="stg" id="stg">
+      <div class="st"><div class="st-n">130+</div><div class="st-l">Years</div></div>
+      <div class="st"><div class="st-n">Daily</div><div class="st-l">Air Freight</div></div>
+      <div class="st"><div class="st-n">24hr</div><div class="st-l">To Your Door</div></div>
+      <div class="st"><div class="st-n">100%</div><div class="st-l">Fresh</div></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- WATER DIVIDER 4 -->
+<div class="wd wd-4"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=70&auto=format" alt=""></div>
+
+<!-- HOW WE WORK 250vh -->
+<div class="ss" id="hww" style="height:250vh"><div class="sp bg-o" id="hwP">
+  <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem">
+    <div class="sc-c"><h2 class="sh" id="hwH" style="color:var(--ouro)">How We Work</h2><p class="stx stx-l" id="hwPt">A streamlined operation built on decades of trust, designed for the demands of professional wholesale buyers.</p></div>
+    <div class="hwg" id="hwG">
+      <div class="hwc"><h3>Door-to-Door Delivery</h3><p>Every shipment delivered directly to your facility — packed, labeled, documented. No middlemen, no delays.</p></div>
+      <div class="hwc"><h3>Overnight Air Freight</h3><p>Fish packed in Santos arrives at your East Coast market the next morning via dedicated cold-chain air freight with full AWB tracking.</p></div>
+      <div class="hwc"><h3>Packing Lists & Documentation</h3><p>Species, box count, individual weights, sizing grades, pricing, and airway bill numbers — sent before the fish lands.</p></div>
+      <div class="hwc"><h3>Volume Forecasting</h3><p>Regular forecasts on upcoming catch so you can plan your inventory. We communicate what's coming and when.</p></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- CONTACT -->
+<section style="min-height:50vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:3rem 2rem;background:var(--deep);position:relative;z-index:5">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ouro),transparent)"></div>
+  <h2 id="ctT" style="font-family:'UnifrakturCook',cursive;font-size:clamp(1.6rem,4vw,3rem);color:var(--creme);opacity:0;transform:translateY(20px)">Let's Talk Fish</h2>
+  <div class="ctg" id="ctG">
+    <div class="cti" style="opacity:0;transform:translateY(15px)"><h3>Victor D'Ascola</h3><a href="mailto:victor@dascolaseafood.com">victor@dascolaseafood.com</a></div>
+    <div class="cti" style="opacity:0;transform:translateY(15px)"><h3>Operations</h3><p>Santos, Brazil → U.S. East Coast</p></div>
+    <div class="cti" style="opacity:0;transform:translateY(15px)"><h3>Markets Served</h3><p>New York · Philadelphia · Boston</p></div>
+  </div>
+  <div class="ftr"><div class="ftr-logo">D'Ascola</div><p>© 2026 D'Ascola Seafood. All rights reserved.</p></div>
+</section>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   VIB3+ SDK ENGINE — Full 8-geometry, 6D rotation
+   Multi-layer Canvas2D with Wave water simulation
+   ═══════════════════════════════════════════════════ */
+const V={
+  c:null,x:null,w:0,h:0,t:0,lt:0,run:false,
+  s:{base:6,core:0,xy:0,xz:0,yz:0,xw:0,yw:0,zw:0,hue:195,spd:.3,int:.15,chaos:.08,sat:.6,lw:1.5,trail:.12,layers:4},
+  init(){
+    this.c=document.getElementById('vib3');
+    this.x=this.c.getContext('2d');
+    this.rs();
+    window.addEventListener('resize',()=>this.rs());
+  },
+  rs(){
+    const d=Math.min(devicePixelRatio||1,2);
+    this.w=innerWidth;this.h=innerHeight;
+    this.c.width=this.w*d;this.c.height=this.h*d;
+    this.c.style.width=this.w+'px';this.c.style.height=this.h+'px';
+    this.x.setTransform(d,0,0,d,0,0);
+  },
+  go(){if(this.run)return;this.run=true;this.lt=performance.now();this.lp();},
+  lp(){
+    if(!this.run)return;
+    const n=performance.now(),dt=Math.min((n-this.lt)/1000,.05);
+    this.lt=n;this.t+=dt*this.s.spd;this.dr();
+    requestAnimationFrame(()=>this.lp());
+  },
+  dr(){
+    const{x:ctx,w,h,s,t}=this;
+    ctx.fillStyle=`rgba(5,11,18,${s.trail})`;
+    ctx.fillRect(0,0,w,h);
+    if(s.int<.01)return;
+    const cx=w/2,cy=h/2,bs=Math.min(w,h)*.4;
+    for(let L=0;L<s.layers;L++){
+      const lr=(L+1)/s.layers,la=s.int*lr*.35,ls=bs*(.4+lr*.8),lt=t*(.3+lr*.7),lc=s.chaos*lr;
+      const s3=1+Math.sin(s.xy+L*.3)*.08+Math.cos(s.xz+L*.2)*.06;
+      const h4=1+Math.sin(s.xw+L*.5)*.15+Math.cos(s.yw+L*.3)*.1;
+      const sz=ls*s3*h4;
+      ctx.save();ctx.globalAlpha=la;
+      ctx.translate(cx+Math.sin(lt*.1+L)*lc*100,cy+Math.cos(lt*.08+L)*lc*60);
+      ctx.rotate(lt*.15+s.zw*.3+s.xy*.2);
+      ctx.scale(1-Math.abs(Math.sin(s.xz+L*.4))*.25,1-Math.abs(Math.sin(s.yz+L*.3))*.25);
+      const hu=(s.hue+L*15)%360;
+      ctx.strokeStyle=`hsla(${hu},${s.sat*100}%,${35+lr*20}%,${la})`;
+      ctx.fillStyle=`hsla(${hu},${s.sat*100}%,${35+lr*20}%,${la*.15})`;
+      ctx.lineWidth=s.lw*(.5+lr*.5);
+      this.geo(sz,lt,lc);
+      if(s.core>0){
+        ctx.strokeStyle=s.core===1?`rgba(0,255,255,${la*.3})`:`rgba(255,0,255,${la*.3})`;
+        ctx.lineWidth=.5;
+        if(s.core===1){for(let i=1;i<=3;i++){ctx.beginPath();ctx.arc(0,0,sz*i/3,0,Math.PI*2);ctx.stroke();}}
+        else{for(let i=0;i<3;i++){const a=i*Math.PI*2/3+Math.PI/6;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*sz*1.2,Math.sin(a)*sz*1.2);ctx.stroke();}}
+      }
+      ctx.restore();
+    }
+  },
+  geo(r,t,ch){
+    const{x:c,s}=this;
+    switch(s.base){
+      case 0:c.beginPath();for(let i=0;i<3;i++){const a=i*Math.PI*2/3-Math.PI/2;i===0?c.moveTo(Math.cos(a)*r,Math.sin(a)*r):c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();for(let i=0;i<3;i++){const a=i*Math.PI*2/3-Math.PI/2;c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(a)*r,Math.sin(a)*r);c.stroke();}break;
+      case 1:{const n=r*.5,w=s.xw*.5;c.strokeRect(-r,-r,r*2,r*2);c.save();c.rotate(w);c.strokeRect(-n,-n,n*2,n*2);c.restore();for(let i=0;i<4;i++){const o=i*Math.PI/2+Math.PI/4,j=o+w;c.beginPath();c.moveTo(Math.cos(o)*r*1.414,Math.sin(o)*r*1.414);c.lineTo(Math.cos(j)*n*1.414,Math.sin(j)*n*1.414);c.stroke();}}break;
+      case 2:c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fill();c.stroke();c.globalAlpha*=.3;for(let i=1;i<4;i++){c.beginPath();c.ellipse(0,0,r,r*i/4,0,0,Math.PI*2);c.stroke();}c.globalAlpha/=.3;break;
+      case 3:for(let i=0;i<24;i++){const a=i*Math.PI*2/24;c.beginPath();c.arc(Math.cos(a)*r,Math.sin(a)*r*.3,r*.25*(.5+Math.sin(a)*.5),0,Math.PI*2);c.stroke();}break;
+      case 4:c.beginPath();for(let i=0;i<=100;i++){const p=i/100*Math.PI*2;const x=Math.cos(p)*(r+Math.sin(p*2)*r*.3);const y=Math.sin(p)*r*.8+Math.cos(p*3)*r*.2;i===0?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();break;
+      case 5:this.frac(r,3);break;
+      case 6:for(let w=0;w<3;w++){const wo=w*.7,wa=r*(.5-w*.12),wf=3+w*.5;c.beginPath();for(let i=0;i<=120;i++){const p=i/120*Math.PI*4-Math.PI*2;const x=p/Math.PI*r/2;const y=Math.sin(p*(1+ch)+t*wf+wo)*wa+Math.sin(p*.5+t*1.5+wo*2)*wa*.3;i===0?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();}c.globalAlpha*=.4;c.beginPath();for(let i=0;i<=120;i++){const p=i/120*Math.PI*4-Math.PI*2;c.lineTo(p/Math.PI*r/2,Math.cos(p*1.3+t*2)*r*.25+Math.sin(p*.7-t)*r*.15);}c.stroke();c.globalAlpha/=.4;break;
+      case 7:c.beginPath();for(let i=0;i<4;i++){const a=i*Math.PI/2;i===0?c.moveTo(Math.cos(a)*r,Math.sin(a)*r):c.lineTo(Math.cos(a)*r,Math.sin(a)*r);}c.closePath();c.fill();c.stroke();for(let i=0;i<4;i++){const a=i*Math.PI/2;c.beginPath();c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.lineTo(0,0);c.stroke();}break;
+    }
+  },
+  frac(r,d){if(d<=0)return;this.x.beginPath();this.x.arc(0,0,r,0,Math.PI*2);this.x.stroke();if(d>1)for(let i=0;i<6;i++){const a=i*Math.PI/3;this.x.save();this.x.translate(Math.cos(a)*r*.7,Math.sin(a)*r*.7);this.frac(r*.35,d-1);this.x.restore();}}
+};
+
+/* ═══════════════════════════════════════════════════
+   INIT — Start VIB3 immediately, then GSAP when loaded
+   ═══════════════════════════════════════════════════ */
+V.init();
+V.go();
+
+window.addEventListener('load',()=>{
+  // Hide loader
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('hide');
+    setTimeout(()=>document.getElementById('loader').style.display='none',600);
+  },2200);
+
+  // Wait for GSAP
+  if(typeof gsap==='undefined'||typeof ScrollTrigger==='undefined'){
+    console.warn('GSAP not loaded — showing static fallback');
+    document.querySelectorAll('.curt').forEach(e=>e.style.display='none');
+    document.querySelectorAll('.mast>*').forEach(e=>{e.style.opacity='1';e.style.transform='none';});
+    document.getElementById('mc').style.opacity='1';
+    V.s.int=.4;
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ═══════════════════════════════════════
+     INTRO — 1200vh SCROLL-LOCKED
+     ═══════════════════════════════════════ */
+  const I=gsap.timeline({scrollTrigger:{trigger:'#intro',start:'top top',end:'bottom top',pin:'#introPin',scrub:1.5,anticipatePin:1}});
+
+  // 0-8%: VIB3 emerges from darkness
+  I.to(V.s,{int:.3,spd:.25,hue:200,duration:.08},0);
+  // 8-16%: Water photo fades in
+  I.to('#wbg',{opacity:.45,duration:.08},.06);
+  I.to(V.s,{int:.5,xw:.5,yw:.2,duration:.08},.08);
+  // 16-24%: Gold line draws
+  I.to('#cl',{scaleX:1,opacity:1,duration:.06},.16);
+  // 24-36%: CURTAINS OPEN
+  I.to('#ct',{yPercent:-110,duration:.12},.24);
+  I.to('#cb',{yPercent:110,duration:.12},.24);
+  I.to('#cl',{opacity:0,duration:.03},.33);
+  // 32-40%: Diamond + VIB3 intensifies
+  I.to('#dia',{opacity:.07,scale:1,duration:.08},.30);
+  I.to(V.s,{int:.6,hue:195,chaos:.1,xw:1.2,yw:.6,layers:5,duration:.08},.32);
+  // 38-46%: Swordfish watermark
+  I.to('#hf',{opacity:.7,duration:.08},.38);
+  // 46-64%: MASTHEAD SCRUBS IN
+  I.to('#mp',{opacity:1,y:0,duration:.03},.46);
+  I.to('#mt',{opacity:1,y:0,scale:1,duration:.05},.48);
+  I.to('#mr',{opacity:.8,width:'180px',duration:.03},.52);
+  I.to('#ms',{opacity:1,y:0,duration:.03},.54);
+  I.to('#mg',{opacity:.65,y:0,duration:.03},.56);
+  I.to('#mc',{opacity:1,duration:.02},.58);
+  // VIB3 calms during reading
+  I.to(V.s,{int:.35,spd:.2,chaos:.05,xw:2,yw:1,zw:.5,hue:190,duration:.12},.48);
+  // 68-78%: HOLD for reading
+  // 78-88%: Energy builds
+  I.to(V.s,{int:.65,spd:.45,chaos:.18,hue:210,xw:3.5,duration:.1},.78);
+  I.to('#dia',{scale:2,rotation:20,opacity:.02,duration:.1},.78);
+  // 88-100%: FADE OUT to content
+  I.to('.mast',{opacity:0,y:-50,scale:1.04,duration:.07},.88);
+  I.to('#hf',{opacity:0,y:-30,duration:.05},.88);
+  I.to('#mc',{opacity:0,duration:.02},.88);
+  I.to('#wbg',{opacity:0,duration:.05},.90);
+  I.to(V.s,{int:.12,spd:.12,chaos:.02,duration:.08},.90);
+
+  /* ═══ WATER DIVIDERS ═══ */
+  gsap.utils.toArray('.wd img').forEach(i=>{gsap.to(i,{scrollTrigger:{trigger:i.parentElement,start:'top bottom',end:'bottom top',scrub:1},y:-50,ease:'none'});});
+  gsap.utils.toArray('.wd-txt').forEach(e=>{gsap.to(e,{scrollTrigger:{trigger:e.parentElement,start:'top 65%',end:'top 30%',scrub:1},opacity:1});});
+
+  /* ═══ PHILOSOPHY — 250vh PINNED ═══ */
+  const P=gsap.timeline({scrollTrigger:{trigger:'#phil',start:'top top',end:'+=150%',pin:'#philP',scrub:1,anticipatePin:1}});
+  P.to(V.s,{hue:165,int:.28,spd:.18,chaos:.04,xw:4,duration:.12},0);
+  P.fromTo('#pa',{opacity:0,y:22},{opacity:1,y:0,duration:.08},0);
+  P.fromTo('#ph',{opacity:0,y:30},{opacity:1,y:0,duration:.1},.03);
+  P.fromTo('#pp1',{opacity:0,y:22},{opacity:1,y:0,duration:.08},.08);
+  P.fromTo('#pp2',{opacity:0,y:22},{opacity:1,y:0,duration:.08},.14);
+  P.fromTo('.pring:nth-child(1)',{opacity:0,scale:.5},{opacity:.15,scale:1,rotation:360,duration:.4},.04);
+  P.fromTo('.pring:nth-child(2)',{opacity:0,scale:.5},{opacity:.1,scale:1,rotation:-360,duration:.4},.07);
+  P.fromTo('.pring:nth-child(3)',{opacity:0,scale:.5},{opacity:.08,scale:1,rotation:360,duration:.4},.1);
+  P.fromTo('.pfish',{opacity:0,x:-15},{opacity:.5,x:0,duration:.15},.12);
+  P.to({},{duration:.18});
+  P.to('#philP .sc',{opacity:0,y:-25,duration:.08});
+  P.to(V.s,{int:.1,duration:.06},'<');
+
+  /* ═══ VALUES — 300vh HORIZONTAL PINNED ═══ */
+  const trk=document.getElementById('vtrk'),vcs=gsap.utils.toArray('.vc');
+  gsap.to(V.s,{scrollTrigger:{trigger:'#vals',start:'top 50%',end:'bottom 50%',scrub:1},hue:220,int:.18,spd:.12,chaos:.03});
+  const H=gsap.to(trk,{x:()=>-(trk.scrollWidth-innerWidth),ease:'none',scrollTrigger:{trigger:'#vals',start:'top top',end:()=>'+='+(trk.scrollWidth-innerWidth),pin:'#valP',scrub:1,snap:{snapTo:1/(vcs.length-1),duration:.3,ease:'power1.inOut'},invalidateOnRefresh:true,anticipatePin:1}});
+  vcs.forEach(c=>{gsap.to(c.querySelector('.vi'),{scrollTrigger:{trigger:c,containerAnimation:H,start:'left 85%',end:'left 40%',scrub:true},opacity:1,y:0});});
+
+  /* ═══ PRODUCTS — 200vh PINNED ═══ */
+  const Pr=gsap.timeline({scrollTrigger:{trigger:'#prods',start:'top top',end:'+=100%',pin:'#prodP',scrub:1,anticipatePin:1}});
+  Pr.to(V.s,{hue:45,int:.06,spd:.08,sat:.3,duration:.08},0);
+  Pr.fromTo('#prH',{opacity:0,y:30},{opacity:1,y:0,duration:.08},0);
+  Pr.fromTo('#prP',{opacity:0,y:22},{opacity:1,y:0,duration:.08},.03);
+  gsap.utils.toArray('.pc').forEach((c,i)=>{Pr.fromTo(c,{opacity:0,y:40,scale:.97},{opacity:1,y:0,scale:1,duration:.08},.08+i*.05);});
+  Pr.to({},{duration:.22});
+  Pr.to('#prG',{opacity:0,scale:.97,y:-15,duration:.06});
+  Pr.to(V.s,{sat:.6,duration:.04},'<');
+
+  /* ═══ HERITAGE — 250vh PINNED ═══ */
+  const He=gsap.timeline({scrollTrigger:{trigger:'#heri',start:'top top',end:'+=150%',pin:'#heriP',scrub:1,anticipatePin:1}});
+  He.to(V.s,{hue:155,int:.22,spd:.18,chaos:.05,xw:5,duration:.08},0);
+  He.fromTo('#ha',{opacity:0,y:22},{opacity:1,y:0,duration:.08},0);
+  He.fromTo('#hh',{opacity:0,y:30},{opacity:1,y:0,duration:.1},.03);
+  He.fromTo('#hp',{opacity:0,y:22},{opacity:1,y:0,duration:.08},.08);
+  gsap.utils.toArray('.st').forEach((s,i)=>{He.fromTo(s,{opacity:0,y:35},{opacity:1,y:0,duration:.06},.16+i*.04);});
+  He.to({},{duration:.18});
+  He.to(V.s,{int:.08,duration:.06});
+
+  /* ═══ HOW WE WORK — 250vh PINNED ═══ */
+  const W=gsap.timeline({scrollTrigger:{trigger:'#hww',start:'top top',end:'+=150%',pin:'#hwP',scrub:1,anticipatePin:1}});
+  W.to(V.s,{hue:210,int:.2,spd:.15,chaos:.03,duration:.08},0);
+  W.fromTo('#hwH',{opacity:0,y:30},{opacity:1,y:0,duration:.08},0);
+  W.fromTo('#hwPt',{opacity:0,y:22},{opacity:1,y:0,duration:.08},.04);
+  gsap.utils.toArray('.hwc').forEach((c,i)=>{W.fromTo(c,{opacity:0,y:30},{opacity:1,y:0,duration:.06},.1+i*.04);});
+  W.to({},{duration:.18});
+
+  /* ═══ CONTACT ═══ */
+  gsap.fromTo('#ctT',{opacity:0,y:20},{scrollTrigger:{trigger:'#ctT',start:'top 85%',toggleActions:'play none none reverse'},opacity:1,y:0,duration:.7,ease:'power3.out'});
+  gsap.utils.toArray('#ctG .cti').forEach((e,i)=>{gsap.fromTo(e,{opacity:0,y:15},{scrollTrigger:{trigger:e,start:'top 88%',toggleActions:'play none none reverse'},opacity:1,y:0,duration:.6,delay:i*.08,ease:'power3.out'});});
+  gsap.to(V.s,{scrollTrigger:{trigger:'#ctT',start:'top 50%',end:'bottom bottom',scrub:1},int:.03,spd:.06});
+
+  // Resize
+  let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>ScrollTrigger.refresh(),200);});
+});
+</script>
+</body>
+</html>
