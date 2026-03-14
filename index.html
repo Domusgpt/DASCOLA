@@ -243,6 +243,109 @@ body{font-family:'Cormorant Garamond',Georgia,serif;background:var(--deep);color
     <div class="pgrid" id="prG">
       <div class="pc"><h3>Swordfish</h3><p>Our flagship. Fresh whole swordfish shipped daily in multi-box loads. Consistent supply for the East Coast's top distributors.</p></div>
       <div class="pc"><h3>Tuna</h3><p>Yellowfin and bigeye tuna, whole and fresh. Sashimi-quality from deep Brazilian waters, delivered with individual fish weights.</p></div>
+      <div class="pc"><h3>Yellowtail & Snapper</h3><p>Yellowtail, lane snapper, pink porgy, strawberry grouper, and golden ti.hwc:hover::after{opacity:1}
+.hwc h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.15rem;color:var(--ouro-lt);margin-bottom:.5rem}
+.hwc p{font-size:clamp(.85rem,1vw,1rem);color:var(--creme-w);font-weight:300;line-height:1.75}
+
+/*═══ CONTACT ═══*/
+.ctg{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;max-width:720px;width:100%;text-align:center;margin-top:1.5rem}
+.cti h3{font-family:'Josefin Sans',sans-serif;font-weight:300;letter-spacing:.3em;text-transform:uppercase;font-size:clamp(.6rem,.75vw,.72rem);color:var(--ouro);margin-bottom:.4rem}
+.cti p,.cti a{font-size:clamp(.85rem,1vw,1rem);color:var(--creme-w);font-weight:300;text-decoration:none;transition:color .3s}
+.cti a:hover{color:var(--ouro)}
+.ftr{text-align:center;padding:1.5rem 0 0;border-top:1px solid rgba(201,168,76,.06);max-width:720px;width:100%;margin-top:1.5rem}
+.ftr-logo{font-family:'UnifrakturCook',cursive;font-size:1.2rem;color:var(--ouro);margin-bottom:.3rem}
+.ftr p{font-family:'Josefin Sans',sans-serif;font-weight:200;font-size:.6rem;letter-spacing:.2em;color:#444}
+
+/*═══ RESPONSIVE ═══*/
+@media(max-width:900px){
+  .phil{grid-template-columns:1fr;gap:2rem;text-align:center}
+  .pvis{display:none}
+  .pgrid{grid-template-columns:1fr;max-width:400px;margin:0 auto}
+  .stg{grid-template-columns:1fr 1fr}
+  .hwg{grid-template-columns:1fr}
+  .ctg{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<canvas id="vib3"></canvas>
+
+<!-- LOADER -->
+<div id="loader">
+  <svg width="90" height="45" viewBox="0 0 200 80" fill="none" style="animation:ldsw 2s ease-in-out infinite">
+    <path d="M20 40 L55 37 Q65 28 80 25 Q100 20 125 25 Q150 30 168 40 Q150 50 125 55 Q100 60 80 55 Q65 52 55 43 L20 40Z" stroke="#C9A84C" stroke-width="1" fill="none" opacity=".5"/>
+    <line x1="20" y1="40" x2="2" y2="39" stroke="#C9A84C" stroke-width=".7" opacity=".35"/>
+    <path d="M90 25 Q95 10 108 22" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/>
+    <path d="M168 40 Q178 30 190 24 M168 40 Q178 50 190 56" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/>
+    <circle cx="62" cy="37" r="1.8" fill="#C9A84C" opacity=".35"/>
+  </svg>
+  <style>@keyframes ldsw{0%,100%{transform:translateX(-3px) rotate(-1deg)}50%{transform:translateX(3px) rotate(1deg)}}</style>
+  <div class="ld-txt">D'Ascola Seafood</div>
+  <div class="ld-bar"><div class="ld-fill"></div></div>
+</div>
+
+<!-- ═══ INTRO 1200vh ═══ -->
+<div id="intro">
+  <div id="introPin">
+    <div class="water-bg" id="wbg"><img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80&auto=format" alt=""></div>
+    <div class="curt curt-t" id="ct"></div>
+    <div class="curt curt-b" id="cb"></div>
+    <div class="curt-line" id="cl"></div>
+    <div class="diamond" id="dia"></div>
+    <div class="hero-fish" id="hf">
+      <svg viewBox="0 0 650 240" fill="none"><path d="M60 120 L125 115 Q155 85 210 73 Q275 58 345 65 Q415 72 465 97 Q492 111 510 120 Q492 129 465 143 Q415 168 345 175 Q275 182 210 167 Q155 155 125 125 L60 120Z" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".12"/><line x1="60" y1="120" x2="0" y2="118" stroke="#C9A84C" stroke-width=".4" opacity=".08"/><path d="M240 73 Q253 30 283 60" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".08"/><path d="M510 120 Q537 92 565 78 M510 120 Q537 148 565 162" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".08"/><circle cx="143" cy="113" r="4" stroke="#C9A84C" stroke-width=".4" fill="none" opacity=".1"/><path d="M150 120 Q330 108 500 120" stroke="#C9A84C" stroke-width=".25" fill="none" opacity=".05" stroke-dasharray="8 15"/></svg>
+    </div>
+    <div class="mast">
+      <span class="m-pre" id="mp">Est. 1893 · Santos, Brazil</span>
+      <h1 class="m-title" id="mt">D'Ascola Seafood</h1>
+      <div class="m-rule" id="mr"></div>
+      <p class="m-sub" id="ms">Fresh from Brazil · Delivered to Your Door</p>
+      <p class="m-tag" id="mg">Premium fresh seafood, air-freighted daily from Brazilian waters to the finest markets on the U.S. East Coast.</p>
+    </div>
+    <div class="m-cue" id="mc"><span>Scroll</span><div class="ln"></div></div>
+  </div>
+</div>
+
+<!-- WATER DIVIDER 1 -->
+<div class="wd wd-1"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=70&auto=format" alt=""><div class="wd-txt" id="wt1"><h2>Fresh. Every Day.</h2><p>From Brazilian waters to your door in 24 hours</p></div></div>
+
+<!-- PHILOSOPHY 250vh -->
+<div class="ss" id="phil" style="height:250vh"><div class="sp bg-v" id="philP">
+  <div class="sc"><div class="phil">
+    <div>
+      <span class="acc" id="pa">Our Operation</span>
+      <h2 class="sh" id="ph">Direct from Brazil</h2>
+      <p class="stx stx-l" id="pp1">D'Ascola Seafood is a premier fresh seafood distributor connecting the rich fishing grounds of Brazil directly to the top wholesale markets and restaurants on the U.S. East Coast. Every shipment is air-freighted overnight — packed fresh, never frozen — and delivered to your door with full documentation.</p>
+      <p class="stx stx-l" id="pp2">With decades of relationships in both Brazilian fisheries and the American marketplace, we deliver swordfish, tuna, yellowtail, snapper, and specialty catch with the reliability and traceability that serious buyers demand.</p>
+    </div>
+    <div class="pvis">
+      <div class="pring"></div><div class="pring"></div><div class="pring"></div>
+      <svg class="pfish" viewBox="0 0 380 160" fill="none"><path d="M30 80 L75 76 Q95 55 130 47 Q170 36 220 42 Q270 48 310 67 Q335 78 350 80 Q335 82 310 93 Q270 112 220 118 Q170 124 130 113 Q95 105 75 84 L30 80Z" stroke="#C9A84C" stroke-width=".7" fill="none" opacity=".35"/><line x1="30" y1="80" x2="2" y2="79" stroke="#C9A84C" stroke-width=".5" opacity=".2"/><path d="M150 47 Q158 22 180 40" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/><path d="M350 80 Q368 62 388 52 M350 80 Q368 98 388 108" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/><circle cx="88" cy="75" r="2.5" stroke="#C9A84C" stroke-width=".5" fill="none" opacity=".2"/></svg>
+    </div>
+  </div></div>
+</div></div>
+
+<!-- VALUES 300vh -->
+<div class="ss" id="vals" style="height:300vh"><div class="sp bg-d" id="valP">
+  <div class="vtrk" id="vtrk">
+    <div class="vc"><div class="vi"><div class="vn">01</div><h3 class="vt">Tradition</h3><p class="vd">Rooted in generations of Brazilian fishing heritage. Victor D'Ascola's hands-on relationships with fishermen and buyers ensure every shipment meets the highest standard.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">02</div><h3 class="vt">Logistics</h3><p class="vd">Air-freighted overnight from Santos, Brazil via dedicated cold-chain corridors. Every box arrives with AWB tracking, packing lists, and weight documentation.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">03</div><h3 class="vt">Integrity</h3><p class="vd">Complete transparency on every shipment. Species, box count, weight, AWB numbers, and pricing — documented and communicated before your fish even lands.</p></div></div>
+    <div class="vc"><div class="vi"><div class="vn">04</div><h3 class="vt">Reliability</h3><p class="vd">Daily deliveries to the East Coast's top distributors and markets. Consistent volume, consistent quality. When Victor sends a forecast, you can plan your week around it.</p></div></div>
+  </div>
+</div></div>
+
+<!-- WATER DIVIDER 2 -->
+<div class="wd wd-2"><img src="https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=70&auto=format" alt=""></div>
+
+<!-- PRODUCTS 200vh -->
+<div class="ss" id="prods" style="height:200vh"><div class="sp bg-c" id="prodP">
+  <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2rem">
+    <div class="sc-c"><h2 class="sh sh-c" id="prH">Our Catch</h2><p class="stx stx-d" id="prP">Fresh, whole fish from Brazil — air-freighted and delivered daily to the U.S. East Coast.</p></div>
+    <div class="pgrid" id="prG">
+      <div class="pc"><h3>Swordfish</h3><p>Our flagship. Fresh whole swordfish shipped daily in multi-box loads. Consistent supply for the East Coast's top distributors.</p></div>
+      <div class="pc"><h3>Tuna</h3><p>Yellowfin and bigeye tuna, whole and fresh. Sashimi-quality from deep Brazilian waters, delivered with individual fish weights.</p></div>
       <div class="pc"><h3>Yellowtail & Snapper</h3><p>Yellowtail, lane snapper, pink porgy, strawberry grouper, and golden tilefish. Graded by size, boxed at 26–29 lbs.</p></div>
     </div>
   </div>
