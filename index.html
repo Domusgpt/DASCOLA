@@ -916,7 +916,7 @@ body {
 </nav>
 
 <!-- Hero Intro -->
-<div id="intro" style="height:1200vh">
+<div id="intro" style="height:700vh">
   <div id="introPin">
     <div class="water-bg" id="wbg">
       <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80&auto=format" alt="">
@@ -985,7 +985,7 @@ body {
 </div>
 
 <!-- Values Section -->
-<div class="ss" id="vals" style="height:300vh">
+<div class="ss" id="vals" style="height:500vh">
   <div class="sp bg-d" id="valP">
     <div class="vtrk" id="vtrk">
       <div class="vc">
@@ -1193,7 +1193,7 @@ var PS = {
         vy: (Math.random() - 0.5) * 0.15,
         r: Math.random() * 1.5 + 0.5,
         o: Math.random() * 0.3 + 0.05,
-        hue: Math.random() > 0.5 ? 43 : 195
+        hue: [50, 120, 200, 50, 120][Math.floor(Math.random() * 5)]
       });
     }
     var self = this;
@@ -1223,7 +1223,7 @@ var PS = {
       if (p.y > h) p.y = 0;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'hsla(' + p.hue + ',50%,60%,' + p.o + ')';
+      ctx.fillStyle = 'hsla(' + p.hue + ',75%,55%,' + (p.o * 1.5) + ')';
       ctx.fill();
       // connection lines
       for (var j = i + 1; j < this.pts.length; j++) {
@@ -1234,7 +1234,7 @@ var PS = {
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(q.x, q.y);
-          ctx.strokeStyle = 'hsla(43,40%,55%,' + (0.04 * (1 - dist / 150)) + ')';
+          ctx.strokeStyle = 'hsla(' + ((p.hue + q.hue) / 2) + ',60%,50%,' + (0.06 * (1 - dist / 150)) + ')';
           ctx.lineWidth = 0.5;
           ctx.stroke();
         }
@@ -1250,7 +1250,7 @@ var PS = {
 // ============================================
 var V = {
   c: null, x: null, w: 0, h: 0, t: 0, lt: 0, run: false,
-  s: { base:6, core:0, xy:0, xz:0, yz:0, xw:0, yw:0, zw:0, hue:195, spd:0.3, int:0.15, chaos:0.08, sat:0.6, lw:1.5, trail:0.12, layers:4 },
+  s: { base:6, core:0, xy:0, xz:0, yz:0, xw:0, yw:0, zw:0, hue:120, spd:0.3, int:0.15, chaos:0.08, sat:0.85, lw:1.5, trail:0.12, layers:4 },
   init: function() {
     this.c = document.getElementById('vib3');
     this.x = this.c.getContext('2d');
@@ -1419,7 +1419,7 @@ window.addEventListener('load', function() {
 
   // Intro timeline
   var I = gsap.timeline({ scrollTrigger: { trigger: '#intro', start: 'top top', end: 'bottom top', pin: '#introPin', scrub: 1.5, anticipatePin: 1 } });
-  I.to(V.s, { int: 0.3, spd: 0.25, hue: 200, duration: 0.08 }, 0);
+  I.to(V.s, { int: 0.3, spd: 0.25, hue: 120, duration: 0.08 }, 0);
   I.to('#wbg', { opacity: 0.4, duration: 0.08 }, 0.06);
   I.to(V.s, { int: 0.5, xw: 0.5, yw: 0.2, duration: 0.08 }, 0.08);
   I.to('#cl', { scaleX: 1, opacity: 1, duration: 0.06 }, 0.16);
@@ -1427,7 +1427,7 @@ window.addEventListener('load', function() {
   I.to('#cb', { yPercent: 110, duration: 0.12 }, 0.24);
   I.to('#cl', { opacity: 0, duration: 0.03 }, 0.33);
   I.to('#dia', { opacity: 0.06, scale: 1, duration: 0.08 }, 0.30);
-  I.to(V.s, { int: 0.6, hue: 195, chaos: 0.1, xw: 1.2, yw: 0.6, layers: 5, duration: 0.08 }, 0.32);
+  I.to(V.s, { int: 0.6, hue: 50, chaos: 0.1, xw: 1.2, yw: 0.6, layers: 5, duration: 0.08 }, 0.32);
   I.to('#hf', { opacity: 0.7, duration: 0.08 }, 0.38);
   I.to('#mp', { opacity: 1, y: 0, duration: 0.03 }, 0.46);
   I.to('#mt', { opacity: 1, y: 0, scale: 1, duration: 0.05 }, 0.48);
@@ -1435,8 +1435,8 @@ window.addEventListener('load', function() {
   I.to('#ms', { opacity: 1, y: 0, duration: 0.03 }, 0.54);
   I.to('#mg', { opacity: 0.65, y: 0, duration: 0.03 }, 0.56);
   I.to('#mc', { opacity: 1, duration: 0.02 }, 0.58);
-  I.to(V.s, { int: 0.35, spd: 0.2, chaos: 0.05, xw: 2, yw: 1, zw: 0.5, hue: 190, duration: 0.12 }, 0.48);
-  I.to(V.s, { int: 0.65, spd: 0.45, chaos: 0.18, hue: 210, xw: 3.5, duration: 0.1 }, 0.78);
+  I.to(V.s, { int: 0.35, spd: 0.2, chaos: 0.05, xw: 2, yw: 1, zw: 0.5, hue: 140, duration: 0.12 }, 0.48);
+  I.to(V.s, { int: 0.65, spd: 0.45, chaos: 0.18, hue: 50, xw: 3.5, duration: 0.1 }, 0.78);
   I.to('#dia', { scale: 2, rotation: 20, opacity: 0.02, duration: 0.1 }, 0.78);
   I.to('.mast', { opacity: 0, y: -50, scale: 1.04, duration: 0.07 }, 0.88);
   I.to('#hf', { opacity: 0, y: -30, duration: 0.05 }, 0.88);
@@ -1450,7 +1450,7 @@ window.addEventListener('load', function() {
 
   // Philosophy / Operation section
   var P = gsap.timeline({ scrollTrigger: { trigger: '#phil', start: 'top top', end: '+=150%', pin: '#philP', scrub: 1, anticipatePin: 1 } });
-  P.to(V.s, { hue: 165, int: 0.28, spd: 0.18, chaos: 0.04, xw: 4, duration: 0.12 }, 0);
+  P.to(V.s, { hue: 130, int: 0.28, spd: 0.18, chaos: 0.04, xw: 4, duration: 0.12 }, 0);
   P.fromTo('#pa', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
   P.fromTo('#ph', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
   P.fromTo('#pp1', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
@@ -1466,13 +1466,13 @@ window.addEventListener('load', function() {
   // Values horizontal scroll
   var trk = document.getElementById('vtrk');
   var vcs = gsap.utils.toArray('.vc');
-  gsap.to(V.s, { scrollTrigger: { trigger: '#vals', start: 'top 50%', end: 'bottom 50%', scrub: 1 }, hue: 220, int: 0.18, spd: 0.12, chaos: 0.03 });
-  var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + (trk.scrollWidth - window.innerWidth); }, pin: '#valP', scrub: 1, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.3, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
+  gsap.to(V.s, { scrollTrigger: { trigger: '#vals', start: 'top 50%', end: 'bottom 50%', scrub: 1 }, hue: 50, int: 0.18, spd: 0.12, chaos: 0.03 });
+  var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + ((trk.scrollWidth - window.innerWidth) * 2.5); }, pin: '#valP', scrub: 2.5, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.6, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
   vcs.forEach(function(c) { gsap.to(c.querySelector('.vi'), { scrollTrigger: { trigger: c, containerAnimation: H, start: 'left 85%', end: 'left 40%', scrub: true }, opacity: 1, y: 0 }); });
 
   // Products
   var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=100%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
-  Pr.to(V.s, { hue: 45, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
+  Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
   Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
   Pr.fromTo('#prP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.03);
   gsap.utils.toArray('.pc').forEach(function(c, i) { Pr.fromTo(c, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.08 }, 0.08 + i * 0.05); });
@@ -1482,7 +1482,7 @@ window.addEventListener('load', function() {
 
   // Heritage
   var He = gsap.timeline({ scrollTrigger: { trigger: '#heri', start: 'top top', end: '+=150%', pin: '#heriP', scrub: 1, anticipatePin: 1 } });
-  He.to(V.s, { hue: 155, int: 0.22, spd: 0.18, chaos: 0.05, xw: 5, duration: 0.08 }, 0);
+  He.to(V.s, { hue: 145, int: 0.22, spd: 0.18, chaos: 0.05, xw: 5, duration: 0.08 }, 0);
   He.fromTo('#ha', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
   He.fromTo('#hh', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
   He.fromTo('#hp', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
@@ -1492,7 +1492,7 @@ window.addEventListener('load', function() {
 
   // How We Work
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
-  W.to(V.s, { hue: 210, int: 0.2, spd: 0.15, chaos: 0.03, duration: 0.08 }, 0);
+  W.to(V.s, { hue: 175, int: 0.2, spd: 0.15, chaos: 0.03, duration: 0.08 }, 0);
   W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
   W.fromTo('#hwPt', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
@@ -1501,7 +1501,7 @@ window.addEventListener('load', function() {
 
   // Trust section
   var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
-  Tr.to(V.s, { hue: 180, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
+  Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
   Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
   Tr.fromTo('#trP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
