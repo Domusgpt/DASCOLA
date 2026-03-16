@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D'Ascola Draft 03 — Parametric Signal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0} body{font-family:'Space Grotesk',sans-serif;background:#03070d;color:#d6f2ff;overflow-x:hidden}
+#bg{position:fixed;inset:0;z-index:-1;background:radial-gradient(circle at 30% 10%,#123,transparent 40%),radial-gradient(circle at 70% 20%,#134,transparent 45%),#03070d}
+.wrap{width:min(1120px,92vw);margin:auto;padding:5rem 0}
+.title{font-family:Syne,sans-serif;font-size:clamp(2.6rem,7vw,6rem);line-height:.95;letter-spacing:-.02em;color:#fff}
+.sub{max-width:58ch;margin-top:1rem;opacity:.85}
+.matrix{margin-top:3rem;display:grid;grid-template-columns:repeat(12,1fr);gap:1rem}
+.card{grid-column:span 4;background:linear-gradient(170deg,rgba(20,39,55,.9),rgba(8,18,26,.8));border:1px solid rgba(141,212,255,.25);padding:1.2rem;min-height:210px;position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;inset:auto -40% -65% -40%;height:120px;background:radial-gradient(circle,#66d7ff44,transparent 60%);transition:.4s}
+.card:hover::after{transform:translateY(-30px)}
+.card h3{font-family:Syne,sans-serif;color:#a4e8ff;font-size:1.1rem}
+.card p{margin-top:.7rem;line-height:1.6;font-size:.94rem}
+.kpi{margin-top:1rem;color:#ffcf70;font-size:.8rem;letter-spacing:.07em;text-transform:uppercase}
+.footer{margin-top:2.3rem;border-top:1px solid #19405b;padding-top:1rem;display:flex;gap:1rem;flex-wrap:wrap}
+.btn{border:1px solid #65d2ff;padding:.7rem 1rem;background:transparent;color:#c8f2ff;cursor:pointer}
+@media(max-width:920px){.card{grid-column:span 6}} @media(max-width:640px){.card{grid-column:span 12}}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div class="wrap">
+  <p style="text-transform:uppercase;letter-spacing:.17em;font-size:.72rem;color:#78c8e8">Draft 03 · Parametric Signal Interface</p>
+  <h1 class="title">Avant-garde supply intelligence<br>for premium seafood buyers.</h1>
+  <p class="sub">A bolder architecture inspired by quant dashboards and contemporary fashion-tech. This direction maintains your trust narrative while framing D'Ascola as a precision network with live-feeling signals.</p>
+
+  <section class="matrix">
+    <article class="card"><h3>Signal 01 · Origin Integrity</h3><p>One-origin sourcing from Santos with direct vessel visibility and personal approval by Victor D'Ascola.</p><span class="kpi">Confidence Layer: Human Verified</span></article>
+    <article class="card"><h3>Signal 02 · Transit Pulse</h3><p>Overnight cold-chain route with pre-flight AWB issuance and continuity checkpoints that buyers can audit.</p><span class="kpi">Latency Profile: Overnight</span></article>
+    <article class="card"><h3>Signal 03 · Buyer Sync</h3><p>East Coast wholesale recipients receive before-arrival manifests, expected weights, and reconciliation-first docs.</p><span class="kpi">Decision Layer: Pre-Arrival Data</span></article>
+  </section>
+
+  <div class="footer">
+    <button class="btn" id="shuffle">Shuffle event intensity</button>
+    <button class="btn" id="focus">Focus: Swordfish lane</button>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+  const cards = gsap.utils.toArray('.card');
+  gsap.from(cards,{opacity:0,y:40,stagger:.12,duration:.7,ease:'power3.out'});
+  document.querySelector('#shuffle').addEventListener('click',()=>{
+    cards.forEach(c=>gsap.to(c,{y:gsap.utils.random(-8,8),x:gsap.utils.random(-4,4),duration:.35,yoyo:true,repeat:1,ease:'sine.inOut'}));
+  });
+  document.querySelector('#focus').addEventListener('click',()=>{
+    gsap.to(cards,{opacity:.35,duration:.25});
+    gsap.to(cards[0],{opacity:1,scale:1.03,duration:.35,boxShadow:'0 0 0 1px #9ae9ff,0 22px 35px #0b3654'});
+    setTimeout(()=>gsap.to(cards,{opacity:1,scale:1,boxShadow:'none',duration:.45}),900);
+  });
+</script>
+</body>
+</html>
