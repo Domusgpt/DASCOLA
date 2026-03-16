@@ -216,54 +216,7 @@ body {
 .nav-links a:hover { color: var(--ouro); }
 .nav-links a:hover::after { width: 100%; }
 
-/* Loader */
-.loader {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: var(--deep);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.loader.done { opacity: 0; pointer-events: none; }
-.loader-fish {
-  width: 120px;
-  margin-bottom: 2rem;
-  animation: fishSwim 2s ease-in-out infinite;
-}
-@keyframes fishSwim {
-  0%, 100% { transform: translateX(0) scaleX(1); }
-  50% { transform: translateX(8px) scaleX(1.02); }
-}
-.loader-bar {
-  width: 180px;
-  height: 1px;
-  background: rgba(201,168,76,0.15);
-  position: relative;
-  overflow: hidden;
-}
-.loader-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 0;
-  background: var(--ouro);
-  transition: width 0.3s;
-}
-.loader-text {
-  font-family: 'Josefin Sans', sans-serif;
-  font-weight: 200;
-  font-size: 0.6rem;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: var(--ouro);
-  margin-top: 1rem;
-  opacity: 0.6;
-}
+
 
 /* Intro / Hero */
 .ss { position: relative; z-index: 5; }
@@ -278,6 +231,9 @@ body {
 }
 
 .sp::before { content: ''; position: absolute; inset: 0; pointer-events: none; }
+@media (orientation: portrait) and (max-width: 900px) {
+  .sp { padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem); }
+}
 
 /* Curtain reveal */
 .curt { position: absolute; z-index: 20; left: 0; right: 0; background: var(--deep); }
@@ -917,18 +873,7 @@ body {
 <canvas id="vib3"></canvas>
 <canvas id="particles"></canvas>
 
-<!-- Loader -->
-<div class="loader" id="loader">
-  <svg class="loader-fish" viewBox="0 0 120 40" fill="none">
-    <path d="M8 20 L22 18 Q32 10 46 7 Q62 3 80 6 Q96 10 106 18 Q110 20 106 22 Q96 30 80 34 Q62 37 46 33 Q32 30 22 22 L8 20Z" stroke="#C9A84C" stroke-width="0.8" fill="none" opacity="0.6"/>
-    <line x1="8" y1="20" x2="0" y2="19.5" stroke="#C9A84C" stroke-width="0.6" opacity="0.4"/>
-    <path d="M106 18 Q114 12 120 8 M106 22 Q114 28 120 32" stroke="#C9A84C" stroke-width="0.6" fill="none" opacity="0.3"/>
-    <circle cx="28" cy="17" r="1.5" stroke="#C9A84C" stroke-width="0.6" fill="none" opacity="0.4"/>
-    <path d="M50 7 Q54 1 60 4" stroke="#C9A84C" stroke-width="0.4" fill="none" opacity="0.2"/>
-  </svg>
-  <div class="loader-bar"><div class="loader-fill" id="lf"></div></div>
-  <div class="loader-text">Loading</div>
-</div>
+
 
 <!-- Navigation -->
 <nav class="nav" id="nav">
@@ -1400,27 +1345,7 @@ V.init();
 V.go();
 PS.init();
 
-// ============================================
-// LOADER
-// ============================================
-var lf = document.getElementById('lf');
-var loadProgress = 0;
-var loadInterval = setInterval(function() {
-  loadProgress += Math.random() * 15 + 5;
-  if (loadProgress >= 100) {
-    loadProgress = 100;
-    lf.style.width = '100%';
-    clearInterval(loadInterval);
-    setTimeout(function() {
-      document.getElementById('loader').classList.add('done');
-      setTimeout(function() {
-        document.getElementById('loader').style.display = 'none';
-      }, 800);
-    }, 300);
-  } else {
-    lf.style.width = loadProgress + '%';
-  }
-}, 120);
+
 
 // ============================================
 // NAVIGATION scroll behavior
