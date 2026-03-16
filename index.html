@@ -276,9 +276,7 @@ body {
   justify-content: center;
   overflow: hidden;
 }
-@media (max-width: 900px) {
-  .sp { overflow: visible; align-items: flex-start; padding-top: 10vh; min-height: 100vh; height: auto; }
-}
+
 .sp::before { content: ''; position: absolute; inset: 0; pointer-events: none; }
 
 /* Curtain reveal */
@@ -338,7 +336,7 @@ body {
   z-index: 15;
   text-align: center;
   max-width: 780px;
-  padding: 0 2rem;
+  padding: 4rem 2rem 0;
 }
 .m-pre {
   font-family: 'Josefin Sans', sans-serif;
@@ -874,12 +872,29 @@ body {
   .nav-brand { font-size: 1rem; }
   .phil { grid-template-columns: 1fr; gap: 2rem; text-align: center; }
   .pvis { display: none; }
-  .pgrid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-  .stg { grid-template-columns: 1fr 1fr; }
-  .hwg { grid-template-columns: 1fr; }
-  .hwc { padding: 1.6rem; }
+  .pgrid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; gap: 0.8rem; }
+  .pc { padding: 1.2rem 1rem; }
+  .pc h3 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+  .pc p { font-size: 0.8rem; line-height: 1.6; }
+  .pc-icon { width: 28px; height: 28px; margin-bottom: 0.6rem; }
+  .pc-detail { margin-top: 0.5rem; font-size: 0.5rem; }
+  .sc-c .acc { margin-bottom: 0.3rem; }
+  .sc-c .sh { font-size: clamp(1.5rem, 6vw, 2rem); margin-bottom: 0.4rem; }
+  .sc-c .stx { font-size: 0.8rem; line-height: 1.5; margin-bottom: 0.5rem; }
+  .stg { grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.2rem; }
+  .st-n { font-size: clamp(1.6rem, 5vw, 2rem); }
+  .st-l { font-size: 0.5rem; }
+  .hwg { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .hwc { padding: 1rem 0.8rem; }
+  .hwc-num { font-size: 1.8rem; margin-bottom: -0.1rem; }
+  .hwc h3 { font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .hwc p { font-size: 0.75rem; line-height: 1.55; }
+
   .ctg { grid-template-columns: 1fr; }
-  .trust-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+  .trust-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; gap: 0.6rem; }
+  .trust-card { padding: 1rem; }
+  .trust-card h3 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .trust-card p { font-size: 0.78rem; line-height: 1.55; }
   .ftr { flex-direction: column; gap: 0.8rem; }
   .sc { padding: 0 1.5rem; }
   .mast { padding: 0 1.2rem; }
@@ -888,15 +903,12 @@ body {
   .wd-txt { max-width: 90vw; }
   .wd-txt h2 { font-size: clamp(1.2rem, 5vw, 1.8rem); }
   .wd-txt p { font-size: 0.55rem; letter-spacing: 0.15em; }
-  .vi { max-width: 85vw; padding: 0; }
-  .vtrk { flex-direction: column; width: 100%; }
-  .vc { width: 100%; height: auto; min-height: auto; padding: 3rem 1.5rem; }
-  .vi { opacity: 1 !important; transform: none !important; }
+  .vi { max-width: 82vw; padding: 0 1rem; }
   .vn { font-size: 3.5rem; }
   .vi .vt { font-size: clamp(1.5rem, 6vw, 2rem); }
   .vi .vd { font-size: 0.9rem; }
   .sh { font-size: clamp(1.8rem, 8vw, 3rem); }
-  .trust-card { padding: 1.4rem; }
+
 }
 </style>
 </head>
@@ -1472,93 +1484,64 @@ window.addEventListener('load', function() {
   gsap.utils.toArray('.wd-txt').forEach(function(e) { gsap.to(e, { scrollTrigger: { trigger: e.parentElement, start: 'top 65%', end: 'top 30%', scrub: 1 }, opacity: 1 }); });
 
   // Philosophy / Operation section
-  if (window.innerWidth > 900) {
-    var P = gsap.timeline({ scrollTrigger: { trigger: '#phil', start: 'top top', end: '+=150%', pin: '#philP', scrub: 1, anticipatePin: 1 } });
-    P.to(V.s, { hue: 130, int: 0.28, spd: 0.18, chaos: 0.04, xw: 4, duration: 0.12 }, 0);
-    P.fromTo('#pa', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
-    P.fromTo('#ph', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
-    P.fromTo('#pp1', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
-    P.fromTo('#pp2', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.14);
-    P.fromTo('.pring:nth-child(1)', { opacity: 0, scale: 0.5 }, { opacity: 0.15, scale: 1, rotation: 360, duration: 0.4 }, 0.04);
-    P.fromTo('.pring:nth-child(2)', { opacity: 0, scale: 0.5 }, { opacity: 0.1, scale: 1, rotation: -360, duration: 0.4 }, 0.07);
-    P.fromTo('.pring:nth-child(3)', { opacity: 0, scale: 0.5 }, { opacity: 0.08, scale: 1, rotation: 360, duration: 0.4 }, 0.1);
-    P.fromTo('.pfish', { opacity: 0, x: -15 }, { opacity: 0.5, x: 0, duration: 0.15 }, 0.12);
-    P.to({}, { duration: 0.18 });
-    P.to('#philP .sc', { opacity: 0, y: -25, duration: 0.08 });
-    P.to(V.s, { int: 0.1, duration: 0.06 }, '<');
-  } else {
-    ['#pa','#ph','#pp1','#pp2'].forEach(function(s) { gsap.fromTo(s, { opacity: 0, y: 20 }, { scrollTrigger: { trigger: s, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }); });
-  }
+  var P = gsap.timeline({ scrollTrigger: { trigger: '#phil', start: 'top top', end: '+=150%', pin: '#philP', scrub: 1, anticipatePin: 1 } });
+  P.to(V.s, { hue: 130, int: 0.28, spd: 0.18, chaos: 0.04, xw: 4, duration: 0.12 }, 0);
+  P.fromTo('#pa', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
+  P.fromTo('#ph', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
+  P.fromTo('#pp1', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
+  P.fromTo('#pp2', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.14);
+  P.fromTo('.pring:nth-child(1)', { opacity: 0, scale: 0.5 }, { opacity: 0.15, scale: 1, rotation: 360, duration: 0.4 }, 0.04);
+  P.fromTo('.pring:nth-child(2)', { opacity: 0, scale: 0.5 }, { opacity: 0.1, scale: 1, rotation: -360, duration: 0.4 }, 0.07);
+  P.fromTo('.pring:nth-child(3)', { opacity: 0, scale: 0.5 }, { opacity: 0.08, scale: 1, rotation: 360, duration: 0.4 }, 0.1);
+  P.fromTo('.pfish', { opacity: 0, x: -15 }, { opacity: 0.5, x: 0, duration: 0.15 }, 0.12);
+  P.to({}, { duration: 0.18 });
+  P.to('#philP .sc', { opacity: 0, y: -25, duration: 0.08 });
+  P.to(V.s, { int: 0.1, duration: 0.06 }, '<');
 
-  // Values horizontal scroll (desktop only)
+  // Values horizontal scroll
   var trk = document.getElementById('vtrk');
   var vcs = gsap.utils.toArray('.vc');
   gsap.to(V.s, { scrollTrigger: { trigger: '#vals', start: 'top 50%', end: 'bottom 50%', scrub: 1 }, hue: 50, int: 0.18, spd: 0.12, chaos: 0.03 });
-  if (window.innerWidth > 900) {
-    var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + ((trk.scrollWidth - window.innerWidth) * 2.5); }, pin: '#valP', scrub: 2.5, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.6, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
-    vcs.forEach(function(c) { gsap.to(c.querySelector('.vi'), { scrollTrigger: { trigger: c, containerAnimation: H, start: 'left 85%', end: 'left 40%', scrub: true }, opacity: 1, y: 0 }); });
-  } else {
-    vcs.forEach(function(c, i) { gsap.fromTo(c.querySelector('.vi'), { opacity: 0, y: 25 }, { scrollTrigger: { trigger: c, start: 'top 85%', end: 'top 50%', scrub: true }, opacity: 1, y: 0 }); });
-  }
+  var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + ((trk.scrollWidth - window.innerWidth) * 2.5); }, pin: '#valP', scrub: 2.5, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.6, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
+  vcs.forEach(function(c) { gsap.to(c.querySelector('.vi'), { scrollTrigger: { trigger: c, containerAnimation: H, start: 'left 85%', end: 'left 40%', scrub: true }, opacity: 1, y: 0 }); });
 
   // Products
-  if (window.innerWidth > 900) {
-    var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=180%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
-    Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
-    Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
-    Pr.fromTo('#prP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.03);
-    gsap.utils.toArray('.pc').forEach(function(c, i) { Pr.fromTo(c, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.08 }, 0.08 + i * 0.05); });
-    Pr.to({}, { duration: 0.22 });
-    Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
-    Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
-  } else {
-    gsap.fromTo('#prH', { opacity: 0, y: 20 }, { scrollTrigger: { trigger: '#prH', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6 });
-    gsap.fromTo('#prP', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#prP', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6 });
-    gsap.utils.toArray('.pc').forEach(function(c, i) { gsap.fromTo(c, { opacity: 0, y: 30 }, { scrollTrigger: { trigger: c, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, delay: i * 0.08 }); });
-  }
+  var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=180%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
+  Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
+  Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
+  Pr.fromTo('#prP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.03);
+  gsap.utils.toArray('.pc').forEach(function(c, i) { Pr.fromTo(c, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.08 }, 0.08 + i * 0.05); });
+  Pr.to({}, { duration: 0.22 });
+  Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
+  Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
   // Heritage
-  if (window.innerWidth > 900) {
-    var He = gsap.timeline({ scrollTrigger: { trigger: '#heri', start: 'top top', end: '+=150%', pin: '#heriP', scrub: 1, anticipatePin: 1 } });
-    He.to(V.s, { hue: 145, int: 0.22, spd: 0.18, chaos: 0.05, xw: 5, duration: 0.08 }, 0);
-    He.fromTo('#ha', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
-    He.fromTo('#hh', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
-    He.fromTo('#hp', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
-    gsap.utils.toArray('.st').forEach(function(s, i) { He.fromTo(s, { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.06 }, 0.16 + i * 0.04); });
-    He.to({}, { duration: 0.18 });
-    He.to(V.s, { int: 0.08, duration: 0.06 });
-  } else {
-    ['#ha','#hh','#hp'].forEach(function(s) { gsap.fromTo(s, { opacity: 0, y: 20 }, { scrollTrigger: { trigger: s, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6 }); });
-    gsap.utils.toArray('.st').forEach(function(s, i) { gsap.fromTo(s, { opacity: 0, y: 25 }, { scrollTrigger: { trigger: s, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.5, delay: i * 0.06 }); });
-  }
+  var He = gsap.timeline({ scrollTrigger: { trigger: '#heri', start: 'top top', end: '+=150%', pin: '#heriP', scrub: 1, anticipatePin: 1 } });
+  He.to(V.s, { hue: 145, int: 0.22, spd: 0.18, chaos: 0.05, xw: 5, duration: 0.08 }, 0);
+  He.fromTo('#ha', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
+  He.fromTo('#hh', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
+  He.fromTo('#hp', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
+  gsap.utils.toArray('.st').forEach(function(s, i) { He.fromTo(s, { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.06 }, 0.16 + i * 0.04); });
+  He.to({}, { duration: 0.18 });
+  He.to(V.s, { int: 0.08, duration: 0.06 });
 
   // How We Work
-  if (window.innerWidth > 900) {
-    var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
-    W.to(V.s, { hue: 175, int: 0.2, spd: 0.15, chaos: 0.03, duration: 0.08 }, 0);
-    W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
-    W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
-    W.fromTo('#hwPt', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
-    gsap.utils.toArray('.hwc').forEach(function(c, i) { W.fromTo(c, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06 }, 0.12 + i * 0.04); });
-    W.to({}, { duration: 0.18 });
-  } else {
-    ['#hwA','#hwH','#hwPt'].forEach(function(s) { gsap.fromTo(s, { opacity: 0, y: 20 }, { scrollTrigger: { trigger: s, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6 }); });
-    gsap.utils.toArray('.hwc').forEach(function(c, i) { gsap.fromTo(c, { opacity: 0, y: 25 }, { scrollTrigger: { trigger: c, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.5, delay: i * 0.06 }); });
-  }
+  var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
+  W.to(V.s, { hue: 175, int: 0.2, spd: 0.15, chaos: 0.03, duration: 0.08 }, 0);
+  W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
+  W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
+  W.fromTo('#hwPt', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
+  gsap.utils.toArray('.hwc').forEach(function(c, i) { W.fromTo(c, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06 }, 0.12 + i * 0.04); });
+  W.to({}, { duration: 0.18 });
 
   // Trust section
-  if (window.innerWidth > 900) {
-    var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
-    Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
-    Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
-    Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
-    Tr.fromTo('#trP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
-    gsap.utils.toArray('.trust-card').forEach(function(c, i) { Tr.fromTo(c, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06 }, 0.12 + i * 0.04); });
-    Tr.to({}, { duration: 0.22 });
-  } else {
-    ['#trA','#trH','#trP'].forEach(function(s) { gsap.fromTo(s, { opacity: 0, y: 20 }, { scrollTrigger: { trigger: s, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6 }); });
-    gsap.utils.toArray('.trust-card').forEach(function(c, i) { gsap.fromTo(c, { opacity: 0, y: 25 }, { scrollTrigger: { trigger: c, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.5, delay: i * 0.06 }); });
-  }
+  var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
+  Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
+  Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
+  Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
+  Tr.fromTo('#trP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
+  gsap.utils.toArray('.trust-card').forEach(function(c, i) { Tr.fromTo(c, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06 }, 0.12 + i * 0.04); });
+  Tr.to({}, { duration: 0.22 });
 
   // Contact
   gsap.fromTo('#ctA', { opacity: 0, y: 12 }, { scrollTrigger: { trigger: '#ctA', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
