@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>D'Ascola Draft 03 — Parametric Signal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#03060c;--panel:#0c1320;--line:#1e334b;--cyan:#64d8ff;--mag:#ff7adf;--text:#d9e6ff;--muted:#91a8c6}
+*{box-sizing:border-box;margin:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:radial-gradient(700px 400px at 10% 10%,#15366044,transparent 70%),radial-gradient(600px 300px at 80% 0,#3a176044,transparent 70%),var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.dashboard{width:min(1200px,94vw);margin:auto;padding:44px 0 70px}
+.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap}
+h1{font-family:Syne,sans-serif;font-size:clamp(2rem,4.8vw,4.4rem);line-height:.94;max-width:15ch}
+.sub{max-width:66ch;color:var(--muted);line-height:1.65;margin-top:12px}
+.control{display:flex;gap:10px;flex-wrap:wrap}
+button{border:1px solid #355a80;background:#08111f;color:#cde7ff;padding:.7rem .95rem;cursor:pointer}
+button:hover{border-color:var(--cyan)}
+.grid{margin-top:26px;display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.panel{border:1px solid var(--line);background:linear-gradient(145deg,#0a1220,#09101a);padding:16px;position:relative;overflow:hidden}
+.glow::after{content:'';position:absolute;width:280px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#5ad4ff2f,transparent 65%);right:-110px;bottom:-120px;pointer-events:none}
+.stream{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{border:1px solid #29425f;background:#0b1628;padding:13px;min-height:168px;transition:border-color .3s,transform .3s}
+.card h3{font-family:Syne,sans-serif;font-size:1.05rem;color:#c8f2ff}
+.card p{margin-top:7px;color:#9eb6d4;line-height:1.5;font-size:.92rem}
+.kpi{margin-top:10px;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:#ffd586}
+.card.active{border-color:var(--cyan);transform:translateY(-3px)}
+.log{display:grid;gap:7px;align-content:start}
+.entry{border:1px solid #2a415a;background:#09111f;padding:10px;font-size:.86rem;color:#bdd9ff}
+.meter{height:8px;background:#0d1a2d;border:1px solid #27405e;margin-top:8px;position:relative}
+.meter span{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cyan),var(--mag));width:52%}
+@media(max-width:920px){.grid{grid-template-columns:1fr}.stream{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="dashboard">
+    <header class="top">
+      <div>
+        <p style="letter-spacing:.16em;text-transform:uppercase;font-size:.7rem;color:#90bce5">Draft 03 · Parametric Signal</p>
+        <h1>A data-lux operations interface for high-trust seafood buying.</h1>
+        <p class="sub">This concept reframes the same Santos → East Coast story as a live signal network. Buyers can focus one lane, randomize volatility, and monitor confidence ratios while events remain narrative-first and human-verifiable.</p>
+      </div>
+      <div class="control">
+        <button id="shuffle">Shuffle Signal Intensity</button>
+        <button id="focus">Focus: Swordfish Lane</button>
+        <button id="reset">Reset View</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <section class="panel glow">
+        <div class="stream" id="stream">
+          <article class="card active"><h3>Signal 01 · Dock Intake</h3><p>Victor validates vessel quality at source and assigns lot IDs before handling transitions.</p><p class="kpi">04:40 BRT · Human Verified</p><div class="meter"><span style="width:81%"></span></div></article>
+          <article class="card"><h3>Signal 02 · Origin Packout</h3><p>Insulated oxygen-aware packaging locks in condition with AWB-linked documentation.</p><p class="kpi">08:10 BRT · Continuity Locked</p><div class="meter"><span style="width:74%"></span></div></article>
+          <article class="card"><h3>Signal 03 · Flight Departure</h3><p>Manifest, expected weights, and pricing move to buyers before departure.</p><p class="kpi">13:30 BRT · Transparency Live</p><div class="meter"><span style="width:67%"></span></div></article>
+          <article class="card"><h3>Signal 04 · East Coast Arrival</h3><p>Direct routing to wholesale channels with no warehouse lag and reconciled receiving.</p><p class="kpi">06:20 EST · Delivery Ready</p><div class="meter"><span style="width:88%"></span></div></article>
+        </div>
+      </section>
+      <aside class="panel">
+        <h2 style="font-family:Syne,sans-serif;font-size:1.2rem">Live Event Ledger</h2>
+        <div class="log" id="log" style="margin-top:12px">
+          <div class="entry">Awaiting operator action…</div>
+        </div>
+      </aside>
+    </section>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+const cards=[...document.querySelectorAll('.card')];
+const bars=[...document.querySelectorAll('.meter span')];
+const log=document.getElementById('log');
+function writeLog(message){
+  const row=document.createElement('div');
+  row.className='entry';
+  row.textContent=new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})+' · '+message;
+  log.prepend(row);
+  if(log.children.length>5) log.removeChild(log.lastChild);
+}
+gsap.from('.top > *',{opacity:0,y:20,stagger:.08,duration:.6});
+gsap.from(cards,{opacity:0,y:18,stagger:.08,duration:.45,delay:.2});
+document.getElementById('shuffle').addEventListener('click',()=>{
+  bars.forEach((bar,i)=>{
+    const next=gsap.utils.random(55,93,1);
+    gsap.to(bar,{width:next+'%',duration:.45,ease:'power2.out'});
+    gsap.to(cards[i],{x:gsap.utils.random(-3,3),y:gsap.utils.random(-4,4),duration:.2,yoyo:true,repeat:1});
+  });
+  writeLog('Signal intensity randomized for volatility simulation.');
+});
+document.getElementById('focus').addEventListener('click',()=>{
+  cards.forEach(c=>c.classList.remove('active')); cards[0].classList.add('active');
+  gsap.to(cards,{opacity:.35,duration:.2});
+  gsap.to(cards[0],{opacity:1,scale:1.03,duration:.35,boxShadow:'0 0 0 1px #66d8ff,0 20px 36px #081f39'});
+  writeLog('Focus mode enabled for Swordfish lane.');
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  cards.forEach(c=>c.classList.remove('active'));
+  gsap.to(cards,{opacity:1,scale:1,x:0,y:0,boxShadow:'none',duration:.3});
+  writeLog('Dashboard reset to balanced view.');
+});
+cards.forEach((card,i)=>card.addEventListener('click',()=>{
+  cards.forEach(c=>c.classList.remove('active')); card.classList.add('active');
+  writeLog(`Operator inspected ${card.querySelector('h3').textContent}.`);
+  gsap.fromTo(card,{scale:.98},{scale:1.02,duration:.2,yoyo:true,repeat:1});
+}));
+</script>
+</body>
+</html>

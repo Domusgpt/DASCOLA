@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>D'Ascola Draft 02 — Editorial Tide Grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,100&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#10151d;--paper:#f6f1e9;--accent:#052f5f;--red:#9c2a2a;--muted:#5b6067}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--paper);color:var(--ink)}
+.layout{width:min(1200px,94vw);margin:auto;padding:38px 0 60px;display:grid;grid-template-columns:1.05fr .95fr;gap:20px}
+.panel{border:1px solid #cfc5b8;background:#fffcf6;min-height:82vh;position:relative;overflow:hidden}
+.left{padding:30px}
+.right{padding:20px;display:grid;grid-template-rows:auto 1fr auto;gap:12px}
+.kicker{letter-spacing:.18em;text-transform:uppercase;font-size:.7rem;color:var(--accent)}
+h1{font-family:Fraunces,serif;font-size:clamp(2.2rem,4.4vw,4.3rem);line-height:.92;margin-top:10px;max-width:15ch}
+.standfirst{margin-top:16px;color:var(--muted);line-height:1.65;max-width:52ch}
+.hero{margin-top:26px;position:relative}
+.hero img{width:100%;height:320px;object-fit:cover;filter:contrast(1.05) saturate(.95)}
+.hero .label{position:absolute;left:14px;bottom:14px;background:#10151de8;color:#f5f7f9;padding:8px 11px;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}
+.events{display:grid;gap:10px;margin-top:18px}
+.event{border:1px solid #c8beb0;padding:14px;background:#fffdfa;cursor:pointer;transition:all .3s}
+.event:hover{transform:translateX(3px)}
+.event.active{border-color:var(--accent);background:#f1f7ff}
+.event h3{font-family:Fraunces,serif;font-size:1.24rem;line-height:1}
+.event p{font-size:.9rem;color:#4d545d;margin-top:6px}
+.quote{border-top:1px solid #cfc5b8;border-bottom:1px solid #cfc5b8;padding:16px 0;font-family:Fraunces,serif;font-size:1.7rem;line-height:1.1;color:#1d2a3b}
+.detail{background:#112235;color:#e9f4ff;padding:18px;line-height:1.65;min-height:180px}
+.detail b{color:#86c9ff}
+.badges{display:flex;gap:10px;flex-wrap:wrap}
+.badges span{border:1px solid #32465b;padding:6px 8px;font-size:.75rem;letter-spacing:.09em;text-transform:uppercase}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.panel{min-height:auto}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <section class="panel left">
+    <p class="kicker">Draft 02 · Editorial Tide Grid</p>
+    <h1>The provenance issue, reimagined as a collectible editorial feature.</h1>
+    <p class="standfirst">A high-fashion publishing direction that treats each supply-chain event as a premium story chapter. The structure keeps your same narrative and confidence markers but presents them with editorial cadence and tactile interaction.</p>
+    <figure class="hero">
+      <img id="heroImage" src="https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&w=1400&q=80" alt="Seafood packed on ice">
+      <figcaption class="label" id="heroLabel">Dock Intake · Santos</figcaption>
+    </figure>
+    <div class="events" id="events">
+      <article class="event active" data-label="Dock Intake · Santos" data-image="https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&w=1400&q=80" data-detail="<b>04:40 BRT</b> — Victor's hands-on vessel-side review validates grade, texture, and handling quality before lot assignment."><h3>04:40 BRT · Dock Intake</h3><p>First-touch grading at source.</p></article>
+      <article class="event" data-label="Origin Packout · Trace Layer" data-image="https://images.unsplash.com/photo-1510130387422-82bed34b37e9?auto=format&fit=crop&w=1400&q=80" data-detail="<b>08:10 BRT</b> — Oxygen-aware insulated packout and lot-level coding establish clear traceability prior to transit."><h3>08:10 BRT · Origin Packout</h3><p>AWB-linked continuity metadata.</p></article>
+      <article class="event" data-label="Air Corridor · Wheels Up" data-image="https://images.unsplash.com/photo-1540962351504-03099e0a754b?auto=format&fit=crop&w=1400&q=80" data-detail="<b>13:30 BRT</b> — Pre-arrival manifests and pricing are sent before departure, reducing uncertainty for buyers."><h3>13:30 BRT · Flight Departure</h3><p>Confidence before transit.</p></article>
+      <article class="event" data-label="East Coast Arrival · Ready" data-image="https://images.unsplash.com/photo-1498654077810-12fe6d4a8dc3?auto=format&fit=crop&w=1400&q=80" data-detail="<b>06:20 EST</b> — Receiving teams match expected volumes and route immediately to wholesale channels without warehouse lag."><h3>06:20 EST · Market Arrival</h3><p>Direct distribution handoff.</p></article>
+    </div>
+  </section>
+
+  <aside class="panel right">
+    <blockquote class="quote" id="quote">“Quality is not claimed at destination. It's decided at origin.”</blockquote>
+    <div class="detail" id="detail"><b>04:40 BRT</b> — Victor's hands-on vessel-side review validates grade, texture, and handling quality before lot assignment.</div>
+    <div class="badges"><span>GSAP state theater</span><span>Interactive event ledger</span><span>Editorial hierarchy</span></div>
+  </aside>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+  gsap.from('.left > *',{opacity:0,y:25,stagger:.08,duration:.7,ease:'power2.out'});
+  gsap.from('.right > *',{opacity:0,x:20,stagger:.1,duration:.6,delay:.2});
+  const cards=[...document.querySelectorAll('.event')];
+  const image=document.getElementById('heroImage');
+  const label=document.getElementById('heroLabel');
+  const detail=document.getElementById('detail');
+  const quote=document.getElementById('quote');
+  const lines=[
+    '“Quality is not claimed at destination. It\'s decided at origin.”',
+    '“Documentation becomes trust when it arrives before the fish.”',
+    '“Speed without continuity is risk. We do both.”',
+    '“Arrival should feel expected, not uncertain.”'
+  ];
+  cards.forEach((card,i)=>card.addEventListener('click',()=>{
+    cards.forEach(c=>c.classList.remove('active')); card.classList.add('active');
+    gsap.to(image,{opacity:.2,duration:.18,onComplete:()=>{image.src=card.dataset.image; label.textContent=card.dataset.label; gsap.to(image,{opacity:1,duration:.35});}});
+    gsap.to(detail,{opacity:0,y:6,duration:.16,onComplete:()=>{detail.innerHTML=card.dataset.detail; gsap.to(detail,{opacity:1,y:0,duration:.3});}});
+    gsap.to(quote,{opacity:0,y:8,duration:.16,onComplete:()=>{quote.textContent=lines[i]; gsap.to(quote,{opacity:1,y:0,duration:.3});}});
+  }));
+</script>
+</body>
+</html>
