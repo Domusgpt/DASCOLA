@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>D'Ascola Concept Deck — Three New Directions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#060b12; --panel:#0f1824; --line:#223149; --text:#e7f2ff; --muted:#9cb0c6; --accent:#79d3ff; }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: radial-gradient(1200px 700px at 10% -10%, #143059, transparent 60%), radial-gradient(1200px 700px at 90% 0%, #2d1637, transparent 60%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 56px 24px;
+    }
+    .wrap { width: min(1080px, 100%); margin: 0 auto; }
+    h1 { font: 400 clamp(2.2rem, 6vw, 4rem)/1.02 'Instrument Serif', serif; margin-bottom: 12px; }
+    .lead { color: var(--muted); max-width: 70ch; line-height: 1.65; margin-bottom: 28px; }
+    .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--line);
+      background: linear-gradient(140deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      padding: 22px;
+      min-height: 230px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .35s ease, border-color .35s ease;
+    }
+    .card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      right: -80px;
+      bottom: -90px;
+      background: radial-gradient(circle, #70d4ff44, transparent 65%);
+      pointer-events: none;
+    }
+    .eyebrow { letter-spacing: .14em; text-transform: uppercase; font-size: .72rem; color: #8ab6d9; }
+    h2 { margin-top: 14px; font-size: 1.4rem; }
+    p { margin-top: 12px; color: var(--muted); line-height: 1.55; }
+    .tag { margin-top: 16px; font-size: .78rem; color: #9ee3ff; }
+    @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>D'Ascola Concept Deck</h1>
+    <p class="lead">Three rebuilt directions with stronger visual identity, richer event interactions, and distinct architecture. Each draft keeps the same Santos → East Coast story and GSAP-led interactivity while pushing into a different design language.</p>
+
+    <section class="grid">
+      <a class="card" href="draft-01-cinematic.html">
+        <p class="eyebrow">Draft 01</p>
+        <h2>Cinematic Dockline: Immersive Narrative</h2>
+        <p>Film-grain atmosphere, depth layers, vessel timeline scrubbing, and precision logistics overlays.</p>
+        <p class="tag">GSAP ScrollTrigger + timeline control + hover parallax</p>
+      </a>
+
+      <a class="card" href="draft-02-editorial.html">
+        <p class="eyebrow">Draft 02</p>
+        <h2>Editorial Tide Grid: Collectible Brand Story</h2>
+        <p>Magazine-grade composition, pull-quote theater, and click-to-activate event copy matrix.</p>
+        <p class="tag">GSAP staged reveal + active state transitions</p>
+      </a>
+
+      <a class="card" href="draft-03-parametric.html">
+        <p class="eyebrow">Draft 03</p>
+        <h2>Parametric Signal: Data-Lux Interface</h2>
+        <p>A control-room style interface with signal gauges, filtered lanes, and kinetic panel response.</p>
+        <p class="tag">GSAP utility animations + live filter controls</p>
+      </a>
+    </section>
+  </div>
+</body>
+</html>
