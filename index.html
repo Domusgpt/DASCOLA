@@ -867,12 +867,435 @@ body {
   .sh { font-size: clamp(1.8rem, 8vw, 3rem); }
 
 }
+
+/* ═══════════════════════════════════════════
+   POLISH & FINISHING EFFECTS
+   ═══════════════════════════════════════════ */
+
+/* Gold shimmer keyframes */
+@keyframes goldShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes gentlePulse {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.02); }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes waveShift {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes compassSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(201,168,76,0), border-color: rgba(201,168,76,0.06); }
+  50% { box-shadow: 0 0 30px rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.15); }
+}
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 4px 20px rgba(201,168,76,0.15); }
+  50% { box-shadow: 0 4px 35px rgba(201,168,76,0.3); }
+}
+@keyframes driftLeft {
+  0% { transform: translateX(100vw) scaleX(-1); opacity: 0; }
+  10% { opacity: 0.04; }
+  90% { opacity: 0.04; }
+  100% { transform: translateX(-100vw) scaleX(-1); opacity: 0; }
+}
+@keyframes driftRight {
+  0% { transform: translateX(-100vw); opacity: 0; }
+  10% { opacity: 0.03; }
+  90% { opacity: 0.03; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+
+/* Enhanced masthead rule - gold shimmer */
+.m-rule {
+  height: 2px !important;
+  background: linear-gradient(90deg, transparent, var(--ouro), var(--ouro-lt), var(--ouro), transparent) !important;
+  background-size: 200% 100%;
+  animation: goldShimmer 4s ease-in-out infinite;
+}
+
+/* Section heading glow */
+.sh {
+  text-shadow: 0 0 60px rgba(201,168,76,0.15);
+}
+.sh-w {
+  text-shadow: 0 0 50px rgba(240,235,224,0.1);
+}
+
+/* Enhanced water divider text */
+.wd-txt h2 {
+  text-shadow: 0 2px 20px rgba(0,0,0,0.6), 0 0 40px rgba(0,0,0,0.3);
+}
+.wd-txt p {
+  text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+}
+.wd::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+}
+
+/* Wave SVG dividers */
+.wave-div {
+  position: relative;
+  z-index: 6;
+  width: 100%;
+  height: 60px;
+  overflow: hidden;
+  margin-top: -60px;
+}
+.wave-div svg {
+  width: 200%;
+  height: 100%;
+  animation: waveShift 12s linear infinite;
+}
+.wave-div-top {
+  margin-top: 0;
+  margin-bottom: -60px;
+  transform: scaleY(-1);
+}
+.wave-div-verde svg path { fill: rgba(0,42,31,0.96); }
+.wave-div-deep svg path { fill: rgba(4,10,16,0.95); }
+.wave-div-pearl svg path { fill: var(--pearl); }
+
+/* Enhanced card hover effects */
+.hwc {
+  transition: background 0.5s, border-color 0.5s, box-shadow 0.5s, transform 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+.hwc:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 40px rgba(201,168,76,0.06) !important;
+  border-color: rgba(201,168,76,0.15) !important;
+}
+
+/* Trust card hover */
+.trust-card {
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.5s, box-shadow 0.5s;
+}
+.trust-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201,168,76,0.15);
+  box-shadow: 0 8px 40px rgba(201,168,76,0.05);
+}
+
+/* Product card enhanced */
+.pc {
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s, border-color 0.4s !important;
+}
+.pc:hover {
+  border-color: rgba(0,104,71,0.12) !important;
+}
+
+/* CTA Button */
+.cta-btn {
+  display: inline-block;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--deep);
+  background: linear-gradient(135deg, var(--ouro), var(--ouro-lt), var(--ouro));
+  background-size: 200% 200%;
+  padding: 1rem 3rem;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+  animation: btnGlow 3s ease-in-out infinite;
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), letter-spacing 0.4s;
+  margin-top: 1.5rem;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  letter-spacing: 0.4em;
+}
+.cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s;
+}
+.cta-btn:hover::after {
+  left: 120%;
+}
+
+/* Floating fish ambient */
+.ambient-fish {
+  position: fixed;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+}
+.ambient-fish svg {
+  width: 80px;
+  height: 30px;
+}
+.fish-1 { top: 35%; animation: driftRight 45s linear infinite; animation-delay: 0s; }
+.fish-2 { top: 65%; animation: driftLeft 55s linear infinite; animation-delay: 8s; }
+.fish-3 { top: 50%; animation: driftRight 60s linear infinite; animation-delay: 20s; }
+
+/* Stat counter enhanced */
+.st-n {
+  position: relative;
+}
+.st-n::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ouro), transparent);
+  transition: width 1s ease-out;
+}
+.st.revealed .st-n::after {
+  width: 80%;
+}
+
+/* Section accent lines */
+.acc {
+  position: relative;
+  display: inline-block;
+}
+.acc::before,
+.acc::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 30px;
+  height: 1px;
+  background: var(--ouro);
+  opacity: 0.3;
+}
+.acc::before { right: calc(100% + 12px); }
+.acc::after { left: calc(100% + 12px); }
+
+/* ═══════════════════════════════════════════
+   THE SOUTHERN BRAZIL FLEET - MAP SECTION
+   ═══════════════════════════════════════════ */
+
+.fleet-section {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  background: var(--deep);
+  overflow: hidden;
+}
+.fleet-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(27,58,92,0.12), transparent 55%),
+    radial-gradient(ellipse at 70% 40%, rgba(0,104,71,0.08), transparent 50%);
+}
+
+/* Parchment map container */
+.fleet-map-wrap {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.fleet-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Map canvas container */
+.fleet-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: 65vh;
+  border: 1px solid rgba(201,168,76,0.12);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at center, rgba(13,34,64,0.4), rgba(4,10,16,0.95)),
+    var(--deep);
+}
+.fleet-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(201,168,76,0.06);
+  margin: 8px;
+  z-index: 1;
+  pointer-events: none;
+}
+.fleet-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  z-index: 2;
+  pointer-events: none;
+}
+#fleetCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Map legend */
+.fleet-legend {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+.fleet-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 200;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--creme-w);
+}
+.fleet-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid;
+}
+.dot-vessel { background: rgba(201,168,76,0.8); border-color: var(--ouro); }
+.dot-port { background: rgba(0,104,71,0.8); border-color: var(--verde-b); }
+.dot-route { background: none; border-color: var(--blade); border-style: dashed; width: 20px; height: 0; border-radius: 0; }
+
+/* Compass rose */
+.compass-rose {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 80px;
+  height: 80px;
+  z-index: 3;
+  opacity: 0.5;
+}
+
+/* Vessel info tooltip */
+.vessel-info {
+  position: absolute;
+  z-index: 10;
+  background: rgba(4,10,16,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,168,76,0.15);
+  padding: 1rem 1.2rem;
+  min-width: 200px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.vessel-info.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.vessel-info h4 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.95rem;
+  color: var(--ouro);
+  margin-bottom: 0.3rem;
+}
+.vessel-info p {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 200;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--creme-w);
+  line-height: 1.8;
+}
+.vessel-info .vi-status {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0,104,71,0.3);
+  color: var(--verde-b);
+  margin-top: 0.4rem;
+}
+
+/* Fleet stats bar */
+.fleet-stats {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(201,168,76,0.06);
+}
+.fleet-stat {
+  text-align: center;
+}
+.fleet-stat-n {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 200;
+  font-size: 1.8rem;
+  color: var(--ouro);
+}
+.fleet-stat-l {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--creme-w);
+  margin-top: 0.2rem;
+}
+
+/* Mobile responsive for fleet */
+@media (max-width: 900px) {
+  .fleet-map { aspect-ratio: 4 / 5; max-height: 55vh; }
+  .fleet-legend { gap: 1rem; }
+  .fleet-stats { gap: 1.5rem; flex-wrap: wrap; }
+  .fleet-stat-n { font-size: 1.4rem; }
+  .compass-rose { width: 50px; height: 50px; bottom: 10px; right: 10px; }
+  .acc::before, .acc::after { width: 18px; }
+}
 </style>
 </head>
 <body>
 <div class="grain"></div>
 <canvas id="vib3"></canvas>
 <canvas id="particles"></canvas>
+
+<!-- Ambient floating fish silhouettes -->
+<div class="ambient-fish fish-1">
+  <svg viewBox="0 0 80 30" fill="none"><path d="M5 15 L15 14 Q20 8 30 6 Q40 3 50 5 Q58 8 64 14 Q66 15 64 16 Q58 22 50 25 Q40 27 30 24 Q20 22 15 16 L5 15Z" stroke="#C9A84C" stroke-width="0.4" fill="none"/><path d="M64 14 Q70 10 76 7 M64 16 Q70 20 76 23" stroke="#C9A84C" stroke-width="0.3" fill="none"/></svg>
+</div>
+<div class="ambient-fish fish-2">
+  <svg viewBox="0 0 80 30" fill="none"><path d="M5 15 L15 14 Q20 8 30 6 Q40 3 50 5 Q58 8 64 14 Q66 15 64 16 Q58 22 50 25 Q40 27 30 24 Q20 22 15 16 L5 15Z" stroke="#C9A84C" stroke-width="0.4" fill="none"/><path d="M64 14 Q70 10 76 7 M64 16 Q70 20 76 23" stroke="#C9A84C" stroke-width="0.3" fill="none"/></svg>
+</div>
+<div class="ambient-fish fish-3">
+  <svg viewBox="0 0 80 30" fill="none"><path d="M5 15 L15 14 Q20 8 30 6 Q40 3 50 5 Q58 8 64 14 Q66 15 64 16 Q58 22 50 25 Q40 27 30 24 Q20 22 15 16 L5 15Z" stroke="#C9A84C" stroke-width="0.4" fill="none"/><path d="M64 14 Q70 10 76 7 M64 16 Q70 20 76 23" stroke="#C9A84C" stroke-width="0.3" fill="none"/></svg>
+</div>
 
 
 
@@ -1131,12 +1554,72 @@ body {
   </div>
 </div>
 
+
+<!-- Wave Divider into Fleet -->
+<div class="wave-div wave-div-top wave-div-deep" style="position:relative;z-index:6">
+  <svg viewBox="0 0 2400 60" preserveAspectRatio="none"><path d="M0,30 C200,50 400,10 600,30 C800,50 1000,10 1200,30 C1400,50 1600,10 1800,30 C2000,50 2200,10 2400,30 L2400,60 L0,60Z"/></svg>
+</div>
+
+<!-- The Southern Brazil Fleet -->
+<div class="fleet-section ss" id="fleet" style="height:280vh">
+  <div class="sp" id="fleetP" style="background:transparent">
+    <div class="fleet-map-wrap">
+      <div class="fleet-header">
+        <span class="acc" id="flA">Live Fleet Tracking</span>
+        <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
+        <p class="stx stx-l" id="flP">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
+      </div>
+      <div class="fleet-map" id="fleetMap">
+        <canvas id="fleetCanvas"></canvas>
+        <!-- Compass Rose SVG -->
+        <svg class="compass-rose" viewBox="0 0 100 100" fill="none">
+          <circle cx="50" cy="50" r="45" stroke="rgba(201,168,76,0.2)" stroke-width="0.5"/>
+          <circle cx="50" cy="50" r="35" stroke="rgba(201,168,76,0.1)" stroke-width="0.3"/>
+          <circle cx="50" cy="50" r="3" fill="rgba(201,168,76,0.4)"/>
+          <!-- Cardinal points -->
+          <path d="M50 5 L53 20 L50 15 L47 20Z" fill="rgba(201,168,76,0.6)"/>
+          <path d="M50 95 L53 80 L50 85 L47 80Z" fill="rgba(201,168,76,0.25)"/>
+          <path d="M5 50 L20 47 L15 50 L20 53Z" fill="rgba(201,168,76,0.25)"/>
+          <path d="M95 50 L80 47 L85 50 L80 53Z" fill="rgba(201,168,76,0.25)"/>
+          <!-- Intercardinals -->
+          <path d="M19 19 L30 28 L26 26 L28 30Z" fill="rgba(201,168,76,0.15)"/>
+          <path d="M81 19 L70 28 L74 26 L72 30Z" fill="rgba(201,168,76,0.15)"/>
+          <path d="M19 81 L30 72 L26 74 L28 70Z" fill="rgba(201,168,76,0.15)"/>
+          <path d="M81 81 L70 72 L74 74 L72 70Z" fill="rgba(201,168,76,0.15)"/>
+          <!-- Letters -->
+          <text x="50" y="3" text-anchor="middle" fill="rgba(201,168,76,0.5)" font-family="Josefin Sans" font-size="5" font-weight="200">N</text>
+          <text x="50" y="99" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">S</text>
+          <text x="2" y="52" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">W</text>
+          <text x="98" y="52" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">E</text>
+        </svg>
+        <!-- Vessel Info Tooltip -->
+        <div class="vessel-info" id="vesselInfo">
+          <h4 id="viName">—</h4>
+          <p id="viDetail">—</p>
+          <span class="vi-status" id="viStatus">—</span>
+        </div>
+      </div>
+      <div class="fleet-legend" id="flLeg">
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
+      </div>
+      <div class="fleet-stats" id="flSt">
+        <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- Contact -->
 <section id="contact" style="min-height:55vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:4rem 2rem;background:var(--deep);position:relative;z-index:5">
   <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ouro),transparent)"></div>
   <span class="acc" id="ctA" style="opacity:0;transform:translateY(12px)">Get in Touch</span>
   <h2 id="ctT" style="font-family:'Playfair Display', Georgia, serif;font-size:clamp(1.8rem,4.5vw,3.2rem);color:var(--creme);opacity:0;transform:translateY(20px);margin-bottom:0.5rem">Let's Talk Fish</h2>
   <p id="ctSub" style="font-size:clamp(0.85rem,1vw,0.95rem);color:var(--creme-w);font-weight:300;opacity:0;transform:translateY(12px);max-width:480px;text-align:center;line-height:1.8;margin-bottom:1rem">Whether you're looking for a reliable swordfish supplier or want to diversify your fresh fish program, we'd like to hear from you.</p>
+  <a href="mailto:victor@dascolaseafood.com" class="cta-btn" id="ctBtn" style="opacity:0;transform:translateY(15px)">Get in Touch</a>
   <div class="ctg" id="ctG">
     <div class="cti" style="opacity:0;transform:translateY(15px)"><h3>Contact</h3><p>Victor D'Ascola</p><a href="mailto:victor@dascolaseafood.com">victor@dascolaseafood.com</a></div>
     <div class="cti" style="opacity:0;transform:translateY(15px)"><h3>Operations</h3><p>Santos, Brazil</p><p style="margin-top:0.2rem;opacity:0.7">→ U.S. East Coast</p></div>
@@ -1473,13 +1956,521 @@ window.addEventListener('load', function() {
   gsap.fromTo('#ctA', { opacity: 0, y: 12 }, { scrollTrigger: { trigger: '#ctA', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
   gsap.fromTo('#ctT', { opacity: 0, y: 20 }, { scrollTrigger: { trigger: '#ctT', start: 'top 85%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' });
   gsap.fromTo('#ctSub', { opacity: 0, y: 12 }, { scrollTrigger: { trigger: '#ctSub', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 0.8, y: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+  gsap.fromTo('#ctBtn', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#ctBtn', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.7, delay: 0.15, ease: 'power3.out' });
   gsap.utils.toArray('#ctG .cti').forEach(function(e, i) { gsap.fromTo(e, { opacity: 0, y: 15 }, { scrollTrigger: { trigger: e, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, delay: i * 0.08, ease: 'power3.out' }); });
   gsap.to(V.s, { scrollTrigger: { trigger: '#ctT', start: 'top 50%', end: 'bottom bottom', scrub: 1 }, int: 0.03, spd: 0.06 });
 
   // Resize handler
   var rt;
   window.addEventListener('resize', function() { clearTimeout(rt); rt = setTimeout(function() { ScrollTrigger.refresh(); }, 200); });
+
+// ============================================
+// ANIMATED STAT COUNTERS
+// ============================================
+function animateCounters() {
+  document.querySelectorAll('.st').forEach(function(st) {
+    st.classList.add('revealed');
+  });
+}
+
+// ============================================
+// FLEET SECTION GSAP ANIMATIONS
+// ============================================
+function initFleetAnimations() {
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+  if (!document.getElementById('fleet')) return;
+  
+  // Fleet section pinned scroll
+  var Fl = gsap.timeline({ scrollTrigger: {
+    trigger: '#fleet', start: 'top top', end: '+=150%',
+    pin: '#fleetP', scrub: 1, anticipatePin: 1,
+    onEnter: function() { FleetMap.init(); FleetMap.go(); },
+    onLeaveBack: function() { FleetMap.stop(); }
+  }});
+  
+  Fl.to(V.s, { hue: 210, int: 0.12, spd: 0.1, chaos: 0.02, duration: 0.06 }, 0);
+  Fl.fromTo('#flA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
+  Fl.fromTo('#flH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
+  Fl.fromTo('#flP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
+  Fl.fromTo('#fleetMap', { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.1 }, 0.08);
+  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.16);
+  Fl.fromTo('#flSt', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0.18);
+  Fl.to({}, { duration: 0.3 });
+  Fl.to(V.s, { int: 0.06, duration: 0.06 });
+}
+
+// Add nav link for Fleet
+(function() {
+  var navLinks = document.querySelector('.nav-links');
+  if (navLinks) {
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = '#fleet';
+    a.textContent = 'Fleet';
+    li.appendChild(a);
+    // Insert before Contact
+    var links = navLinks.querySelectorAll('li');
+    navLinks.insertBefore(li, links[links.length - 1]);
+  }
+})();
+
+  // Init fleet animations
+  initFleetAnimations();
+  
+  // Trigger stat counter animation when heritage stats come into view
+  ScrollTrigger.create({
+    trigger: '#stg',
+    start: 'top 80%',
+    onEnter: animateCounters,
+    once: true
+  });
 });
+
+// ============================================
+// SOUTHERN BRAZIL FLEET MAP ENGINE
+// Nautical chart renderer with cartography vibe
+// ============================================
+var FleetMap = {
+  c: null, x: null, w: 0, h: 0, t: 0, run: false,
+  // Map bounds: South Atlantic focus on Brazil coast
+  bounds: { latN: -15, latS: -35, lonW: -55, lonE: -25 },
+  
+  // Brazil coastline simplified (lat, lon pairs)
+  coast: [
+    [-5.5,-35],[-6.5,-35],[-7.5,-34.8],[-8.5,-35],[-9.5,-35.5],[-10,-36.5],
+    [-11,-37],[-12,-38],[-12.8,-38.5],[-13,-39],[-14,-39],[-15,-39],
+    [-16,-39],[-17,-39.5],[-18,-39.8],[-19,-40],[-20,-40.2],[-20.5,-40.5],
+    [-21,-41],[-22,-41.5],[-22.5,-42],[-22.9,-43],[-23,-43.2],[-23.2,-44],
+    [-23.5,-45],[-23.8,-46],[-24,-46.3],[-24.5,-47],[-25,-48],[-25.5,-48.3],
+    [-26,-48.6],[-27,-48.5],[-28,-48.8],[-28.5,-49],[-29,-49.5],[-30,-50],
+    [-31,-51],[-32,-52],[-33,-52.5],[-33.5,-53]
+  ],
+  
+  // Ports
+  ports: [
+    { name: 'Santos', lat: -23.96, lon: -46.33, size: 'major' },
+    { name: 'Rio de Janeiro', lat: -22.91, lon: -43.17, size: 'minor' },
+    { name: 'Florianópolis', lat: -27.59, lon: -48.55, size: 'minor' },
+    { name: 'Vitória', lat: -20.32, lon: -40.34, size: 'minor' },
+    { name: 'Paranaguá', lat: -25.52, lon: -48.51, size: 'minor' },
+    { name: 'Salvador', lat: -12.97, lon: -38.51, size: 'minor' },
+  ],
+  
+  // Simulated vessel positions (will be replaced by AIS API)
+  vessels: [
+    { name: 'São Jorge', lat: -24.2, lon: -44.8, heading: 135, speed: 7.2, type: 'Longliner', status: 'Fishing', catch: 'Swordfish' },
+    { name: 'Estrela do Mar', lat: -25.1, lon: -45.5, heading: 200, speed: 5.8, type: 'Trawler', status: 'In Transit', catch: 'Tuna' },
+    { name: 'Rei do Oceano', lat: -23.5, lon: -43.2, heading: 45, speed: 0, type: 'Longliner', status: 'In Port', catch: '—' },
+    { name: 'Brisa Dourada', lat: -26.3, lon: -47.0, heading: 320, speed: 8.1, type: 'Longliner', status: 'Fishing', catch: 'Yellowtail' },
+    { name: 'Maré Alta', lat: -22.8, lon: -41.5, heading: 180, speed: 6.5, type: 'Gillnetter', status: 'Fishing', catch: 'Snapper' },
+    { name: 'D\'Ascola I', lat: -24.0, lon: -46.2, heading: 90, speed: 3.2, type: 'Longliner', status: 'Returning', catch: 'Swordfish' },
+    { name: 'Esperança', lat: -27.5, lon: -46.8, heading: 350, speed: 9.0, type: 'Trawler', status: 'Fishing', catch: 'Tuna' },
+  ],
+  
+  // Shipping route: Santos to NYC (simplified great circle approximation)
+  route: [
+    [-23.96,-46.33],[-22,-42],[-18,-38],[-12,-35],[-5,-32],
+    [5,-40],[15,-50],[25,-60],[35,-68],[40,-73],[40.7,-74]
+  ],
+  
+  init: function() {
+    this.c = document.getElementById('fleetCanvas');
+    if (!this.c) return;
+    this.x = this.c.getContext('2d');
+    this.rs();
+    var self = this;
+    window.addEventListener('resize', function() { self.rs(); });
+    
+    // Mouse interaction
+    var map = document.getElementById('fleetMap');
+    if (map) {
+      map.addEventListener('mousemove', function(e) { self.hover(e); });
+      map.addEventListener('mouseleave', function() {
+        var vi = document.getElementById('vesselInfo');
+        if (vi) vi.classList.remove('active');
+      });
+    }
+  },
+  
+  rs: function() {
+    if (!this.c) return;
+    var rect = this.c.parentElement.getBoundingClientRect();
+    var d = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = rect.width;
+    this.h = rect.height;
+    this.c.width = this.w * d;
+    this.c.height = this.h * d;
+    this.c.style.width = this.w + 'px';
+    this.c.style.height = this.h + 'px';
+    this.x.setTransform(d, 0, 0, d, 0, 0);
+  },
+  
+  // Convert lat/lon to canvas x/y
+  proj: function(lat, lon) {
+    var b = this.bounds;
+    var x = ((lon - b.lonW) / (b.lonE - b.lonW)) * this.w;
+    var y = ((b.latN - lat) / (b.latN - b.latS)) * this.h;
+    return { x: x, y: y };
+  },
+  
+  go: function() {
+    if (this.run || !this.c) return;
+    this.run = true;
+    this.lp();
+  },
+  
+  stop: function() { this.run = false; },
+  
+  lp: function() {
+    if (!this.run) return;
+    this.t += 0.008;
+    this.dr();
+    var self = this;
+    requestAnimationFrame(function() { self.lp(); });
+  },
+  
+  dr: function() {
+    var ctx = this.x, w = this.w, h = this.h, t = this.t;
+    // Clear
+    ctx.fillStyle = 'rgba(4,10,16,0.98)';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Ocean gradient
+    var grad = ctx.createRadialGradient(w*0.35, h*0.5, 0, w*0.5, h*0.5, w*0.8);
+    grad.addColorStop(0, 'rgba(13,34,64,0.35)');
+    grad.addColorStop(0.5, 'rgba(10,28,50,0.2)');
+    grad.addColorStop(1, 'rgba(4,10,16,0.05)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+    
+    // Grid lines (latitude/longitude)
+    this.drawGrid(ctx, w, h, t);
+    
+    // Depth contours (bathymetry lines)
+    this.drawDepthContours(ctx, t);
+    
+    // Coastline
+    this.drawCoast(ctx, t);
+    
+    // Shipping route
+    this.drawRoute(ctx, t);
+    
+    // Ports
+    this.drawPorts(ctx, t);
+    
+    // Vessels
+    this.drawVessels(ctx, t);
+    
+    // Wind lines (decorative)
+    this.drawWindLines(ctx, t);
+    
+    // Map border decoration
+    this.drawBorder(ctx, w, h);
+  },
+  
+  drawGrid: function(ctx, w, h, t) {
+    ctx.strokeStyle = 'rgba(201,168,76,0.04)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4, 8]);
+    var b = this.bounds;
+    // Latitude lines every 5 degrees
+    for (var lat = Math.ceil(b.latS/5)*5; lat <= b.latN; lat += 5) {
+      var p = this.proj(lat, b.lonW);
+      var p2 = this.proj(lat, b.lonE);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      // Label
+      ctx.fillStyle = 'rgba(201,168,76,0.12)';
+      ctx.font = '7px "Josefin Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(Math.abs(lat) + '°S', 4, p.y - 3);
+    }
+    // Longitude lines every 5 degrees
+    for (var lon = Math.ceil(b.lonW/5)*5; lon <= b.lonE; lon += 5) {
+      var q = this.proj(b.latN, lon);
+      var q2 = this.proj(b.latS, lon);
+      ctx.beginPath();
+      ctx.moveTo(q.x, q.y);
+      ctx.lineTo(q2.x, q2.y);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(201,168,76,0.12)';
+      ctx.font = '7px "Josefin Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(Math.abs(lon) + '°W', q.x, h - 4);
+    }
+    ctx.setLineDash([]);
+  },
+  
+  drawDepthContours: function(ctx, t) {
+    ctx.strokeStyle = 'rgba(27,58,92,0.08)';
+    ctx.lineWidth = 0.5;
+    // Simplified continental shelf contours
+    var shelf = [
+      [-10,-36],[-12,-37.5],[-15,-38],[-18,-39],[-20,-39.5],
+      [-22,-40.5],[-23,-42],[-23.5,-43.5],[-24,-45.5],[-25,-47],[-27,-47.5],[-29,-48.5],[-31,-50],[-33,-51.5]
+    ];
+    for (var offset = 0; offset < 3; offset++) {
+      ctx.beginPath();
+      for (var i = 0; i < shelf.length; i++) {
+        var s = shelf[i];
+        var p = this.proj(s[0], s[1] - offset * 1.5 + Math.sin(t + i*0.3) * 0.15);
+        i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.stroke();
+    }
+  },
+  
+  drawCoast: function(ctx, t) {
+    var coast = this.coast;
+    // Land fill
+    ctx.beginPath();
+    for (var i = 0; i < coast.length; i++) {
+      var p = this.proj(coast[i][0], coast[i][1]);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    // Close along map edge to fill land
+    var last = this.proj(coast[coast.length-1][0], coast[coast.length-1][1]);
+    var topRight = this.proj(this.bounds.latS, this.bounds.lonE);
+    ctx.lineTo(this.w, last.y);
+    ctx.lineTo(this.w, 0);
+    var first = this.proj(coast[0][0], coast[0][1]);
+    ctx.lineTo(this.w, first.y);
+    ctx.lineTo(first.x, first.y);
+    ctx.closePath();
+    
+    // Land gradient - Brazil green/gold
+    var landGrad = ctx.createLinearGradient(this.w * 0.6, 0, this.w, this.h);
+    landGrad.addColorStop(0, 'rgba(0,42,31,0.6)');
+    landGrad.addColorStop(0.5, 'rgba(0,59,46,0.5)');
+    landGrad.addColorStop(1, 'rgba(0,42,31,0.4)');
+    ctx.fillStyle = landGrad;
+    ctx.fill();
+    
+    // Coast outline
+    ctx.beginPath();
+    for (var j = 0; j < coast.length; j++) {
+      var q = this.proj(coast[j][0], coast[j][1]);
+      j === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y);
+    }
+    ctx.strokeStyle = 'rgba(201,168,76,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Glow on coast
+    ctx.strokeStyle = 'rgba(201,168,76,0.08)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    
+    // "BRAZIL" label
+    var br = this.proj(-18, -42);
+    ctx.save();
+    ctx.translate(br.x, br.y);
+    ctx.rotate(-0.3);
+    ctx.fillStyle = 'rgba(201,168,76,0.12)';
+    ctx.font = '600 ' + Math.max(11, this.w * 0.018) + 'px "Josefin Sans", sans-serif';
+    ctx.letterSpacing = '0.5em';
+    ctx.textAlign = 'center';
+    ctx.fillText('B R A Z I L', 0, 0);
+    ctx.restore();
+    
+    // "SOUTH ATLANTIC" label
+    var sa = this.proj(-28, -38);
+    ctx.save();
+    ctx.translate(sa.x, sa.y);
+    ctx.rotate(0.15);
+    ctx.fillStyle = 'rgba(139,175,196,0.08)';
+    ctx.font = '200 ' + Math.max(9, this.w * 0.012) + 'px "Josefin Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('S O U T H   A T L A N T I C', 0, 0);
+    ctx.restore();
+  },
+  
+  drawRoute: function(ctx, t) {
+    var route = this.route;
+    // Animated dashed line
+    ctx.strokeStyle = 'rgba(139,175,196,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    ctx.lineDashOffset = -t * 30;
+    ctx.beginPath();
+    for (var i = 0; i < route.length; i++) {
+      var p = this.proj(route[i][0], route[i][1]);
+      if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h) {
+        // Off map — draw to edge
+        if (i > 0) ctx.lineTo(p.x, p.y);
+        break;
+      }
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Route label
+    var mid = this.proj(route[2][0], route[2][1]);
+    if (mid.x > 0 && mid.x < this.w) {
+      ctx.fillStyle = 'rgba(139,175,196,0.15)';
+      ctx.font = '200 7px "Josefin Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('→ U.S. EAST COAST', mid.x, mid.y - 8);
+    }
+  },
+  
+  drawPorts: function(ctx, t) {
+    for (var i = 0; i < this.ports.length; i++) {
+      var port = this.ports[i];
+      var p = this.proj(port.lat, port.lon);
+      if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h) continue;
+      
+      var sz = port.size === 'major' ? 5 : 3;
+      
+      // Pulse ring for major port
+      if (port.size === 'major') {
+        var pulse = 1 + Math.sin(t * 2) * 0.3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, sz * 2 * pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,104,71,' + (0.15 * (1 - Math.sin(t*2)*0.5)) + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      
+      // Port dot
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz, 0, Math.PI * 2);
+      ctx.fillStyle = port.size === 'major' ? 'rgba(0,104,71,0.9)' : 'rgba(0,104,71,0.5)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(201,168,76,0.3)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      
+      // Label
+      ctx.fillStyle = port.size === 'major' ? 'rgba(201,168,76,0.7)' : 'rgba(201,168,76,0.35)';
+      ctx.font = (port.size === 'major' ? '600 ' : '300 ') + Math.max(8, this.w * 0.009) + 'px "Josefin Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(port.name.toUpperCase(), p.x + sz + 5, p.y + 3);
+    }
+  },
+  
+  drawVessels: function(ctx, t) {
+    for (var i = 0; i < this.vessels.length; i++) {
+      var v = this.vessels[i];
+      // Animate position slightly
+      var lat = v.lat + Math.sin(t * 0.5 + i * 1.7) * 0.05;
+      var lon = v.lon + Math.cos(t * 0.4 + i * 2.1) * 0.05;
+      var p = this.proj(lat, lon);
+      if (p.x < 0 || p.x > this.w || p.y < 0 || p.y > this.h) continue;
+      
+      // Store screen pos for hover
+      v._sx = p.x;
+      v._sy = p.y;
+      
+      // Wake trail (if moving)
+      if (v.speed > 0) {
+        var headRad = v.heading * Math.PI / 180;
+        var wakeLen = Math.min(v.speed * 3, 25);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - Math.sin(headRad) * wakeLen, p.y + Math.cos(headRad) * wakeLen);
+        ctx.strokeStyle = 'rgba(201,168,76,0.12)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      
+      // Ping ring
+      var ping = ((t * 0.8 + i * 0.5) % 2);
+      if (ping < 1) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4 + ping * 12, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(201,168,76,' + (0.3 * (1 - ping)) + ')';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      
+      // Vessel triangle
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(v.heading * Math.PI / 180);
+      ctx.beginPath();
+      ctx.moveTo(0, -5);
+      ctx.lineTo(-3, 4);
+      ctx.lineTo(3, 4);
+      ctx.closePath();
+      
+      var col = v.status === 'Fishing' ? 'rgba(201,168,76,0.9)' :
+                v.status === 'In Port' ? 'rgba(0,104,71,0.7)' :
+                'rgba(139,175,196,0.7)';
+      ctx.fillStyle = col;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+      ctx.restore();
+      
+      // Name label
+      ctx.fillStyle = 'rgba(240,235,224,0.3)';
+      ctx.font = '200 ' + Math.max(7, this.w * 0.007) + 'px "Josefin Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(v.name, p.x, p.y + 14);
+    }
+  },
+  
+  drawWindLines: function(ctx, t) {
+    ctx.strokeStyle = 'rgba(139,175,196,0.03)';
+    ctx.lineWidth = 0.5;
+    for (var i = 0; i < 8; i++) {
+      var y = this.h * (0.1 + i * 0.1) + Math.sin(t * 0.3 + i) * 10;
+      var startX = (Math.sin(t * 0.2 + i * 2) * 0.5 + 0.5) * this.w * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      for (var x = startX; x < startX + this.w * 0.2; x += 10) {
+        ctx.lineTo(x, y + Math.sin((x - startX) * 0.05 + t + i) * 3);
+      }
+      ctx.stroke();
+    }
+  },
+  
+  drawBorder: function(ctx, w, h) {
+    // Decorative corner marks
+    var L = 15;
+    ctx.strokeStyle = 'rgba(201,168,76,0.2)';
+    ctx.lineWidth = 1;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(0, L); ctx.lineTo(0, 0); ctx.lineTo(L, 0); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(w-L, 0); ctx.lineTo(w, 0); ctx.lineTo(w, L); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(0, h-L); ctx.lineTo(0, h); ctx.lineTo(L, h); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(w-L, h); ctx.lineTo(w, h); ctx.lineTo(w, h-L); ctx.stroke();
+  },
+  
+  hover: function(e) {
+    var rect = this.c.parentElement.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var vi = document.getElementById('vesselInfo');
+    var hit = null;
+    
+    for (var i = 0; i < this.vessels.length; i++) {
+      var v = this.vessels[i];
+      if (v._sx === undefined) continue;
+      var dx = mx - v._sx, dy = my - v._sy;
+      if (Math.sqrt(dx*dx + dy*dy) < 18) { hit = v; break; }
+    }
+    
+    if (hit && vi) {
+      document.getElementById('viName').textContent = hit.name;
+      document.getElementById('viDetail').textContent = hit.type + ' · ' + hit.speed + ' kts · ' + hit.catch;
+      document.getElementById('viStatus').textContent = hit.status;
+      vi.style.left = Math.min(mx + 15, this.w - 220) + 'px';
+      vi.style.top = (my - 10) + 'px';
+      vi.classList.add('active');
+    } else if (vi) {
+      vi.classList.remove('active');
+    }
+  }
+};
 </script>
 </body>
 </html>
