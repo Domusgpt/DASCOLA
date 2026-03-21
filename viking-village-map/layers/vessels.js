@@ -210,40 +210,53 @@ function drawLighthouseCompass(ctx, w, h, projFn, config, t) {
   }
 
   // --- Lighthouse silhouette (center of compass) ---
+  // Barnegat Lighthouse: RED upper half, WHITE lower half
   ctx.globalAlpha = 0.3;
 
   var lhW = 8;    // lighthouse width at base
   var lhH = 28;   // lighthouse height
   var topW = 6;    // width at top (tapers)
-  var bandH = lhH / 6; // height of each band
+  var midY = -lhH / 2 + 4; // midpoint dividing red/white
 
-  // Tower outline — tapered rectangle
+  // Full tower outline — tapered trapezoid
   ctx.beginPath();
-  ctx.moveTo(-lhW, bandH * 1);      // base left (start above center)
-  ctx.lineTo(-topW, -lhH + bandH);  // top left
-  ctx.lineTo(topW, -lhH + bandH);   // top right
-  ctx.lineTo(lhW, bandH * 1);       // base right
+  ctx.moveTo(-lhW, 8);              // base left
+  ctx.lineTo(-topW, -lhH + 4);     // top left
+  ctx.lineTo(topW, -lhH + 4);      // top right
+  ctx.lineTo(lhW, 8);              // base right
   ctx.closePath();
 
-  // Fill with white base
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.fill();
+  // WHITE lower half
+  ctx.save();
+  ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillRect(-lhW - 1, midY, (lhW + 1) * 2, lhH);
+  // RED upper half
+  ctx.fillStyle = colors.ouro.replace(/[\d.]+\)$/, '0.45)');
+  ctx.fillRect(-topW - 1, -lhH, (topW + 1) * 2 + 4, midY + lhH);
+  ctx.restore();
 
-  // Red bands — horizontal stripes
-  var bandCount = 3; // 3 red bands
-  for (var bi = 0; bi < bandCount; bi++) {
-    var bandY = bandH * 1 - (bi * 2 + 1) * bandH;  // odd bands are red
-    // Interpolate width at this height
-    var progress = 1 - (bandY - (-lhH + bandH)) / (bandH * 1 - (-lhH + bandH));
-    if (progress < 0) progress = 0;
-    if (progress > 1) progress = 1;
-    var bw = topW + (lhW - topW) * progress;
+  // Tower outline stroke
+  ctx.beginPath();
+  ctx.moveTo(-lhW, 8);
+  ctx.lineTo(-topW, -lhH + 4);
+  ctx.lineTo(topW, -lhH + 4);
+  ctx.lineTo(lhW, 8);
+  ctx.closePath();
+  ctx.strokeStyle = colors.creme;
+  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = 0.2;
+  ctx.stroke();
 
-    ctx.beginPath();
-    ctx.rect(-bw, bandY, bw * 2, bandH);
-    ctx.fillStyle = colors.ouro.replace(/[\d.]+\)$/, '0.4)');
-    ctx.fill();
-  }
+  // Dividing line between red and white halves
+  ctx.globalAlpha = 0.25;
+  var divLeftW = topW + (lhW - topW) * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(-divLeftW, midY);
+  ctx.lineTo(divLeftW, midY);
+  ctx.strokeStyle = colors.creme;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
 
   // Lantern room (top)
   var lanternY = -lhH + bandH - 4;

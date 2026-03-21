@@ -179,6 +179,72 @@
       "type": "Scalloper",
       "status": "Returning",
       "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Gipper",
+      "mmsi": null,
+      "lat": 39.68,
+      "lon": -73.85,
+      "heading": 195,
+      "speed": 3.6,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Sea Dog",
+      "mmsi": null,
+      "lat": 39.92,
+      "lon": -73.30,
+      "heading": 60,
+      "speed": 5.8,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Sea Farmer",
+      "mmsi": null,
+      "lat": 39.50,
+      "lon": -73.10,
+      "heading": 140,
+      "speed": 7.0,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Golden Tilefish"
+    },
+    {
+      "name": "F/V Frances Anne",
+      "mmsi": null,
+      "lat": 39.75,
+      "lon": -72.30,
+      "heading": 95,
+      "speed": 8.2,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Swordfish"
+    },
+    {
+      "name": "F/V Eaglet II",
+      "mmsi": null,
+      "lat": 39.45,
+      "lon": -72.80,
+      "heading": 210,
+      "speed": 6.8,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Tuna"
+    },
+    {
+      "name": "F/V Monica",
+      "mmsi": null,
+      "lat": 39.58,
+      "lon": -72.50,
+      "heading": 170,
+      "speed": 7.5,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Swordfish"
     }
   ],
   "ports": [
