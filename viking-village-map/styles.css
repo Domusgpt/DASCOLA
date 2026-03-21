@@ -1,0 +1,459 @@
+/* =============================================================================
+
+   VIKING VILLAGE FLEET MAP — Barnegat Light, NJ
+   =============================================================================
+
+   Color palette inspired by:
+     - Barnegat Lighthouse ("Old Barney"): red & white horizontal bands
+     - Turquoise green Atlantic waters off the Jersey Shore
+     - Sandy LBI beach dunes and golden hour light
+     - Night indigo deep ocean
+     - Pine Barrens evergreen forest (NJ state tree: Red Oak, but pines rule)
+
+   ─────────────────────────────────────────────────────────────────────────────
+   QUICK REBRAND GUIDE — Change these 5 variables:
+
+     --fm-accent        → Lighthouse red (#C41E3A)
+     --fm-deep          → Night indigo ocean (#0F1B3D)
+     --fm-land          → Pine Barrens green (#3A6B35)
+     --fm-text          → Beach sand cream (#D4B896)
+     --fm-font-display  → Headline font (Playfair Display)
+
+   ============================================================================= */
+
+
+/* =============================================
+   Section 1: CUSTOM PROPERTIES
+   ============================================= */
+
+:root {
+
+  /* --- Barnegat Lighthouse Red — accent ----------------------------------- */
+  --fm-accent:       #C41E3A;
+  --fm-accent-lt:    #E8364F;
+  --fm-accent-dim:   rgba(196, 30, 58, 0.08);
+
+  /* --- Night Indigo Ocean — deep background -------------------------------- */
+  --fm-deep:         #0F1B3D;
+  --fm-ocean-mid:    rgba(20, 40, 80, 0.4);
+  --fm-ocean-shelf:  #1B3A5C;
+
+  /* --- Pine Barrens Green — land, ports, in-port status -------------------- */
+  --fm-land:         #3A6B35;
+  --fm-land-dark:    #264723;
+  --fm-land-deep:    rgba(42, 71, 38, 0.95);
+
+  /* --- Beach Sand — text tones --------------------------------------------- */
+  --fm-text:         #D4B896;
+  --fm-text-warm:    #C8A882;
+  --fm-text-muted:   #3BA99C;  /* Turquoise — ocean accent for secondary info */
+
+  /* --- Status colors ------------------------------------------------------- */
+  --fm-status-fishing:   var(--fm-accent);
+  --fm-status-transit:   var(--fm-text-muted);
+  --fm-status-returning: var(--fm-text-muted);
+  --fm-status-port:      var(--fm-land);
+
+  /* --- Typography ---------------------------------------------------------- */
+  --fm-font-display: 'Playfair Display', Georgia, serif;
+  --fm-font-sans:    'Josefin Sans', sans-serif;
+
+  /* --- Layout -------------------------------------------------------------- */
+  --fm-max-width:          1400px;
+  --fm-roster-width:       220px;
+  --fm-map-ratio:          16 / 10;
+  --fm-map-ratio-mobile:   4 / 5;
+  --fm-gap:                1.5rem;
+  --fm-mobile-break:       900px;
+}
+
+
+/* =============================================
+   Section 2: LAYOUT
+   ============================================= */
+
+.fleet-section {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  background: var(--fm-deep);
+  overflow: hidden;
+}
+
+.fleet-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(27, 58, 92, 0.12), transparent 55%),
+    radial-gradient(ellipse at 70% 40%, rgba(58, 107, 53, 0.06), transparent 50%); /* Pine green */
+}
+
+.fleet-map-wrap {
+  position: relative;
+  max-width: var(--fm-max-width);
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.fleet-map-panel-wrap {
+  display: flex;
+  gap: var(--fm-gap);
+  align-items: stretch;
+}
+
+
+/* =============================================
+   Section 3: HEADER
+   ============================================= */
+
+.fleet-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+
+/* =============================================
+   Section 4: ROSTER PANEL
+   ============================================= */
+
+.fleet-roster {
+  width: var(--fm-roster-width);
+  flex-shrink: 0;
+  background: rgba(15, 27, 61, 0.85);           /* --fm-deep @ 0.85 */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(196, 30, 58, 0.08);    /* --fm-accent @ 0.08 */
+  overflow-y: auto;
+  max-height: 65vh;
+}
+
+.fleet-roster-title {
+  font-family: var(--fm-font-sans);
+  font-weight: 300;
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--fm-accent);
+  text-align: center;
+  padding: 1rem 0.8rem 0.8rem;
+  border-bottom: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
+}
+
+.roster-item {
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid rgba(196, 30, 58, 0.04); /* --fm-accent @ 0.04 */
+  cursor: default;
+  transition: background 0.3s;
+}
+
+.roster-item:hover,
+.roster-item.active {
+  background: rgba(196, 30, 58, 0.04); /* --fm-accent @ 0.04 */
+}
+
+.roster-item-name {
+  font-family: var(--fm-font-display);
+  font-size: 0.75rem;
+  color: var(--fm-accent);
+  margin-bottom: 0.2rem;
+}
+
+.roster-item-status {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-family: var(--fm-font-sans);
+  font-size: 0.42rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid rgba(58, 107, 53, 0.3); /* --fm-land @ 0.3 */
+  color: var(--fm-land);
+  margin-bottom: 0.25rem;
+}
+
+.roster-item-status.status-fishing,
+.roster-item-status.status-scalloping {
+  border-color: rgba(196, 30, 58, 0.3); /* --fm-accent @ 0.3 */
+  color: var(--fm-accent);
+}
+
+.roster-item-status.status-in-transit {
+  border-color: rgba(59, 169, 156, 0.3); /* Turquoise @ 0.3 */
+  color: var(--fm-text-muted);
+}
+
+.roster-item-status.status-returning {
+  border-color: rgba(59, 169, 156, 0.3); /* Turquoise @ 0.3 */
+  color: var(--fm-text-muted);
+}
+
+.roster-item-detail {
+  font-family: var(--fm-font-sans);
+  font-weight: 200;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: var(--fm-text-warm);
+  opacity: 0.6;
+}
+
+.roster-item-catch {
+  font-family: var(--fm-font-sans);
+  font-weight: 200;
+  font-size: 0.45rem;
+  letter-spacing: 0.1em;
+  color: var(--fm-text-warm);
+  opacity: 0.4;
+  margin-top: 0.1rem;
+}
+
+
+/* =============================================
+   Section 5: MAP CONTAINER & CANVASES
+   ============================================= */
+
+.fleet-map {
+  position: relative;
+  flex: 1;
+  aspect-ratio: var(--fm-map-ratio);
+  max-height: 65vh;
+  border: 1px solid rgba(196, 30, 58, 0.12); /* --fm-accent @ 0.12 */
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at center, var(--fm-ocean-mid), rgba(15, 27, 61, 0.95)),
+    var(--fm-deep);
+}
+
+.fleet-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
+  margin: 8px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.fleet-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.fleet-map canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#fleetCanvasDepth    { z-index: 1; }
+#fleetCanvasCurrents { z-index: 2; }
+#fleetCanvasCoast    { z-index: 3; }
+#fleetCanvasVessels  { z-index: 4; }
+#fleetCanvasAtmo     { z-index: 5; pointer-events: none; }
+
+#fleetCanvasDepth,
+#fleetCanvasCurrents,
+#fleetCanvasCoast,
+#fleetCanvasAtmo {
+  pointer-events: none;
+}
+
+
+/* =============================================
+   Section 6: VESSEL TOOLTIP
+   ============================================= */
+
+.vessel-info {
+  position: absolute;
+  z-index: 10;
+  background: rgba(15, 27, 61, 0.92);            /* --fm-deep @ 0.92 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 30, 58, 0.15);     /* --fm-accent @ 0.15 */
+  padding: 1rem 1.2rem;
+  min-width: 200px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.vessel-info.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.vessel-info h4 {
+  font-family: var(--fm-font-display);
+  font-size: 0.95rem;
+  color: var(--fm-accent);
+  margin-bottom: 0.3rem;
+}
+
+.vessel-info p {
+  font-family: var(--fm-font-sans);
+  font-weight: 200;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: var(--fm-text-warm);
+  line-height: 1.8;
+}
+
+.vessel-info .vi-status {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border: 1px solid rgba(58, 107, 53, 0.3); /* --fm-land @ 0.3 */
+  color: var(--fm-land);
+  margin-top: 0.4rem;
+}
+
+
+/* =============================================
+   Section 7: LEGEND & STATS
+   ============================================= */
+
+.fleet-legend {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.fleet-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--fm-font-sans);
+  font-weight: 200;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fm-text-warm);
+}
+
+.fleet-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid;
+}
+
+.dot-vessel {
+  background: rgba(196, 30, 58, 0.8); /* Lighthouse red @ 0.8 */
+  border-color: var(--fm-accent);
+}
+
+.dot-port {
+  background: rgba(58, 107, 53, 0.8); /* Pine green @ 0.8 */
+  border-color: var(--fm-land);
+}
+
+.dot-route {
+  background: none;
+  border-color: var(--fm-text-muted);
+  border-style: dashed;
+  width: 20px;
+  height: 0;
+  border-radius: 0;
+}
+
+.dot-fishing {
+  background: none;
+  border-color: var(--fm-accent);
+  box-shadow: 0 0 6px rgba(196, 30, 58, 0.3); /* Lighthouse red glow */
+}
+
+.fleet-stats {
+  display: flex;
+  gap: 2.5rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
+}
+
+.fleet-stat {
+  text-align: center;
+}
+
+.fleet-stat-n {
+  font-family: var(--fm-font-sans);
+  font-weight: 200;
+  font-size: 1.8rem;
+  color: var(--fm-accent);
+}
+
+.fleet-stat-l {
+  font-family: var(--fm-font-sans);
+  font-weight: 300;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fm-text-warm);
+  margin-top: 0.2rem;
+}
+
+
+/* =============================================
+   Section 8: MOBILE RESPONSIVE
+   ============================================= */
+
+@media (max-width: 900px) {
+
+  .fleet-map-panel-wrap {
+    flex-direction: column;
+  }
+
+  .fleet-roster {
+    width: 100%;
+    max-height: 25vh;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .fleet-roster-title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 0.8rem 0.4rem;
+    border-bottom: none;
+    border-right: 1px solid rgba(196, 30, 58, 0.06);
+    min-width: 28px;
+  }
+
+  .roster-item {
+    min-width: 140px;
+    border-bottom: none;
+    border-right: 1px solid rgba(196, 30, 58, 0.04);
+  }
+
+  .fleet-map {
+    aspect-ratio: var(--fm-map-ratio-mobile);
+    max-height: 55vh;
+  }
+
+  .fleet-legend {
+    gap: 1rem;
+  }
+
+  .fleet-stats {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .fleet-stat-n {
+    font-size: 1.4rem;
+  }
+}
