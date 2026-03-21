@@ -403,7 +403,7 @@ export class FleetMap {
 
     var coastLayer = cm.getLayer('coast');
     if (coastLayer.dirty) {
-      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t);
+      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t, this.renderer);
       coastLayer.dirty = false;
     }
 
@@ -425,7 +425,7 @@ export class FleetMap {
 
     var atmoLayer = cm.getLayer('atmosphere');
     if (atmoLayer.dirty) {
-      drawAtmosphere(atmoLayer.ctx, cm, this.config);
+      drawAtmosphere(atmoLayer.ctx, cm, this.config, this.theme);
       atmoLayer.dirty = false;
     }
 

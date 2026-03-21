@@ -4,8 +4,6 @@
  * Renders the coastline, land fill, labels, ports, shipping routes,
  * and a decorative cartouche.
  *
- * This layer redraws each frame when animated elements are present
- * (shipping route dashes, port pulses).
  * Canvas: fleetCanvasCoast (z-index: 2)
  *
  * Customizable via config.colors:
@@ -22,10 +20,10 @@
  *   .sans       — Sans-serif for labels
  */
 
+import { drawLabel } from '../assets/text/labels.js';
+
 /**
  * Build the smooth coastline path using quadratic bezier curves.
- * Uses midpoints between consecutive projected points as curve targets
- * so the line passes smoothly near each data point.
  *
  * @param {CanvasRenderingContext2D} ctx
  * @param {Array}    coastData — [[lat,lon], ...]
@@ -59,8 +57,8 @@ function traceCoast(ctx, coastData, projFn) {
  * Draw the coast layer.
  *
  * Supports two call signatures:
- *   drawCoast(ctx, cm, coastData, ports, routes, config, t)         — CanvasManager style
- *   drawCoast(ctx, w, h, projFn, config, t, coastData, ports, routes) — explicit style
+ *   drawCoast(ctx, cm, coastData, ports, routes, config, t, renderer)  — CanvasManager style
+ *   drawCoast(ctx, w, h, projFn, config, t, coastData, ports, routes, renderer) — explicit style
  *
  * @param {CanvasRenderingContext2D} ctx
  * @param {CanvasManager|number} cmOrW
@@ -69,12 +67,13 @@ function traceCoast(ctx, coastData, projFn) {
  * @param {Array|object} routesOrConfig
  * @param {object|number} configOrT
  * @param {number} [tOrCoastData]
+ * @param {object} [rendererArg]
  */
-export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfig, configOrT, tOrCoastData) {
-  var w, h, projFn, config, t, coastData, ports, routes;
+export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfig, configOrT, tOrCoastData, rendererArg) {
+  var w, h, projFn, config, t, coastData, ports, routes, renderer;
 
   if (typeof cmOrW === 'object' && cmOrW.w !== undefined) {
-    // CanvasManager style: (ctx, cm, coastData, ports, routes, config, t)
+    // CanvasManager style: (ctx, cm, coastData, ports, routes, config, t, renderer)
     w = cmOrW.w;
     h = cmOrW.h;
     projFn = cmOrW.proj.bind(cmOrW);
@@ -83,8 +82,9 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
     routes = routesOrConfig;
     config = configOrT;
     t = tOrCoastData;
+    renderer = rendererArg;
   } else {
-    // Explicit style: (ctx, w, h, projFn, config, t, coastData, ports, routes)
+    // Explicit style: (ctx, w, h, projFn, config, t, coastData, ports, routes, renderer)
     w = cmOrW;
     h = coastDataOrH;
     projFn = portsOrProjFn;
@@ -93,10 +93,21 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
     coastData = tOrCoastData;
     ports = arguments[7];
     routes = arguments[8];
+    renderer = arguments[9];
   }
 
   var colors = config.colors;
   var fonts  = config.fonts;
+  var theme  = (renderer && renderer.theme) || null;
+
+  // Resolve theme-driven port settings
+  var portPulseSpeed = 2.5;
+  if (theme && theme.symbols && theme.symbols.port && theme.symbols.port.pulseSpeed !== undefined) {
+    portPulseSpeed = theme.symbols.port.pulseSpeed;
+  }
+
+  // Label opts shared by all drawLabel calls in this layer
+  var labelOpts = { w: w, fonts: fonts, colors: colors, theme: theme };
 
   // ------------------------------------------------------------------
   // 1. Land fill — coastline closed along right edge of canvas
@@ -134,35 +145,21 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
   ctx.stroke();
 
   // ------------------------------------------------------------------
-  // 3. Land labels
+  // 3. Land labels — using the label system
   // ------------------------------------------------------------------
-  var labelSize = Math.max(14, Math.round(w * 0.022));
-
-  // "B R A Z I L"
-  ctx.save();
   var bz = projFn(-18, -42);
-  ctx.translate(bz.x, bz.y);
-  ctx.rotate(-0.35);
-  ctx.font         = labelSize + 'px ' + fonts.display;
-  ctx.fillStyle    = colors.coastLine;
-  ctx.globalAlpha  = 0.35;
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('B R A Z I L', 0, 0);
-  ctx.restore();
+  drawLabel(ctx, 'land-mass', 'BRAZIL', bz.x, bz.y, {
+    w: w, fonts: fonts, colors: colors, theme: theme,
+    color: colors.coastLine,
+    rotation: -0.35,
+  });
 
-  // "S O U T H   A T L A N T I C"
-  ctx.save();
   var sa = projFn(-28, -38);
-  ctx.translate(sa.x, sa.y);
-  ctx.rotate(-0.18);
-  ctx.font         = Math.round(labelSize * 0.75) + 'px ' + fonts.sans;
-  ctx.fillStyle    = colors.blade;
-  ctx.globalAlpha  = 0.08;
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('S O U T H   A T L A N T I C', 0, 0);
-  ctx.restore();
+  drawLabel(ctx, 'water-body', 'SOUTH ATLANTIC', sa.x, sa.y, {
+    w: w, fonts: fonts, colors: colors, theme: theme,
+    color: colors.blade,
+    rotation: -0.18,
+  });
 
   ctx.globalAlpha = 1;
 
@@ -192,15 +189,14 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
       }
       ctx.stroke();
 
-      // Label at the 3rd point (or last if fewer)
+      // Route label using label system
       var labelIdx = Math.min(2, rPts.length - 1);
       var rlp      = projFn(rPts[labelIdx][0], rPts[labelIdx][1]);
-      ctx.font      = Math.max(9, Math.round(w * 0.009)) + 'px ' + fonts.sans;
-      ctx.fillStyle = colors.blade;
-      ctx.globalAlpha = 0.25;
-      ctx.textAlign    = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('\u2192 ' + route.name, rlp.x + 6, rlp.y);
+      ctx.globalAlpha = 1;
+      drawLabel(ctx, 'route-label', '\u2192 ' + route.name, rlp.x + 6, rlp.y, {
+        w: w, fonts: fonts, colors: colors, theme: theme,
+        color: colors.blade,
+      });
     }
 
     ctx.setLineDash([]);
@@ -209,22 +205,20 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
   }
 
   // ------------------------------------------------------------------
-  // 5. Ports — enhanced with anchor symbol, double pulse rings,
-  //    and label glow for readability
+  // 5. Ports — using renderer.drawPort() when available,
+  //    with theme-driven pulse speed
   // ------------------------------------------------------------------
   if (ports && ports.length) {
-    var portFontSize = Math.max(9, Math.round(w * 0.009));
-
     for (var pi = 0; pi < ports.length; pi++) {
       var port   = ports[pi];
       var pp     = projFn(port.lat, port.lon);
       var major  = port.size === 'major';
       var radius = major ? 6 : 3.5;
 
-      // Pulse rings for major ports (double ring)
-      if (major) {
-        var pulse  = Math.sin(t * 2.0) * 0.5 + 0.5;
-        var pulse2 = Math.sin(t * 2.0 + 1.5) * 0.5 + 0.5;
+      // Pulse rings for major ports (theme-driven speed)
+      if (major && portPulseSpeed > 0) {
+        var pulse  = Math.sin(t * portPulseSpeed) * 0.5 + 0.5;
+        var pulse2 = Math.sin(t * portPulseSpeed + 1.5) * 0.5 + 0.5;
 
         ctx.beginPath();
         ctx.arc(pp.x, pp.y, radius + 4 + pulse * 8, 0, Math.PI * 2);
@@ -240,44 +234,51 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
         ctx.stroke();
       }
 
-      // Port glow
-      var portGlow = ctx.createRadialGradient(pp.x, pp.y, 0, pp.x, pp.y, radius * 4);
-      portGlow.addColorStop(0, colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.15)') : 'rgba(10,126,110,0.15)');
-      portGlow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle   = portGlow;
-      ctx.globalAlpha = 1;
-      ctx.fillRect(pp.x - radius * 4, pp.y - radius * 4, radius * 8, radius * 8);
+      // Use renderer.drawPort() for the port symbol if available
+      if (renderer) {
+        renderer.drawPort(ctx, port, pp, {
+          t: t,
+          colors: colors,
+          fonts: fonts,
+          w: w,
+        });
+      } else {
+        // Fallback: simple dot rendering
 
-      // Port dot with border
-      ctx.beginPath();
-      ctx.arc(pp.x, pp.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle   = colors.verde;
-      ctx.globalAlpha = 0.9;
-      ctx.fill();
-      ctx.strokeStyle = colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.4)') : 'rgba(10,126,110,0.4)';
-      ctx.lineWidth   = 0.5;
-      ctx.stroke();
+        // Port glow
+        var portGlow = ctx.createRadialGradient(pp.x, pp.y, 0, pp.x, pp.y, radius * 4);
+        portGlow.addColorStop(0, colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.15)') : 'rgba(10,126,110,0.15)');
+        portGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle   = portGlow;
+        ctx.globalAlpha = 1;
+        ctx.fillRect(pp.x - radius * 4, pp.y - radius * 4, radius * 8, radius * 8);
 
-      // Inner highlight dot
-      if (major) {
+        // Port dot with border
         ctx.beginPath();
-        ctx.arc(pp.x, pp.y, radius * 0.35, 0, Math.PI * 2);
-        ctx.fillStyle   = colors.creme || 'rgba(245,237,216,1)';
-        ctx.globalAlpha = 0.4;
+        ctx.arc(pp.x, pp.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle   = colors.verde;
+        ctx.globalAlpha = 0.9;
         ctx.fill();
+        ctx.strokeStyle = colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.4)') : 'rgba(10,126,110,0.4)';
+        ctx.lineWidth   = 0.5;
+        ctx.stroke();
+
+        // Inner highlight dot for major ports
+        if (major) {
+          ctx.beginPath();
+          ctx.arc(pp.x, pp.y, radius * 0.35, 0, Math.PI * 2);
+          ctx.fillStyle   = colors.creme || 'rgba(245,237,216,1)';
+          ctx.globalAlpha = 0.4;
+          ctx.fill();
+        }
       }
 
-      // Port label with shadow for readability
-      ctx.save();
-      ctx.font         = portFontSize + 'px ' + fonts.sans;
-      ctx.textAlign    = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor  = 'rgba(0,0,0,0.6)';
-      ctx.shadowBlur   = 3;
-      ctx.fillStyle    = colors.verde;
-      ctx.globalAlpha  = 0.75;
-      ctx.fillText(port.name.toUpperCase(), pp.x + radius + 6, pp.y);
-      ctx.restore();
+      // Port label using label system
+      ctx.globalAlpha = 1;
+      drawLabel(ctx, 'port-name', port.name, pp.x + radius + 6, pp.y, {
+        w: w, fonts: fonts, colors: colors, theme: theme,
+        color: colors.verde,
+      });
     }
 
     ctx.globalAlpha = 1;
@@ -285,6 +286,7 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
 
   // ------------------------------------------------------------------
   // 6. Cartouche — ornate decorative title frame (top-left)
+  //    Uses drawLabel for title and subtitle text
   // ------------------------------------------------------------------
   if (config.title) {
     ctx.save();
@@ -317,13 +319,9 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
     var ctickLen = 10;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    // top-left
     ctx.moveTo(ccx - 2, ccy + ctickLen);  ctx.lineTo(ccx - 2, ccy - 2);  ctx.lineTo(ccx + ctickLen, ccy - 2);
-    // top-right
     ctx.moveTo(ccx + ccw - ctickLen, ccy - 2);  ctx.lineTo(ccx + ccw + 2, ccy - 2);  ctx.lineTo(ccx + ccw + 2, ccy + ctickLen);
-    // bottom-left
     ctx.moveTo(ccx - 2, ccy + cch - ctickLen);  ctx.lineTo(ccx - 2, ccy + cch + 2);  ctx.lineTo(ccx + ctickLen, ccy + cch + 2);
-    // bottom-right
     ctx.moveTo(ccx + ccw - ctickLen, ccy + cch + 2);  ctx.lineTo(ccx + ccw + 2, ccy + cch + 2);  ctx.lineTo(ccx + ccw + 2, ccy + cch - ctickLen);
     ctx.stroke();
 
@@ -348,21 +346,19 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
     ctx.fillStyle = colors.ouro;
     ctx.fill();
 
-    // Title text
-    var ctitleSize = Math.max(14, Math.round(ccw * 0.07));
-    ctx.font         = ctitleSize + 'px ' + fonts.display;
-    ctx.fillStyle    = colors.ouro;
-    ctx.globalAlpha  = 0.7;
-    ctx.textAlign    = 'left';
-    ctx.textBaseline = 'top';
-    ctx.fillText(config.title, ccx + cpad, ccy + cpad);
+    // Title text via label system
+    ctx.globalAlpha = 1;
+    drawLabel(ctx, 'title', config.title, ccx + cpad, ccy + cpad, {
+      w: w, fonts: fonts, colors: colors, theme: theme,
+      color: colors.ouro,
+    });
 
-    // Subtitle
+    // Subtitle via label system
     if (config.subtitle) {
-      var csubSize = Math.max(9, Math.round(ctitleSize * 0.6));
-      ctx.font        = '300 ' + csubSize + 'px ' + fonts.sans;
-      ctx.globalAlpha = 0.4;
-      ctx.fillText(config.subtitle, ccx + cpad, lineY + 8);
+      drawLabel(ctx, 'subtitle', config.subtitle, ccx + cpad, lineY + 8, {
+        w: w, fonts: fonts, colors: colors, theme: theme,
+        color: colors.ouro,
+      });
     }
 
     ctx.restore();
