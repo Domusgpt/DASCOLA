@@ -423,32 +423,16 @@
        ═══════════════════════════════════════════════ -->
   <section class="about-strip" id="about">
     <div class="inner fade-in">
-      <span class="section-label">Our Heritage</span>
-      <h2>Three Generations on the South Atlantic</h2>
+      <span class="section-label">About</span>
+      <h2>D'Ascola Seafood</h2>
       <p>
-        From the port of Santos, the D'Ascola family has fished the waters of the
-        South Atlantic for over sixty years. Our fleet of seven vessels ranges from
-        traditional longliners pursuing swordfish to modern trawlers tracking tuna
-        along the Brazilian continental shelf. Every captain, every crew, every
-        catch carries the pride of a family that lives and breathes the sea.
+        <!-- Placeholder — replace with real company copy -->
+        Premium seafood sourced from the South Atlantic. Our fleet operates
+        across the Brazilian coast, from Santos to Salvador, bringing the
+        finest catch to market every day.
       </p>
-      <div class="stat-row">
-        <div class="stat-item">
-          <div class="num">7</div>
-          <div class="label">Active Vessels</div>
-        </div>
-        <div class="stat-item">
-          <div class="num">62</div>
-          <div class="label">Years at Sea</div>
-        </div>
-        <div class="stat-item">
-          <div class="num">6</div>
-          <div class="label">Ports of Call</div>
-        </div>
-        <div class="stat-item">
-          <div class="num">24/7</div>
-          <div class="label">Fleet Tracking</div>
-        </div>
+      <div class="stat-row" id="aboutStats">
+        <!-- Stats populated dynamically from vessel data -->
       </div>
     </div>
   </section>
@@ -550,14 +534,12 @@
        ═══════════════════════════════════════════════ -->
   <footer class="site-footer">
     <div class="footer-brand">D'Ascola Seafood</div>
-    <div class="footer-tagline">Santos, Brazil &mdash; Since 1964</div>
+    <div class="footer-tagline">Fleet Operations</div>
     <div class="footer-links">
       <a href="#fleet">Fleet Map</a>
-      <a href="#about">Our Story</a>
-      <a href="#">Sustainability</a>
-      <a href="#">Contact</a>
+      <a href="#about">About</a>
     </div>
-    <div class="footer-copy">&copy; 2026 D'Ascola Seafood Ltd. All rights reserved.</div>
+    <div class="footer-copy">&copy; 2026 D'Ascola Seafood. All rights reserved.</div>
   </footer>
 
   <!-- ═══════════════════════════════════════════════
@@ -625,9 +607,10 @@
       observer.observe(el);
     });
 
-    // ── Update stats from vessel data ──
+    // ── Build stats dynamically from actual data ──
     function updateStats() {
       var vessels = data.vessels;
+      var ports = data.ports;
       var counts = { total: vessels.length, fishing: 0, transit: 0, port: 0, returning: 0 };
       vessels.forEach(function(v) {
         var s = (v.status || '').toLowerCase();
@@ -636,11 +619,23 @@
         else if (s === 'in port') counts.port++;
         else if (s === 'returning') counts.returning++;
       });
+
+      // Fleet stats bar (below map)
       document.getElementById('statTotal').textContent = counts.total;
       document.getElementById('statFishing').textContent = counts.fishing;
       document.getElementById('statTransit').textContent = counts.transit;
       document.getElementById('statPort').textContent = counts.port;
       document.getElementById('statReturning').textContent = counts.returning;
+
+      // About section stats (derived from actual data)
+      var aboutEl = document.getElementById('aboutStats');
+      if (aboutEl) {
+        aboutEl.innerHTML =
+          '<div class="stat-item"><div class="num">' + vessels.length + '</div><div class="label">Active Vessels</div></div>' +
+          '<div class="stat-item"><div class="num">' + ports.length + '</div><div class="label">Ports</div></div>' +
+          '<div class="stat-item"><div class="num">' + (data.routes ? data.routes.length : 0) + '</div><div class="label">Routes</div></div>' +
+          '<div class="stat-item"><div class="num">24/7</div><div class="label">Fleet Tracking</div></div>';
+      }
     }
     updateStats();
   </script>
