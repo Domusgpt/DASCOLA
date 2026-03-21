@@ -1090,6 +1090,9 @@ body {
    THE SOUTHERN BRAZIL FLEET - MAP SECTION
    ═══════════════════════════════════════════ */
 
+/* ============================================
+   FLEET SECTION — Multi-Canvas Parallax Map
+   ============================================ */
 .fleet-section {
   position: relative;
   z-index: 5;
@@ -1106,10 +1109,9 @@ body {
     radial-gradient(ellipse at 70% 40%, rgba(0,104,71,0.08), transparent 50%);
 }
 
-/* Parchment map container */
 .fleet-map-wrap {
   position: relative;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 3rem 2rem;
 }
@@ -1121,10 +1123,86 @@ body {
   z-index: 2;
 }
 
+/* Panel layout: roster + map side by side */
+.fleet-map-panel-wrap {
+  display: flex;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* Side panel: vessel roster */
+.fleet-roster {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(4,10,16,0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,168,76,0.08);
+  overflow-y: auto;
+  max-height: 65vh;
+}
+.fleet-roster-title {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  font-size: 0.55rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  text-align: center;
+  padding: 1rem 0.8rem 0.8rem;
+  border-bottom: 1px solid rgba(201,168,76,0.06);
+}
+.roster-item {
+  padding: 0.7rem 0.8rem;
+  border-bottom: 1px solid rgba(201,168,76,0.04);
+  cursor: default;
+  transition: background 0.3s;
+}
+.roster-item:hover, .roster-item.active {
+  background: rgba(201,168,76,0.04);
+}
+.roster-item-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 0.75rem;
+  color: var(--ouro);
+  margin-bottom: 0.2rem;
+}
+.roster-item-status {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 0.42rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0,104,71,0.3);
+  color: var(--verde-b);
+  margin-bottom: 0.25rem;
+}
+.roster-item-status.status-fishing { border-color: rgba(201,168,76,0.3); color: var(--ouro); }
+.roster-item-status.status-in-transit { border-color: rgba(139,175,196,0.3); color: var(--blade); }
+.roster-item-status.status-returning { border-color: rgba(139,175,196,0.3); color: var(--blade); }
+.roster-item-detail {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 200;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: var(--creme-w);
+  opacity: 0.6;
+}
+.roster-item-catch {
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 200;
+  font-size: 0.45rem;
+  letter-spacing: 0.1em;
+  color: var(--creme-w);
+  opacity: 0.4;
+  margin-top: 0.1rem;
+}
+
 /* Map canvas container */
 .fleet-map {
   position: relative;
-  width: 100%;
+  flex: 1;
   aspect-ratio: 16 / 10;
   max-height: 65vh;
   border: 1px solid rgba(201,168,76,0.12);
@@ -1139,7 +1217,7 @@ body {
   inset: 0;
   border: 1px solid rgba(201,168,76,0.06);
   margin: 8px;
-  z-index: 1;
+  z-index: 6;
   pointer-events: none;
 }
 .fleet-map::after {
@@ -1148,14 +1226,24 @@ body {
   inset: 0;
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   opacity: 0.03;
-  z-index: 2;
+  z-index: 7;
   pointer-events: none;
 }
-#fleetCanvas {
+
+/* Multi-canvas stacking */
+.fleet-map canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+#fleetCanvasDepth    { z-index: 1; }
+#fleetCanvasCurrents { z-index: 2; }
+#fleetCanvasCoast    { z-index: 3; }
+#fleetCanvasVessels  { z-index: 4; }
+#fleetCanvasAtmo     { z-index: 5; pointer-events: none; }
+#fleetCanvasDepth, #fleetCanvasCurrents, #fleetCanvasCoast, #fleetCanvasAtmo {
+  pointer-events: none;
 }
 
 /* Map legend */
@@ -1186,17 +1274,7 @@ body {
 .dot-vessel { background: rgba(201,168,76,0.8); border-color: var(--ouro); }
 .dot-port { background: rgba(0,104,71,0.8); border-color: var(--verde-b); }
 .dot-route { background: none; border-color: var(--blade); border-style: dashed; width: 20px; height: 0; border-radius: 0; }
-
-/* Compass rose */
-.compass-rose {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 80px;
-  height: 80px;
-  z-index: 3;
-  opacity: 0.5;
-}
+.dot-fishing { background: none; border-color: var(--ouro); box-shadow: 0 0 6px rgba(201,168,76,0.3); }
 
 /* Vessel info tooltip */
 .vessel-info {
@@ -1251,9 +1329,7 @@ body {
   padding-top: 1.5rem;
   border-top: 1px solid rgba(201,168,76,0.06);
 }
-.fleet-stat {
-  text-align: center;
-}
+.fleet-stat { text-align: center; }
 .fleet-stat-n {
   font-family: 'Josefin Sans', sans-serif;
   font-weight: 200;
@@ -1272,11 +1348,32 @@ body {
 
 /* Mobile responsive for fleet */
 @media (max-width: 900px) {
+  .fleet-map-panel-wrap { flex-direction: column; }
+  .fleet-roster {
+    width: 100%;
+    max-height: 25vh;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .fleet-roster-title {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    padding: 0.8rem 0.4rem;
+    border-bottom: none;
+    border-right: 1px solid rgba(201,168,76,0.06);
+    min-width: 28px;
+  }
+  .roster-item {
+    min-width: 140px;
+    border-bottom: none;
+    border-right: 1px solid rgba(201,168,76,0.04);
+  }
   .fleet-map { aspect-ratio: 4 / 5; max-height: 55vh; }
   .fleet-legend { gap: 1rem; }
   .fleet-stats { gap: 1.5rem; flex-wrap: wrap; }
   .fleet-stat-n { font-size: 1.4rem; }
-  .compass-rose { width: 50px; height: 50px; bottom: 10px; right: 10px; }
   .acc::before, .acc::after { width: 18px; }
 }
 </style>
@@ -1569,40 +1666,32 @@ body {
         <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
         <p class="stx stx-l" id="flP">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
       </div>
-      <div class="fleet-map" id="fleetMap">
-        <canvas id="fleetCanvas"></canvas>
-        <!-- Compass Rose SVG -->
-        <svg class="compass-rose" viewBox="0 0 100 100" fill="none">
-          <circle cx="50" cy="50" r="45" stroke="rgba(201,168,76,0.2)" stroke-width="0.5"/>
-          <circle cx="50" cy="50" r="35" stroke="rgba(201,168,76,0.1)" stroke-width="0.3"/>
-          <circle cx="50" cy="50" r="3" fill="rgba(201,168,76,0.4)"/>
-          <!-- Cardinal points -->
-          <path d="M50 5 L53 20 L50 15 L47 20Z" fill="rgba(201,168,76,0.6)"/>
-          <path d="M50 95 L53 80 L50 85 L47 80Z" fill="rgba(201,168,76,0.25)"/>
-          <path d="M5 50 L20 47 L15 50 L20 53Z" fill="rgba(201,168,76,0.25)"/>
-          <path d="M95 50 L80 47 L85 50 L80 53Z" fill="rgba(201,168,76,0.25)"/>
-          <!-- Intercardinals -->
-          <path d="M19 19 L30 28 L26 26 L28 30Z" fill="rgba(201,168,76,0.15)"/>
-          <path d="M81 19 L70 28 L74 26 L72 30Z" fill="rgba(201,168,76,0.15)"/>
-          <path d="M19 81 L30 72 L26 74 L28 70Z" fill="rgba(201,168,76,0.15)"/>
-          <path d="M81 81 L70 72 L74 74 L72 70Z" fill="rgba(201,168,76,0.15)"/>
-          <!-- Letters -->
-          <text x="50" y="3" text-anchor="middle" fill="rgba(201,168,76,0.5)" font-family="Josefin Sans" font-size="5" font-weight="200">N</text>
-          <text x="50" y="99" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">S</text>
-          <text x="2" y="52" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">W</text>
-          <text x="98" y="52" text-anchor="middle" fill="rgba(201,168,76,0.3)" font-family="Josefin Sans" font-size="5" font-weight="200">E</text>
-        </svg>
-        <!-- Vessel Info Tooltip -->
-        <div class="vessel-info" id="vesselInfo">
-          <h4 id="viName">—</h4>
-          <p id="viDetail">—</p>
-          <span class="vi-status" id="viStatus">—</span>
+      <div class="fleet-map-panel-wrap">
+        <!-- Side Panel: Vessel Roster -->
+        <aside class="fleet-roster" id="fleetRoster">
+          <div class="fleet-roster-title">Vessel Roster</div>
+          <div class="fleet-roster-list" id="rosterList"></div>
+        </aside>
+        <!-- Map Container: 5 parallax canvases -->
+        <div class="fleet-map" id="fleetMap">
+          <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasCurrents"></canvas>
+          <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasVessels"></canvas>
+          <canvas id="fleetCanvasAtmo"></canvas>
+          <!-- Vessel Info Tooltip -->
+          <div class="vessel-info" id="vesselInfo">
+            <h4 id="viName">—</h4>
+            <p id="viDetail">—</p>
+            <span class="vi-status" id="viStatus">—</span>
+          </div>
         </div>
       </div>
       <div class="fleet-legend" id="flLeg">
         <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
         <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
         <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
       </div>
       <div class="fleet-stats" id="flSt">
         <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
@@ -1993,6 +2082,7 @@ function initFleetAnimations() {
   Fl.fromTo('#flH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
   Fl.fromTo('#flP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
   Fl.fromTo('#fleetMap', { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.1 }, 0.08);
+  Fl.fromTo('#fleetRoster', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.08 }, 0.12);
   Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.16);
   Fl.fromTo('#flSt', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0.18);
   Fl.to({}, { duration: 0.3 });
