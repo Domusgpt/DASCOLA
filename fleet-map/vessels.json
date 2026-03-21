@@ -3,35 +3,36 @@
     "description": "D'Ascola Seafood fleet vessel data. Edit this file to add, remove, or update vessels.",
     "version": "1.0",
     "fields": {
-      "name": "Display name of the vessel.",
-      "mmsi": "Maritime Mobile Service Identity number (for AIS tracking). Set to null if not tracked via AIS.",
+      "name": "Display name of the vessel",
+      "mmsi": "Maritime Mobile Service Identity number (for AIS tracking). Set to null if not tracked.",
       "lat": "Current latitude in decimal degrees. Negative = south of equator.",
       "lon": "Current longitude in decimal degrees. Negative = west of prime meridian.",
       "heading": "Heading in degrees. 0 = north, 90 = east, 180 = south, 270 = west.",
       "speed": "Speed in knots. 0 = stationary.",
       "type": "Vessel type: 'Longliner', 'Trawler', 'Gillnetter', 'Seiner', etc.",
-      "status": "Current status: 'Fishing', 'In Transit', 'In Port', 'Returning'.",
-      "catch": "Current or last catch species. Use '\u2014' (em dash) if none."
+      "status": "Current status: 'Fishing', 'In Transit', 'In Port', 'Returning'",
+      "catch": "Current or last catch species. Use '\u2014' if none."
     },
     "portFields": {
-      "name": "Display name of the port.",
-      "lat": "Port latitude in decimal degrees.",
-      "lon": "Port longitude in decimal degrees.",
-      "size": "Port size: 'major' (home port, larger icon) or 'minor' (smaller icon)."
+      "name": "Display name of the port",
+      "lat": "Port latitude in decimal degrees",
+      "lon": "Port longitude in decimal degrees",
+      "size": "'major' (home port, shown larger) or 'minor' (secondary port)"
     },
     "routeFields": {
-      "name": "Display name of the shipping route.",
-      "points": "Array of [lat, lon] waypoints defining the route path."
+      "name": "Display name of the shipping route",
+      "points": "Array of [lat, lon] waypoints defining the route path"
     },
     "howToUpdate": [
-      "1. To ADD a vessel: copy an existing vessel object and modify the values.",
-      "2. To REMOVE a vessel: delete the vessel object from the 'vessels' array.",
-      "3. To CHANGE position: update lat, lon, heading, and speed values.",
-      "4. To CHANGE status: set status to one of: 'Fishing', 'In Transit', 'In Port', 'Returning'.",
-      "5. After editing, save this file and refresh the page (or call map.updateVessels()).",
-      "6. For live AIS tracking, set the mmsi field and configure aisEndpoint in the map config."
+      "1. To ADD a vessel: Copy an existing vessel object and modify the values",
+      "2. To REMOVE a vessel: Delete the vessel object from the 'vessels' array",
+      "3. To CHANGE position: Update lat, lon, heading, speed values",
+      "4. To CHANGE status: Set status to one of: 'Fishing', 'In Transit', 'In Port', 'Returning'",
+      "5. After editing, save this file and refresh the page (or call map.updateVessels())",
+      "6. For live AIS tracking, set the mmsi field and configure aisEndpoint in the map config"
     ]
   },
+
   "vessels": [
     {
       "name": "São Jorge",
@@ -111,6 +112,7 @@
       "catch": "Tuna"
     }
   ],
+
   "ports": [
     {
       "name": "Santos",
@@ -149,6 +151,7 @@
       "size": "minor"
     }
   ],
+
   "routes": [
     {
       "name": "Santos to NYC",
