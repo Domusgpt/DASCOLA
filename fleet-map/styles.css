@@ -443,16 +443,18 @@
   border: 1px solid;
 }
 
-/* Vessel dot: filled gold circle. */
+/* Vessel dot: filled accent circle. */
 .dot-vessel {
-  background: rgba(201, 168, 76, 0.8); /* --fm-accent @ 0.8 */
+  background: var(--fm-accent);
   border-color: var(--fm-accent);
+  opacity: 0.8;
 }
 
-/* Port dot: filled green circle. */
+/* Port dot: filled land/teal circle. */
 .dot-port {
-  background: rgba(0, 104, 71, 0.8); /* --fm-land @ 0.8 */
+  background: var(--fm-land);
   border-color: var(--fm-land);
+  opacity: 0.8;
 }
 
 /* Route indicator: a short dashed line instead of a dot.

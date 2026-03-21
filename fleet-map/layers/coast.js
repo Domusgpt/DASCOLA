@@ -209,7 +209,8 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
   }
 
   // ------------------------------------------------------------------
-  // 5. Ports
+  // 5. Ports — enhanced with anchor symbol, double pulse rings,
+  //    and label glow for readability
   // ------------------------------------------------------------------
   if (ports && ports.length) {
     var portFontSize = Math.max(9, Math.round(w * 0.009));
@@ -218,90 +219,150 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
       var port   = ports[pi];
       var pp     = projFn(port.lat, port.lon);
       var major  = port.size === 'major';
-      var radius = major ? 5 : 3;
+      var radius = major ? 6 : 3.5;
 
-      // Pulse ring for major ports
+      // Pulse rings for major ports (double ring)
       if (major) {
-        var pulse = Math.sin(t * 2.5) * 0.5 + 0.5; // 0-1
+        var pulse  = Math.sin(t * 2.0) * 0.5 + 0.5;
+        var pulse2 = Math.sin(t * 2.0 + 1.5) * 0.5 + 0.5;
+
         ctx.beginPath();
-        ctx.arc(pp.x, pp.y, radius + 4 + pulse * 6, 0, Math.PI * 2);
+        ctx.arc(pp.x, pp.y, radius + 4 + pulse * 8, 0, Math.PI * 2);
         ctx.strokeStyle = colors.verde;
-        ctx.globalAlpha = 0.15 * (1 - pulse);
+        ctx.globalAlpha = 0.18 * (1 - pulse);
         ctx.lineWidth   = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(pp.x, pp.y, radius + 2 + pulse2 * 5, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.1 * (1 - pulse2);
+        ctx.lineWidth   = 0.5;
         ctx.stroke();
       }
 
-      // Port dot
+      // Port glow
+      var portGlow = ctx.createRadialGradient(pp.x, pp.y, 0, pp.x, pp.y, radius * 4);
+      portGlow.addColorStop(0, colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.15)') : 'rgba(10,126,110,0.15)');
+      portGlow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle   = portGlow;
+      ctx.globalAlpha = 1;
+      ctx.fillRect(pp.x - radius * 4, pp.y - radius * 4, radius * 8, radius * 8);
+
+      // Port dot with border
       ctx.beginPath();
       ctx.arc(pp.x, pp.y, radius, 0, Math.PI * 2);
       ctx.fillStyle   = colors.verde;
-      ctx.globalAlpha = 0.85;
+      ctx.globalAlpha = 0.9;
       ctx.fill();
+      ctx.strokeStyle = colors.verde.replace ? colors.verde.replace(/[\d.]+\)$/, '0.4)') : 'rgba(10,126,110,0.4)';
+      ctx.lineWidth   = 0.5;
+      ctx.stroke();
 
-      // Port label
+      // Inner highlight dot
+      if (major) {
+        ctx.beginPath();
+        ctx.arc(pp.x, pp.y, radius * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle   = colors.creme || 'rgba(245,237,216,1)';
+        ctx.globalAlpha = 0.4;
+        ctx.fill();
+      }
+
+      // Port label with shadow for readability
+      ctx.save();
       ctx.font         = portFontSize + 'px ' + fonts.sans;
-      ctx.fillStyle    = colors.verde;
-      ctx.globalAlpha  = 0.65;
       ctx.textAlign    = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(port.name.toUpperCase(), pp.x + radius + 5, pp.y);
+      ctx.shadowColor  = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur   = 3;
+      ctx.fillStyle    = colors.verde;
+      ctx.globalAlpha  = 0.75;
+      ctx.fillText(port.name.toUpperCase(), pp.x + radius + 6, pp.y);
+      ctx.restore();
     }
 
     ctx.globalAlpha = 1;
   }
 
   // ------------------------------------------------------------------
-  // 6. Cartouche — decorative title frame (top-left)
+  // 6. Cartouche — ornate decorative title frame (top-left)
   // ------------------------------------------------------------------
   if (config.title) {
     ctx.save();
 
-    var cx  = 24;
-    var cy  = 24;
-    var cw  = Math.min(260, w * 0.28);
-    var ch  = config.subtitle ? 68 : 48;
-    var pad = 14;
+    var ccx = 20;
+    var ccy = 20;
+    var ccw = Math.min(280, w * 0.3);
+    var cch = config.subtitle ? 78 : 52;
+    var cpad = 16;
 
-    ctx.globalAlpha = 0.5;
+    // Background fill — semi-transparent dark panel
+    ctx.fillStyle   = colors.deep || 'rgba(3,8,16,1)';
+    ctx.globalAlpha = 0.35;
+    ctx.fillRect(ccx + 2, ccy + 2, ccw - 4, cch - 4);
+
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = colors.ouro;
 
     // Outer border
-    ctx.strokeStyle = colors.ouro;
-    ctx.lineWidth   = 1.5;
-    ctx.strokeRect(cx, cy, cw, ch);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(ccx, ccy, ccw, cch);
 
     // Inner border (double-line effect)
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(cx + 4, cy + 4, cw - 8, ch - 8);
+    ctx.lineWidth = 0.4;
+    ctx.globalAlpha = 0.35;
+    ctx.strokeRect(ccx + 5, ccy + 5, ccw - 10, cch - 10);
 
-    // Corner ornaments — small diagonal ticks
-    var tickLen = 6;
+    // Corner ornaments — L-shaped corner brackets
+    ctx.globalAlpha = 0.55;
+    var ctickLen = 10;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     // top-left
-    ctx.moveTo(cx, cy + tickLen);       ctx.lineTo(cx, cy);       ctx.lineTo(cx + tickLen, cy);
+    ctx.moveTo(ccx - 2, ccy + ctickLen);  ctx.lineTo(ccx - 2, ccy - 2);  ctx.lineTo(ccx + ctickLen, ccy - 2);
     // top-right
-    ctx.moveTo(cx + cw - tickLen, cy);  ctx.lineTo(cx + cw, cy);  ctx.lineTo(cx + cw, cy + tickLen);
+    ctx.moveTo(ccx + ccw - ctickLen, ccy - 2);  ctx.lineTo(ccx + ccw + 2, ccy - 2);  ctx.lineTo(ccx + ccw + 2, ccy + ctickLen);
     // bottom-left
-    ctx.moveTo(cx, cy + ch - tickLen);  ctx.lineTo(cx, cy + ch);  ctx.lineTo(cx + tickLen, cy + ch);
+    ctx.moveTo(ccx - 2, ccy + cch - ctickLen);  ctx.lineTo(ccx - 2, ccy + cch + 2);  ctx.lineTo(ccx + ctickLen, ccy + cch + 2);
     // bottom-right
-    ctx.moveTo(cx + cw - tickLen, cy + ch); ctx.lineTo(cx + cw, cy + ch); ctx.lineTo(cx + cw, cy + ch - tickLen);
-    ctx.lineWidth = 2;
+    ctx.moveTo(ccx + ccw - ctickLen, ccy + cch + 2);  ctx.lineTo(ccx + ccw + 2, ccy + cch + 2);  ctx.lineTo(ccx + ccw + 2, ccy + cch - ctickLen);
     ctx.stroke();
 
+    // Decorative line under title
+    ctx.globalAlpha = 0.2;
+    ctx.lineWidth   = 0.5;
+    var lineY = ccy + cpad + Math.max(14, Math.round(ccw * 0.07)) + 4;
+    ctx.beginPath();
+    ctx.moveTo(ccx + cpad, lineY);
+    ctx.lineTo(ccx + ccw - cpad, lineY);
+    ctx.stroke();
+
+    // Small diamond accent at line center
+    var diamX = ccx + ccw * 0.5;
+    ctx.globalAlpha = 0.25;
+    ctx.beginPath();
+    ctx.moveTo(diamX, lineY - 3);
+    ctx.lineTo(diamX + 3, lineY);
+    ctx.lineTo(diamX, lineY + 3);
+    ctx.lineTo(diamX - 3, lineY);
+    ctx.closePath();
+    ctx.fillStyle = colors.ouro;
+    ctx.fill();
+
     // Title text
-    var titleSize = Math.max(13, Math.round(cw * 0.07));
-    ctx.font         = titleSize + 'px ' + fonts.display;
+    var ctitleSize = Math.max(14, Math.round(ccw * 0.07));
+    ctx.font         = ctitleSize + 'px ' + fonts.display;
     ctx.fillStyle    = colors.ouro;
-    ctx.globalAlpha  = 0.6;
+    ctx.globalAlpha  = 0.7;
     ctx.textAlign    = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(config.title, cx + pad, cy + pad);
+    ctx.fillText(config.title, ccx + cpad, ccy + cpad);
 
     // Subtitle
     if (config.subtitle) {
-      var subSize = Math.max(9, Math.round(titleSize * 0.65));
-      ctx.font        = subSize + 'px ' + fonts.sans;
+      var csubSize = Math.max(9, Math.round(ctitleSize * 0.6));
+      ctx.font        = '300 ' + csubSize + 'px ' + fonts.sans;
       ctx.globalAlpha = 0.4;
-      ctx.fillText(config.subtitle, cx + pad, cy + pad + titleSize + 6);
+      ctx.fillText(config.subtitle, ccx + cpad, lineY + 8);
     }
 
     ctx.restore();

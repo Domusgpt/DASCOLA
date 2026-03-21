@@ -27,6 +27,7 @@ import { TREASURE_MAP }     from './themes/treasure-map.js';
 import { TACTICAL }         from './themes/tactical.js';
 import { MINIMAL }          from './themes/minimal.js';
 import { TROPICAL }         from './themes/tropical.js';
+import { DASCOLA }          from './themes/dascola.js';
 
 export class AssetRegistry {
   constructor() {
@@ -143,6 +144,7 @@ export function createDefaultRegistry() {
   reg.registerTheme(TACTICAL);
   reg.registerTheme(MINIMAL);
   reg.registerTheme(TROPICAL);
+  reg.registerTheme(DASCOLA);
 
   return reg;
 }

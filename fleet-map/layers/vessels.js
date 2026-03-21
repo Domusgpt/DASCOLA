@@ -85,22 +85,35 @@ export function drawVessels(ctx, cmOrW, vesselsOrH, config, t, renderer) {
   var i, v, sp;
 
   // ------------------------------------------------------------------
-  // 2. Fishing zone halos
+  // 2. Fishing zone halos — dual-layer glow
   // ------------------------------------------------------------------
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
     if (v.status !== 'Fishing') continue;
 
     sp = projFn(v.lat, v.lon);
-    var haloRadius = 32 + Math.sin(t * 1.5 + i) * 6;
+    var haloRadius = 38 + Math.sin(t * 1.2 + i) * 8;
+    var innerHalo  = 18 + Math.sin(t * 2.0 + i * 1.3) * 4;
 
+    // Outer glow
     var haloGrad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, haloRadius);
-    haloGrad.addColorStop(0, colors.ouro.replace(/[\d.]+\)$/, '0.08)'));
+    haloGrad.addColorStop(0, colors.ouro.replace(/[\d.]+\)$/, '0.06)'));
+    haloGrad.addColorStop(0.5, colors.ouro.replace(/[\d.]+\)$/, '0.03)'));
     haloGrad.addColorStop(1, colors.ouro.replace(/[\d.]+\)$/, '0)'));
 
     ctx.fillStyle = haloGrad;
     ctx.beginPath();
     ctx.arc(sp.x, sp.y, haloRadius, 0, TAU);
+    ctx.fill();
+
+    // Inner warm glow
+    var innerGrad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, innerHalo);
+    innerGrad.addColorStop(0, colors.ouro.replace(/[\d.]+\)$/, '0.12)'));
+    innerGrad.addColorStop(1, colors.ouro.replace(/[\d.]+\)$/, '0)'));
+
+    ctx.fillStyle = innerGrad;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, innerHalo, 0, TAU);
     ctx.fill();
   }
 
@@ -198,14 +211,20 @@ export function drawVessels(ctx, cmOrW, vesselsOrH, config, t, renderer) {
     }
 
     // ------------------------------------------------------------------
-    // 6. Name labels
+    // 6. Name labels — with subtle glow for readability
     // ------------------------------------------------------------------
     var nameFontSize = Math.max(8, Math.round(w * 0.007));
     ctx.font         = nameFontSize + 'px ' + fonts.sans;
-    ctx.fillStyle    = colors.creme.replace(/[\d.]+\)$/, '0.3)');
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(v.name, sp.x, sp.y + 8);
+
+    // Text shadow/glow for readability
+    ctx.save();
+    ctx.shadowColor  = colors.deep || 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur   = 4;
+    ctx.fillStyle    = colors.creme.replace(/[\d.]+\)$/, '0.45)');
+    ctx.fillText(v.name, sp.x, sp.y + 10);
+    ctx.restore();
   }
 
   // ------------------------------------------------------------------
@@ -216,36 +235,46 @@ export function drawVessels(ctx, cmOrW, vesselsOrH, config, t, renderer) {
 
 /**
  * Draw a decorative compass rose in the bottom-right corner.
+ * Enhanced ornate design with multiple rings, fleur-de-lis north marker,
+ * and dual-tone star pattern.
  */
 function drawCompassRose(ctx, w, h, config, t) {
   var colors = config.colors;
   var fonts  = config.fonts;
 
-  var cx     = w - 60;
-  var cy     = h - 60;
-  var outerR = 35;
-  var innerR = 14;
+  var cx     = w - 70;
+  var cy     = h - 70;
+  var outerR = 42;
+  var midR   = 30;
+  var innerR = 16;
   var tickR  = outerR + 6;
 
-  var wobble = Math.sin(t * 0.3) * 0.05;
+  var wobble = Math.sin(t * 0.25) * 0.03;
 
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(wobble);
-  ctx.globalAlpha = 0.2;
 
-  // Outer circle
+  // ── Outer double ring ──
+  ctx.globalAlpha = 0.18;
   ctx.beginPath();
   ctx.arc(0, 0, outerR, 0, TAU);
   ctx.strokeStyle = colors.ouro;
-  ctx.lineWidth   = 0.8;
+  ctx.lineWidth   = 1;
   ctx.stroke();
 
-  // Degree tick marks
-  for (var deg = 0; deg < 360; deg += 10) {
+  ctx.beginPath();
+  ctx.arc(0, 0, outerR + 3, 0, TAU);
+  ctx.lineWidth   = 0.4;
+  ctx.stroke();
+
+  // ── Degree tick marks ──
+  for (var deg = 0; deg < 360; deg += 5) {
     var rad    = deg * Math.PI / 180;
     var isCard = (deg % 90 === 0);
-    var tickLen = isCard ? 6 : 3;
+    var isOrd  = (deg % 45 === 0) && !isCard;
+    var isMaj  = (deg % 15 === 0) && !isCard && !isOrd;
+    var tickLen = isCard ? 8 : (isOrd ? 5 : (isMaj ? 4 : 2));
     var r1 = outerR;
     var r2 = outerR + tickLen;
 
@@ -253,62 +282,98 @@ function drawCompassRose(ctx, w, h, config, t) {
     ctx.moveTo(Math.cos(rad) * r1, Math.sin(rad) * r1);
     ctx.lineTo(Math.cos(rad) * r2, Math.sin(rad) * r2);
     ctx.strokeStyle = colors.ouro;
-    ctx.lineWidth   = isCard ? 1 : 0.5;
+    ctx.lineWidth   = isCard ? 1.2 : (isOrd ? 0.8 : 0.4);
+    ctx.globalAlpha = isCard ? 0.3 : 0.15;
     ctx.stroke();
   }
 
-  // 8-point star
-  ctx.globalAlpha = 0.25;
-  for (var pt = 0; pt < 8; pt++) {
-    var angle   = pt * (TAU / 8) - Math.PI / 2; // start from north
-    var isMain  = (pt % 2 === 0);
-    var starLen = isMain ? outerR - 2 : innerR + 4;
+  // ── 16-point star ──
+  for (var pt = 0; pt < 16; pt++) {
+    var angle   = pt * (TAU / 16) - Math.PI / 2;
+    var isMain  = (pt % 4 === 0);
+    var isSec   = (pt % 2 === 0) && !isMain;
+    var starLen = isMain ? outerR - 3 : (isSec ? midR : innerR + 3);
+    var halfA   = TAU / 32;
+    var sideR   = isMain ? 7 : (isSec ? 4 : 2.5);
 
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(Math.cos(angle) * starLen, Math.sin(angle) * starLen);
-
-    // Side points of the star diamond
-    var halfAngle = TAU / 16;
-    var sideR     = isMain ? 6 : 4;
-    ctx.lineTo(
-      Math.cos(angle - halfAngle) * sideR,
-      Math.sin(angle - halfAngle) * sideR
-    );
-    ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(angle) * starLen, Math.sin(angle) * starLen);
-    ctx.lineTo(
-      Math.cos(angle + halfAngle) * sideR,
-      Math.sin(angle + halfAngle) * sideR
-    );
+    ctx.lineTo(Math.cos(angle + halfA) * sideR, Math.sin(angle + halfA) * sideR);
     ctx.closePath();
 
-    ctx.fillStyle = isMain ? colors.ouro : colors.creme;
-    ctx.globalAlpha = isMain ? 0.2 : 0.1;
+    ctx.fillStyle   = isMain ? colors.ouro : colors.creme;
+    ctx.globalAlpha = isMain ? 0.25 : (isSec ? 0.12 : 0.06);
+    ctx.fill();
+
+    // Mirror side
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(angle) * starLen, Math.sin(angle) * starLen);
+    ctx.lineTo(Math.cos(angle - halfA) * sideR, Math.sin(angle - halfA) * sideR);
+    ctx.closePath();
+
+    ctx.fillStyle   = isMain ? colors.ouro.replace(/[\d.]+\)$/, '0.15)') : colors.creme;
+    ctx.globalAlpha = isMain ? 0.15 : (isSec ? 0.08 : 0.04);
     ctx.fill();
   }
 
-  // Cardinal letters N, S, E, W
-  ctx.globalAlpha = 0.25;
-  var letterR     = tickR + 8;
-  var letterSize  = Math.max(8, Math.round(w * 0.008));
-  ctx.font         = letterSize + 'px ' + fonts.sans;
-  ctx.fillStyle    = colors.creme;
+  // ── Middle ring ──
+  ctx.globalAlpha = 0.12;
+  ctx.beginPath();
+  ctx.arc(0, 0, midR, 0, TAU);
+  ctx.strokeStyle = colors.ouro;
+  ctx.lineWidth   = 0.5;
+  ctx.stroke();
+
+  // ── Cardinal letters ──
+  var letterR     = tickR + 10;
+  var letterSize  = Math.max(9, Math.round(w * 0.009));
+  ctx.font         = 'bold ' + letterSize + 'px ' + fonts.sans;
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
 
+  // N with fleur-de-lis style emphasis
+  ctx.fillStyle   = colors.ouro;
+  ctx.globalAlpha = 0.4;
   ctx.fillText('N', 0, -letterR);
+  // Decorative dots flanking N
+  ctx.globalAlpha = 0.15;
+  ctx.beginPath();
+  ctx.arc(-6, -letterR, 1, 0, TAU);
+  ctx.arc(6, -letterR, 1, 0, TAU);
+  ctx.fill();
+
+  ctx.fillStyle   = colors.creme;
+  ctx.globalAlpha = 0.2;
   ctx.fillText('S', 0, letterR);
   ctx.fillText('E', letterR, 0);
   ctx.fillText('W', -letterR, 0);
 
-  // Inner ring
+  // Ordinal labels
+  var ordR = letterR - 2;
+  var ordSize = Math.max(6, Math.round(w * 0.005));
+  ctx.font = ordSize + 'px ' + fonts.sans;
+  ctx.globalAlpha = 0.1;
+  var diag = ordR * 0.707;
+  ctx.fillText('NE', diag, -diag);
+  ctx.fillText('SE', diag, diag);
+  ctx.fillText('SW', -diag, diag);
+  ctx.fillText('NW', -diag, -diag);
+
+  // ── Inner ring + center dot ──
   ctx.beginPath();
   ctx.arc(0, 0, innerR, 0, TAU);
   ctx.strokeStyle = colors.ouro;
-  ctx.lineWidth   = 0.5;
+  ctx.lineWidth   = 0.6;
   ctx.globalAlpha = 0.15;
   ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 2, 0, TAU);
+  ctx.fillStyle   = colors.ouro;
+  ctx.globalAlpha = 0.3;
+  ctx.fill();
 
   ctx.restore();
 }
