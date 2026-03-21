@@ -2,44 +2,25 @@
  * Fleet Map — Main Entry Point
  * =============================
  * A reusable, configurable fleet tracking map for the fishing industry.
+ * Now with asset design system: themed vessel silhouettes, weather overlay,
+ * channel markers, and 5 switchable theme packs.
  *
  * Usage:
  *   import { FleetMap } from './fleet-map/index.js';
  *
  *   var map = new FleetMap('#fleetMap', {
  *     title: 'My Fleet',
+ *     theme: 'classic-nautical',  // or 'tactical', 'treasure-map', 'minimal', 'tropical'
+ *     assets: { vesselStyle: 'silhouette', showWeather: true },
  *     bounds: { latN: -15, latS: -35, lonW: -55, lonE: -25 },
  *     vessels: [ { name: 'Boat 1', lat: -24, lon: -44, heading: 135, speed: 7, type: 'Longliner', status: 'Fishing', catch: 'Swordfish' } ],
- *     ports: [ { name: 'Santos', lat: -23.96, lon: -46.33, size: 'major' } ],
+ *     ports: [ { name: 'Santos', lat: -23.96, lon: -46.33, size: 'major', facilities: ['fuel', 'ice-house'] } ],
  *     routes: [ { name: 'US East Coast', points: [[-23.96,-46.33],[-22,-42],[5,-40],[40.7,-74]] } ],
+ *     weather: { enabled: true, stations: [{ lat: -23.96, lon: -46.33, name: 'Santos' }] },
+ *     markers: [{ type: 'buoy-red', lat: -24.0, lon: -44.5, name: 'R2' }],
  *   });
  *
- *   map.start();  // Begin rendering
- *   map.stop();   // Pause
- *   map.destroy(); // Clean up
- *   map.updateVessels([...]); // Update vessel data (e.g., from dashboard)
- *
- * Configuration:
- *   See config.js for all available options including colors, fonts,
- *   AIS endpoint, particle count, and more.
- *
- * Vessel Data Format:
- *   Each vessel object: {
- *     name: string,         — Display name
- *     mmsi: string|null,    — AIS MMSI number (for live tracking)
- *     lat: number,          — Latitude (decimal degrees, negative = south)
- *     lon: number,          — Longitude (decimal degrees, negative = west)
- *     heading: number,      — Heading in degrees (0 = north, 90 = east)
- *     speed: number,        — Speed in knots
- *     type: string,         — Vessel type ('Longliner', 'Trawler', etc.)
- *     status: string,       — 'Fishing' | 'In Transit' | 'In Port' | 'Returning'
- *     catch: string,        — Current catch description
- *   }
- *
- * Adding/Removing Vessels:
- *   Simply call map.updateVessels(newArray) with the updated list.
- *   The roster panel, stats, and map all update automatically.
- *   For a future dashboard UI, this method is the integration point.
+ *   map.start();
  */
 
 import { mergeConfig } from './config.js';
@@ -49,11 +30,16 @@ import { drawCurrents, initParticles } from './layers/currents.js';
 import { drawCoast } from './layers/coast.js';
 import { drawVessels } from './layers/vessels.js';
 import { drawAtmosphere } from './layers/atmosphere.js';
+import { drawWeather } from './layers/weather.js';
+import { drawMarkers } from './layers/markers.js';
 import { buildRoster } from './roster.js';
 import { setupInteraction } from './interaction.js';
 import { AISClient } from './ais.js';
 import { BRAZIL_COAST } from './data/brazil-coast.js';
 import { SA_CURRENTS } from './data/currents-sa.js';
+import { createDefaultRegistry } from './assets/registry.js';
+import { AssetRenderer } from './assets/renderer.js';
+import { NOAAClient } from './services/noaa.js';
 
 /**
  * Deep-copy an array of plain objects (one level deep).
@@ -110,6 +96,7 @@ export class FleetMap {
     this.vessels = prepareVessels(cloneArray(this.config.vessels));
     this.ports = cloneArray(this.config.ports);
     this.routes = cloneArray(this.config.routes);
+    this.markers = cloneArray(this.config.markers);
 
     // Resolve coast data
     if (this.config.coastData === 'brazil') {
@@ -129,8 +116,37 @@ export class FleetMap {
       this.currentData = [];
     }
 
-    // Create canvas manager
+    // Create canvas manager (now with weather + markers layers)
     this.cm = new CanvasManager(this.container, this.config);
+
+    // ── Asset Design System ──────────────────────────
+    this.registry = createDefaultRegistry();
+    this.renderer = new AssetRenderer(this.registry, this.config.theme);
+
+    // Apply theme colors to config so all layers use the theme palette
+    var theme = this.registry.getTheme(this.config.theme);
+    if (theme && theme.colors) {
+      for (var ck in theme.colors) {
+        if (theme.colors.hasOwnProperty(ck)) {
+          this.config.colors[ck] = theme.colors[ck];
+        }
+      }
+    }
+    if (theme && theme.fonts) {
+      for (var fk in theme.fonts) {
+        if (theme.fonts.hasOwnProperty(fk)) {
+          this.config.fonts[fk] = theme.fonts[fk];
+        }
+      }
+    }
+
+    // ── NOAA Weather Client ──────────────────────────
+    this.noaaClient = null;
+    this.weatherData = [];
+    this.weatherWarnings = [];
+    if (this.config.weather && this.config.weather.enabled) {
+      this.noaaClient = new NOAAClient(this.config.weather);
+    }
 
     // Init current particles
     this.particles = initParticles(this.config);
@@ -153,13 +169,13 @@ export class FleetMap {
   }
 
   /**
-   * Begin rendering and (optionally) AIS polling.
+   * Begin rendering and (optionally) AIS/weather polling.
    */
   start() {
     if (this.started) return;
     this.started = true;
 
-    // Draw static layers once — they'll render on the next frame
+    // Draw static layers once
     this._drawStatic();
 
     // Start the animation loop
@@ -176,12 +192,25 @@ export class FleetMap {
       });
     }
 
+    // Start NOAA weather polling if configured
+    if (this.noaaClient) {
+      var self3 = this;
+      this.noaaClient.start(function (data, warnings) {
+        self3.weatherData = data || [];
+        self3.weatherWarnings = warnings || [];
+        self3.cm.markDirty('weather');
+        if (typeof self3.config.onWeatherUpdate === 'function') {
+          self3.config.onWeatherUpdate(data, warnings);
+        }
+      });
+    }
+
     // Listen for window resize
     window.addEventListener('resize', this._resizeBound);
   }
 
   /**
-   * Pause rendering and AIS polling.
+   * Pause rendering and AIS/weather polling.
    */
   stop() {
     if (!this.started) return;
@@ -192,10 +221,14 @@ export class FleetMap {
     if (this.aisClient) {
       this.aisClient.stop();
     }
+
+    if (this.noaaClient) {
+      this.noaaClient.stop();
+    }
   }
 
   /**
-   * Clean up all resources. Call this when removing the map from the page.
+   * Clean up all resources.
    */
   destroy() {
     this.stop();
@@ -217,37 +250,77 @@ export class FleetMap {
       this.aisClient = null;
     }
 
+    if (this.noaaClient) {
+      this.noaaClient.stop();
+      this.noaaClient = null;
+    }
+
     this.vessels = null;
     this.ports = null;
     this.routes = null;
+    this.markers = null;
     this.coastData = null;
     this.currentData = null;
     this.particles = null;
     this.rosterEl = null;
     this.container = null;
     this.config = null;
+    this.registry = null;
+    this.renderer = null;
+    this.weatherData = null;
+    this.weatherWarnings = null;
   }
 
   /**
    * Replace the vessel list. Rebuilds the roster and updates stats.
-   * This is the main integration point for dashboard UIs.
-   *
-   * @param {Array} arr — new array of vessel objects
    */
   updateVessels(arr) {
     this.vessels = prepareVessels(cloneArray(arr));
 
-    // Rebuild the roster panel
     if (this.container && this.config) {
       this.rosterEl = buildRoster(this.container, this.vessels, this.config);
     }
 
-    // Update stats display
     this._updateStats();
 
-    // Fire callback
     if (this.config && typeof this.config.onAISUpdate === 'function') {
       this.config.onAISUpdate(this.vessels);
+    }
+  }
+
+  /**
+   * Switch theme at runtime.
+   * @param {string} themeId — 'classic-nautical' | 'tactical' | 'treasure-map' | 'minimal' | 'tropical'
+   */
+  setTheme(themeId) {
+    this.config.theme = themeId;
+    this.renderer.setTheme(themeId);
+
+    // Apply theme colors/fonts to config
+    var theme = this.registry.getTheme(themeId);
+    if (theme && theme.colors) {
+      for (var ck in theme.colors) {
+        if (theme.colors.hasOwnProperty(ck)) {
+          this.config.colors[ck] = theme.colors[ck];
+        }
+      }
+    }
+    if (theme && theme.fonts) {
+      for (var fk in theme.fonts) {
+        if (theme.fonts.hasOwnProperty(fk)) {
+          this.config.fonts[fk] = theme.fonts[fk];
+        }
+      }
+    }
+
+    // Redraw everything
+    this._drawStatic();
+    if (this.cm) {
+      this.cm.markDirty('depth');
+      this.cm.markDirty('coast');
+      this.cm.markDirty('atmosphere');
+      this.cm.markDirty('weather');
+      this.cm.markDirty('markers');
     }
   }
 
@@ -259,20 +332,19 @@ export class FleetMap {
 
     this.cm.resize();
 
-    // All layers need redraw after resize
     this.cm.markDirty('depth');
     this.cm.markDirty('currents');
     this.cm.markDirty('coast');
+    this.cm.markDirty('weather');
+    this.cm.markDirty('markers');
     this.cm.markDirty('vessels');
     this.cm.markDirty('atmosphere');
 
-    // Redraw static layers
     this._drawStatic();
   }
 
   /**
-   * Main per-frame draw function. Called by the canvas manager loop.
-   * @param {number} t — elapsed time counter
+   * Main per-frame draw function.
    * @private
    */
   _draw(t) {
@@ -283,13 +355,13 @@ export class FleetMap {
 
     var depthLayer = cm.getLayer('depth');
     if (depthLayer.dirty) {
-      drawDepth(depthLayer.ctx, cm, this.config);
+      drawDepth(depthLayer.ctx, cm, this.config, t);
       depthLayer.dirty = false;
     }
 
     var coastLayer = cm.getLayer('coast');
     if (coastLayer.dirty) {
-      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t);
+      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t, this.renderer);
       coastLayer.dirty = false;
     }
 
@@ -299,25 +371,45 @@ export class FleetMap {
       atmoLayer.dirty = false;
     }
 
+    // Weather layer (static, refreshes on NOAA update)
+    var weatherLayer = cm.getLayer('weather');
+    if (weatherLayer && weatherLayer.dirty) {
+      if (this.config.assets.showWeather && this.weatherData.length) {
+        drawWeather(weatherLayer.ctx, cm, this.weatherData, this.weatherWarnings, this.renderer, this.config, t);
+      } else {
+        weatherLayer.ctx.clearRect(0, 0, cm.w, cm.h);
+      }
+      weatherLayer.dirty = false;
+    }
+
+    // Markers layer (static)
+    var markersLayer = cm.getLayer('markers');
+    if (markersLayer && markersLayer.dirty) {
+      if (this.config.assets.showMarkers && this.markers.length) {
+        drawMarkers(markersLayer.ctx, cm, this.markers, this.renderer, this.config, t);
+      } else {
+        markersLayer.ctx.clearRect(0, 0, cm.w, cm.h);
+      }
+      markersLayer.dirty = false;
+    }
+
     // --- Animated layers: always redraw (60fps) ---
 
     var currLayer = cm.getLayer('currents');
     drawCurrents(currLayer.ctx, cm, this.particles, this.currentData, this.config, t);
 
     var vesselLayer = cm.getLayer('vessels');
-    drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t);
+    drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t, this.renderer);
 
     // --- Simulated vessel drift (when no AIS endpoint) ---
 
     if (!this.config.aisEndpoint && this.vessels) {
       for (var i = 0; i < this.vessels.length; i++) {
         var v = this.vessels[i];
-        // Small sin/cos wobble to simulate GPS drift
         var phase = i * 1.7 + t * 0.3;
         v.lat += Math.sin(phase) * 0.00004;
         v.lon += Math.cos(phase * 0.7) * 0.00005;
 
-        // Slowly rotate heading
         v.heading = (v.heading + Math.sin(t + i) * 0.15) % 360;
         if (v.heading < 0) v.heading += 360;
       }
@@ -325,7 +417,7 @@ export class FleetMap {
   }
 
   /**
-   * Mark static layers dirty so they redraw on the next frame.
+   * Mark static layers dirty.
    * @private
    */
   _drawStatic() {
@@ -333,17 +425,17 @@ export class FleetMap {
     this.cm.markDirty('depth');
     this.cm.markDirty('coast');
     this.cm.markDirty('atmosphere');
+    this.cm.markDirty('weather');
+    this.cm.markDirty('markers');
   }
 
   /**
-   * Update the fleet stats display elements if they exist in the DOM.
-   * Looks for elements with class `fleet-stat-n` where n is 0-based.
+   * Update fleet stats display.
    * @private
    */
   _updateStats() {
     if (!this.vessels || !this.container) return;
 
-    // Count vessels by status
     var counts = {
       total: this.vessels.length,
       fishing: 0,
@@ -360,7 +452,6 @@ export class FleetMap {
       else if (status === 'returning') counts.returning++;
     }
 
-    // Update stat elements if they exist
     var statKeys = ['total', 'fishing', 'transit', 'port', 'returning'];
     for (var j = 0; j < statKeys.length; j++) {
       var el = this.container.querySelector('.fleet-stat-' + j);

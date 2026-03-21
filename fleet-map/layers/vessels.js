@@ -1,20 +1,14 @@
 /**
  * Fleet Map — Vessels Layer
  * ==========================
- * Renders vessel triangles, wake trails, ping rings, fishing zone
- * halos, name labels, and a decorative compass rose.
+ * Renders vessel silhouettes (or triangles), wake trails, ping rings,
+ * fishing zone halos, name labels, and a decorative compass rose.
  *
- * Canvas: fleetCanvasVessels (z-index: 4, top layer)
+ * Supports asset design system: when an AssetRenderer is provided,
+ * vessels render as themed silhouettes. Falls back to simple triangles.
+ *
+ * Canvas: fleetCanvasVessels (z-index: 6, animated)
  * Redraws every frame.
- *
- * Customizable via config.colors:
- *   .ouro   — Fishing vessel / compass accent (gold)
- *   .verde  — In-port vessel (green)
- *   .blade  — Transit/returning vessel (steel blue)
- *   .creme  — Label text color
- *
- * Customizable via config.fonts:
- *   .sans — Label font
  */
 
 var TAU = Math.PI * 2;
@@ -37,21 +31,21 @@ function statusColor(colors, status, alpha) {
 /**
  * Draw the vessels layer.
  *
- * @param {CanvasRenderingContext2D} ctx     — canvas context
- * @param {number}   w       — logical canvas width
- * @param {number}   h       — logical canvas height
- * @param {function} projFn  — projFn(lat, lon) => { x, y }
- * @param {object}   config  — merged FleetMap config
- * @param {number}   t       — animation time counter
- * @param {Array}    vessels — array of vessel objects
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {CanvasManager} cm
+ * @param {Array} vessels
+ * @param {object} config
+ * @param {number} t
+ * @param {AssetRenderer} [renderer] — optional asset renderer for themed silhouettes
  */
-export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
+export function drawVessels(ctx, cm, vessels, config, t, renderer) {
+  var w = cm.w;
+  var h = cm.h;
   var colors = config.colors;
   var fonts  = config.fonts;
+  var useAssets = renderer && config.assets && config.assets.vesselStyle === 'silhouette';
 
-  // ------------------------------------------------------------------
-  // 1. Clear canvas (transparent)
-  // ------------------------------------------------------------------
+  // Clear canvas
   ctx.clearRect(0, 0, w, h);
 
   if (!vessels || !vessels.length) {
@@ -61,14 +55,52 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
 
   var i, v, sp;
 
-  // ------------------------------------------------------------------
-  // 2. Fishing zone halos
-  // ------------------------------------------------------------------
+  // If using asset renderer, delegate full vessel rendering
+  if (useAssets) {
+    // Wake trails first (behind everything)
+    for (i = 0; i < vessels.length; i++) {
+      v = vessels[i];
+      if (!v.trail || v.trail.length < 2) continue;
+
+      ctx.beginPath();
+      ctx.moveTo(v.trail[0].x, v.trail[0].y);
+      for (var ti = 1; ti < v.trail.length; ti++) {
+        ctx.lineTo(v.trail[ti].x, v.trail[ti].y);
+      }
+      ctx.strokeStyle = colors.ouro.replace(/[\d.]+\)$/, '0.15)');
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Render each vessel via asset renderer
+    for (i = 0; i < vessels.length; i++) {
+      v = vessels[i];
+      sp = cm.proj(v.lat, v.lon);
+      v._sx = sp.x;
+      v._sy = sp.y;
+      v._idx = i;
+
+      renderer.drawVessel(ctx, v, sp.x, sp.y, {
+        canvasWidth: w,
+        t: t,
+        showLabel: true,
+        showBadge: config.assets.showStatusBadges,
+        showEta: config.assets.showEta,
+      });
+    }
+
+    drawCompassRose(ctx, w, h, config, t);
+    return;
+  }
+
+  // ── Fallback: original triangle rendering ──
+
+  // Fishing zone halos
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
     if (v.status !== 'Fishing') continue;
 
-    sp = projFn(v.lat, v.lon);
+    sp = cm.proj(v.lat, v.lon);
     var haloRadius = 32 + Math.sin(t * 1.5 + i) * 6;
 
     var haloGrad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, haloRadius);
@@ -81,9 +113,7 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     ctx.fill();
   }
 
-  // ------------------------------------------------------------------
-  // 3. Wake trails
-  // ------------------------------------------------------------------
+  // Wake trails
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
     if (!v.trail || v.trail.length < 2) continue;
@@ -92,26 +122,21 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     var tp0 = v.trail[0];
     ctx.moveTo(tp0.x, tp0.y);
 
-    for (var ti = 1; ti < v.trail.length; ti++) {
-      ctx.lineTo(v.trail[ti].x, v.trail[ti].y);
+    for (var ti2 = 1; ti2 < v.trail.length; ti2++) {
+      ctx.lineTo(v.trail[ti2].x, v.trail[ti2].y);
     }
 
     ctx.strokeStyle = colors.ouro.replace(/[\d.]+\)$/, '0.15)');
     ctx.lineWidth   = 1.5;
     ctx.globalAlpha = 1;
-
-    // Create fading effect along the trail
     ctx.stroke();
   }
 
-  // ------------------------------------------------------------------
-  // 4. Vessel triangles
-  // ------------------------------------------------------------------
+  // Vessel triangles
   for (i = 0; i < vessels.length; i++) {
     v  = vessels[i];
-    sp = projFn(v.lat, v.lon);
+    sp = cm.proj(v.lat, v.lon);
 
-    // Store screen position for hover detection
     v._sx = sp.x;
     v._sy = sp.y;
 
@@ -122,14 +147,12 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     ctx.translate(sp.x, sp.y);
     ctx.rotate(rad);
 
-    // Triangle: tip at top, base at bottom
     ctx.beginPath();
     ctx.moveTo(0, -5);
     ctx.lineTo(-3, 4);
     ctx.lineTo(3, 4);
     ctx.closePath();
 
-    // Fill based on status
     var fillAlpha;
     switch (v.status) {
       case 'Fishing':   fillAlpha = 0.9; break;
@@ -139,16 +162,13 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     ctx.fillStyle = statusColor(colors, v.status, fillAlpha);
     ctx.fill();
 
-    // Thin white stroke
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
     ctx.lineWidth   = 0.5;
     ctx.stroke();
 
     ctx.restore();
 
-    // ------------------------------------------------------------------
-    // 5. Ping rings
-    // ------------------------------------------------------------------
+    // Ping rings
     var phase = (t * 0.8 + i * 0.5) % 2;
     if (phase < 1) {
       var pingR     = 4 + phase * 12;
@@ -161,9 +181,7 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
       ctx.stroke();
     }
 
-    // ------------------------------------------------------------------
-    // 6. Name labels
-    // ------------------------------------------------------------------
+    // Name labels
     var nameFontSize = Math.max(8, Math.round(w * 0.007));
     ctx.font         = nameFontSize + 'px ' + fonts.sans;
     ctx.fillStyle    = colors.creme.replace(/[\d.]+\)$/, '0.3)');
@@ -172,9 +190,7 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     ctx.fillText(v.name, sp.x, sp.y + 8);
   }
 
-  // ------------------------------------------------------------------
-  // 7. Compass rose (bottom-right)
-  // ------------------------------------------------------------------
+  // Compass rose
   drawCompassRose(ctx, w, h, config, t);
 }
 
@@ -224,7 +240,7 @@ function drawCompassRose(ctx, w, h, config, t) {
   // 8-point star
   ctx.globalAlpha = 0.25;
   for (var pt = 0; pt < 8; pt++) {
-    var angle   = pt * (TAU / 8) - Math.PI / 2; // start from north
+    var angle   = pt * (TAU / 8) - Math.PI / 2;
     var isMain  = (pt % 2 === 0);
     var starLen = isMain ? outerR - 2 : innerR + 4;
 
@@ -232,7 +248,6 @@ function drawCompassRose(ctx, w, h, config, t) {
     ctx.moveTo(0, 0);
     ctx.lineTo(Math.cos(angle) * starLen, Math.sin(angle) * starLen);
 
-    // Side points of the star diamond
     var halfAngle = TAU / 16;
     var sideR     = isMain ? 6 : 4;
     ctx.lineTo(
@@ -252,7 +267,7 @@ function drawCompassRose(ctx, w, h, config, t) {
     ctx.fill();
   }
 
-  // Cardinal letters N, S, E, W
+  // Cardinal letters
   ctx.globalAlpha = 0.25;
   var letterR     = tickR + 8;
   var letterSize  = Math.max(8, Math.round(w * 0.008));

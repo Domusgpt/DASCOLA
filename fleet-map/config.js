@@ -21,6 +21,30 @@ export var DEFAULTS = {
   aisEndpoint: null,   // URL string — null = use simulated drift
   aisRefreshMs: 60000, // 60 seconds
 
+  // Theme — asset design system
+  theme: 'classic-nautical',  // 'classic-nautical' | 'treasure-map' | 'tactical' | 'minimal' | 'tropical'
+
+  // Asset rendering options
+  assets: {
+    vesselStyle: 'silhouette',   // 'silhouette' | 'triangle' — silhouette uses themed vessel symbols
+    showFacilities: true,        // show port facility icons
+    showWeather: false,          // enable weather overlay
+    showMarkers: false,          // enable nav aids / channel markers
+    showStatusBadges: false,     // show vessel status pill badges
+    showEta: false,              // show ETA readout on vessels
+  },
+
+  // Weather (NOAA integration)
+  weather: {
+    enabled: false,
+    refreshMs: 900000,    // 15 minutes
+    stations: [],         // [{ lat, lon, name }]
+    forecastZone: null,   // NOAA zone ID for warnings
+  },
+
+  // Navigation aids / channel markers
+  markers: [],   // [{ type, lat, lon, name, light? }]
+
   // Color palette (CSS color strings)
   colors: {
     deep:      'rgba(4,10,16,1)',
@@ -44,10 +68,11 @@ export var DEFAULTS = {
 
   // Vessels — array of vessel objects
   // Each vessel: { name, mmsi?, lat, lon, heading, speed, type, status, catch }
+  // Extended fields (optional): eta, etaPort, message, messageTs, catchWeight, fuelLevel, crewCount, permissions
   vessels: [],
 
   // Ports — array of port objects
-  // Each port: { name, lat, lon, size: 'major'|'minor' }
+  // Each port: { name, lat, lon, size: 'major'|'minor', facilities?: ['fuel','ice-house','fish-market',...] }
   ports: [],
 
   // Shipping routes — array of route arrays
@@ -66,10 +91,11 @@ export var DEFAULTS = {
   onVesselHover: null,   // function(vessel, screenPos) {}
   onVesselClick: null,   // function(vessel) {}
   onAISUpdate: null,     // function(vessels) {}
+  onWeatherUpdate: null, // function(weatherData, warnings) {}
 };
 
 /**
- * Merge user config with defaults (shallow + nested colors/fonts).
+ * Merge user config with defaults (shallow + nested for objects).
  */
 export function mergeConfig(userConfig) {
   var cfg = {};
@@ -82,7 +108,7 @@ export function mergeConfig(userConfig) {
   if (!userConfig) return cfg;
   for (key in userConfig) {
     if (!userConfig.hasOwnProperty(key)) continue;
-    if (key === 'colors' || key === 'fonts') {
+    if (key === 'colors' || key === 'fonts' || key === 'assets' || key === 'weather') {
       cfg[key] = {};
       var def = DEFAULTS[key];
       var usr = userConfig[key] || {};
