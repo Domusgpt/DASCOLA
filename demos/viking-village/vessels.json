@@ -1,0 +1,282 @@
+{
+  "_documentation": {
+    "description": "Viking Village fleet vessel data — Barnegat Light, NJ. Real vessel names from the Viking Village dock.",
+    "version": "1.0",
+    "fields": {
+      "name": "Vessel display name (F/V prefix is traditional)",
+      "mmsi": "AIS MMSI number (null for simulated vessels)",
+      "lat": "Current latitude (positive = north)",
+      "lon": "Current longitude (negative = west)",
+      "heading": "Course in degrees (0=N, 90=E, 180=S, 270=W)",
+      "speed": "Speed over ground in knots (0 = docked)",
+      "type": "Vessel type: Scalloper, Longliner, Gillnetter, Dragger",
+      "status": "Fishing | Scalloping | In Transit | In Port | Returning",
+      "catch": "Current or last catch species"
+    }
+  },
+  "vessels": [
+    {
+      "name": "F/V Karen L",
+      "mmsi": null,
+      "lat": 39.85,
+      "lon": -73.65,
+      "heading": 135,
+      "speed": 4.2,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Lucky Thirteen",
+      "mmsi": null,
+      "lat": 39.72,
+      "lon": -73.80,
+      "heading": 220,
+      "speed": 3.8,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V C.B. Keane",
+      "mmsi": null,
+      "lat": 39.90,
+      "lon": -73.45,
+      "heading": 45,
+      "speed": 6.5,
+      "type": "Scalloper",
+      "status": "In Transit",
+      "catch": "\u2014"
+    },
+    {
+      "name": "F/V Madelyn",
+      "mmsi": null,
+      "lat": 39.65,
+      "lon": -73.50,
+      "heading": 190,
+      "speed": 3.5,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Ms Manya",
+      "mmsi": null,
+      "lat": 39.80,
+      "lon": -73.90,
+      "heading": 310,
+      "speed": 4.0,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Elizabeth",
+      "mmsi": null,
+      "lat": 39.76,
+      "lon": -74.10,
+      "heading": 0,
+      "speed": 0,
+      "type": "Scalloper",
+      "status": "In Port",
+      "catch": "\u2014"
+    },
+    {
+      "name": "F/V F. Nelson Blount",
+      "mmsi": null,
+      "lat": 39.70,
+      "lon": -73.95,
+      "heading": 165,
+      "speed": 3.2,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Relentless",
+      "mmsi": null,
+      "lat": 39.95,
+      "lon": -72.40,
+      "heading": 80,
+      "speed": 7.8,
+      "type": "Scalloper/Dragger",
+      "status": "Fishing",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Alexandria Dawn",
+      "mmsi": null,
+      "lat": 39.88,
+      "lon": -72.60,
+      "heading": 30,
+      "speed": 8.5,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Tuna"
+    },
+    {
+      "name": "F/V Bear",
+      "mmsi": null,
+      "lat": 39.78,
+      "lon": -73.70,
+      "heading": 275,
+      "speed": 5.5,
+      "type": "Scalloper/Longliner",
+      "status": "Returning",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Provider III",
+      "mmsi": null,
+      "lat": 39.60,
+      "lon": -73.60,
+      "heading": 150,
+      "speed": 3.0,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Julianne",
+      "mmsi": null,
+      "lat": 39.76,
+      "lon": -74.11,
+      "heading": 0,
+      "speed": 0,
+      "type": "Scalloper",
+      "status": "In Port",
+      "catch": "\u2014"
+    },
+    {
+      "name": "F/V Eliza",
+      "mmsi": null,
+      "lat": 39.55,
+      "lon": -73.75,
+      "heading": 340,
+      "speed": 6.0,
+      "type": "Gillnetter",
+      "status": "Fishing",
+      "catch": "Spiny Dogfish"
+    },
+    {
+      "name": "F/V Dana Christine II",
+      "mmsi": null,
+      "lat": 39.40,
+      "lon": -73.40,
+      "heading": 115,
+      "speed": 7.2,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Golden Tilefish"
+    },
+    {
+      "name": "F/V Lindsay L",
+      "mmsi": null,
+      "lat": 39.82,
+      "lon": -73.20,
+      "heading": 250,
+      "speed": 5.0,
+      "type": "Scalloper",
+      "status": "Returning",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Gipper",
+      "mmsi": null,
+      "lat": 39.68,
+      "lon": -73.85,
+      "heading": 195,
+      "speed": 3.6,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Sea Dog",
+      "mmsi": null,
+      "lat": 39.92,
+      "lon": -73.30,
+      "heading": 60,
+      "speed": 5.8,
+      "type": "Scalloper",
+      "status": "Scalloping",
+      "catch": "Sea Scallops"
+    },
+    {
+      "name": "F/V Sea Farmer",
+      "mmsi": null,
+      "lat": 39.50,
+      "lon": -73.10,
+      "heading": 140,
+      "speed": 7.0,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Golden Tilefish"
+    },
+    {
+      "name": "F/V Frances Anne",
+      "mmsi": null,
+      "lat": 39.75,
+      "lon": -72.30,
+      "heading": 95,
+      "speed": 8.2,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Swordfish"
+    },
+    {
+      "name": "F/V Eaglet II",
+      "mmsi": null,
+      "lat": 39.45,
+      "lon": -72.80,
+      "heading": 210,
+      "speed": 6.8,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Tuna"
+    },
+    {
+      "name": "F/V Monica",
+      "mmsi": null,
+      "lat": 39.58,
+      "lon": -72.50,
+      "heading": 170,
+      "speed": 7.5,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Swordfish"
+    }
+  ],
+  "ports": [
+    { "name": "Viking Village", "lat": 39.758, "lon": -74.108, "size": "major" },
+    { "name": "Barnegat Light", "lat": 39.764, "lon": -74.106, "size": "minor" },
+    { "name": "Point Pleasant", "lat": 40.08, "lon": -74.05, "size": "minor" },
+    { "name": "Atlantic City", "lat": 39.36, "lon": -74.42, "size": "minor" },
+    { "name": "Sandy Hook", "lat": 40.46, "lon": -73.99, "size": "minor" },
+    { "name": "Cape May", "lat": 38.95, "lon": -74.90, "size": "minor" }
+  ],
+  "routes": [
+    {
+      "name": "Hudson Canyon Run",
+      "points": [
+        [39.758, -74.108],
+        [39.78, -73.80],
+        [39.82, -73.50],
+        [39.88, -73.00],
+        [39.92, -72.50],
+        [39.95, -72.20]
+      ]
+    },
+    {
+      "name": "Fulton Fish Market (NYC)",
+      "points": [
+        [39.758, -74.108],
+        [39.90, -74.00],
+        [40.10, -73.90],
+        [40.30, -73.85],
+        [40.50, -74.00],
+        [40.70, -74.00]
+      ]
+    }
+  ]
+}
