@@ -35,9 +35,7 @@ function rgba(r, g, b, a) {
  * @param {number}   h      — logical canvas height
  * @param {object}   config — merged FleetMap config
  */
-export function drawAtmosphere(ctx, cm, config) {
-  var w = cm.w;
-  var h = cm.h;
+export function drawAtmosphere(ctx, w, h, config) {
   var deep = parseRGB(config.colors.deep);
   var r = deep.r;
   var g = deep.g;

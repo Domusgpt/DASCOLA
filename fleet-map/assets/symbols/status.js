@@ -1,135 +1,283 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Vessel Status & Info Overlay Symbols
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Status & Info Overlay Symbols
+ * ============================================
+ * Vessel status badges, catch tags, ETA displays, speed indicators,
+ * and future captain's log / permission markers.
+ *
+ * All draw functions render centered at origin.
+ */
 
-export const STATUS = {
-  'status-badge': {
-    name: 'Status Pill Badge',
-    draw(ctx, size, color, { label = '', bgColor = null } = {}) {
-      if (!label) return;
-      ctx.font = `bold ${Math.round(size * 0.55)}px sans-serif`;
-      const tw = ctx.measureText(label).width;
-      const pw = tw + size * 0.6;
-      const ph = size * 0.7;
-      const r = ph / 2;
+var TAU = Math.PI * 2;
 
-      // Pill background
-      ctx.beginPath();
-      ctx.moveTo(-pw / 2 + r, -ph / 2);
-      ctx.lineTo(pw / 2 - r, -ph / 2);
-      ctx.arc(pw / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
-      ctx.lineTo(-pw / 2 + r, ph / 2);
-      ctx.arc(-pw / 2 + r, 0, r, Math.PI / 2, -Math.PI / 2);
-      ctx.closePath();
-      ctx.fillStyle = bgColor || color || 'rgba(0,0,0,0.5)';
-      ctx.fill();
+// =====================================================================
+// STATUS BADGE
+// =====================================================================
 
-      // Label text
-      ctx.fillStyle = '#fff';
+var statusBadge = {
+  id: 'status-badge',
+  name: 'Status Pill Badge',
+  description: 'Rounded pill showing vessel status text',
+
+  /**
+   * @param {object} [data] — { text: 'Fishing', color: 'rgba(...)' }
+   */
+  draw: function (ctx, size, color, t, data) {
+    var s = size * 0.5;
+    var text = (data && data.text) || '';
+    var bgColor = (data && data.color) || color || 'rgba(201,168,76,0.7)';
+
+    // Pill background
+    var pillW = Math.max(s * 1.2, text.length * s * 0.22);
+    var pillH = s * 0.45;
+    var r = pillH * 0.5;
+
+    ctx.beginPath();
+    ctx.roundRect(-pillW * 0.5, -pillH * 0.5, pillW, pillH, r);
+    ctx.fillStyle = bgColor;
+    ctx.fill();
+
+    // Text
+    if (text) {
+      ctx.font = Math.max(6, s * 0.3) + 'px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, 0, 0);
-    },
+      ctx.fillText(text, 0, 0);
+    }
   },
+};
 
-  'catch-tag': {
-    name: 'Catch Species Indicator',
-    draw(ctx, size, color, { species = '', weight = 0 } = {}) {
-      if (!species) return;
-      const label = weight ? `${species} ${weight}lb` : species;
-      ctx.font = `${Math.round(size * 0.45)}px sans-serif`;
-      const tw = ctx.measureText(label).width;
-      const pw = tw + size * 0.4;
-      const ph = size * 0.55;
+// =====================================================================
+// CATCH TAG
+// =====================================================================
 
-      ctx.fillStyle = color || 'rgba(0,104,71,0.6)';
-      ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
+var catchTag = {
+  id: 'catch-tag',
+  name: 'Catch Species Tag',
+  description: 'Small tag showing current catch species',
 
-      ctx.fillStyle = '#fff';
+  draw: function (ctx, size, color, t, data) {
+    var s = size * 0.5;
+    var text = (data && data.text) || '';
+    var c = color || 'rgba(201,168,76,0.6)';
+
+    // Tag shape (rectangle with pointed left edge)
+    var tagW = Math.max(s * 0.8, text.length * s * 0.18);
+    ctx.beginPath();
+    ctx.moveTo(-tagW * 0.5 - s * 0.1, 0);
+    ctx.lineTo(-tagW * 0.5, -s * 0.2);
+    ctx.lineTo(tagW * 0.5, -s * 0.2);
+    ctx.lineTo(tagW * 0.5, s * 0.2);
+    ctx.lineTo(-tagW * 0.5, s * 0.2);
+    ctx.closePath();
+    ctx.fillStyle = c;
+    ctx.fill();
+
+    // Hole
+    ctx.beginPath();
+    ctx.arc(-tagW * 0.5 + s * 0.08, 0, s * 0.03, 0, TAU);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fill();
+
+    // Text
+    if (text) {
+      ctx.font = Math.max(5, s * 0.25) + 'px sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, 0, 0);
-    },
+      ctx.fillText(text, s * 0.05, 0);
+    }
   },
+};
 
-  'eta-display': {
-    name: 'ETA to Port Readout',
-    draw(ctx, size, color, { eta = '', port = '' } = {}) {
-      if (!eta) return;
-      const label = port ? `ETA ${port}: ${eta}` : `ETA: ${eta}`;
-      ctx.font = `${Math.round(size * 0.45)}px sans-serif`;
-      ctx.fillStyle = color || 'rgba(139,175,196,0.7)';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, 0, 0);
-    },
-  },
+// =====================================================================
+// ETA DISPLAY
+// =====================================================================
 
-  'speed-indicator': {
-    name: 'Speed Arc Gauge',
-    draw(ctx, size, color, { speed = 0, maxSpeed = 15 } = {}) {
-      const r = size * 0.4;
-      const ratio = Math.min(speed / maxSpeed, 1);
-      const startAngle = Math.PI * 0.75;
-      const endAngle = startAngle + ratio * Math.PI * 1.5;
+var etaDisplay = {
+  id: 'eta-display',
+  name: 'ETA to Port Readout',
 
-      // Background arc
-      ctx.beginPath();
-      ctx.arc(0, 0, r, Math.PI * 0.75, Math.PI * 2.25);
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
+  draw: function (ctx, size, color, t, data) {
+    var s = size * 0.5;
+    var eta = (data && data.eta) || '--:--';
+    var port = (data && data.port) || '';
+    var c = color || 'rgba(139,175,196,0.7)';
 
-      // Speed arc
-      ctx.beginPath();
-      ctx.arc(0, 0, r, startAngle, endAngle);
-      ctx.strokeStyle = color || '#c9a84c';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
+    // Background box
+    var boxW = s * 1.6;
+    var boxH = s * 0.7;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.roundRect(-boxW * 0.5, -boxH * 0.5, boxW, boxH, s * 0.06);
+    ctx.fill();
 
-      // Speed text
-      ctx.fillStyle = color || '#c9a84c';
-      ctx.font = `bold ${Math.round(size * 0.35)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${speed.toFixed(1)}kt`, 0, r * 0.3);
-    },
-  },
+    // Border
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.02;
+    ctx.stroke();
 
-  'captains-log': {
-    name: "Captain's Log Icon",
-    draw(ctx, size, color) {
-      const s = size * 0.35;
-      // Book / scroll
-      ctx.strokeStyle = color || '#c9a84c';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(-s, -s * 0.8, s * 2, s * 1.6);
-      // Lines
-      ctx.globalAlpha = 0.5;
-      for (let i = 0; i < 3; i++) {
-        const y = -s * 0.4 + i * s * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(-s * 0.6, y);
-        ctx.lineTo(s * 0.6, y);
-        ctx.stroke();
-      }
+    // Clock icon (small circle with hands)
+    ctx.beginPath();
+    ctx.arc(-boxW * 0.3, 0, s * 0.1, 0, TAU);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.02;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-boxW * 0.3, 0);
+    ctx.lineTo(-boxW * 0.3, -s * 0.07);
+    ctx.moveTo(-boxW * 0.3, 0);
+    ctx.lineTo(-boxW * 0.3 + s * 0.05, s * 0.02);
+    ctx.stroke();
+
+    // ETA text
+    ctx.font = 'bold ' + Math.max(6, s * 0.28) + 'px sans-serif';
+    ctx.fillStyle = c;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(eta, boxW * 0.05, -s * 0.05);
+
+    // Port name (smaller)
+    if (port) {
+      ctx.font = Math.max(5, s * 0.18) + 'px sans-serif';
+      ctx.fillStyle = c;
+      ctx.globalAlpha = 0.6;
+      ctx.fillText(port, boxW * 0.05, s * 0.15);
       ctx.globalAlpha = 1;
-    },
+    }
   },
+};
 
-  'permission-lock': {
-    name: 'Permission Lock Icon',
-    draw(ctx, size, color) {
-      const s = size * 0.25;
-      // Lock body
-      ctx.fillStyle = color || '#888';
-      ctx.fillRect(-s, 0, s * 2, s * 1.5);
-      // Shackle
-      ctx.beginPath();
-      ctx.arc(0, 0, s * 0.8, Math.PI, 0);
-      ctx.strokeStyle = color || '#888';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    },
+// =====================================================================
+// SPEED INDICATOR
+// =====================================================================
+
+var speedIndicator = {
+  id: 'speed-indicator',
+  name: 'Speed Arc Gauge',
+
+  draw: function (ctx, size, color, t, data) {
+    var s = size * 0.5;
+    var speed = (data && data.speed) || 0;
+    var maxSpeed = (data && data.maxSpeed) || 15;
+    var c = color || 'rgba(139,175,196,0.6)';
+
+    // Background arc
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.35, Math.PI * 0.8, Math.PI * 2.2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = size * 0.06;
+    ctx.stroke();
+
+    // Speed arc (filled portion)
+    var fraction = Math.min(speed / maxSpeed, 1);
+    var arcEnd = Math.PI * 0.8 + fraction * Math.PI * 1.4;
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.35, Math.PI * 0.8, arcEnd);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.06;
+    ctx.stroke();
+
+    // Speed text
+    ctx.font = 'bold ' + Math.max(6, s * 0.3) + 'px sans-serif';
+    ctx.fillStyle = c;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(speed) + 'kt', 0, s * 0.05);
   },
+};
+
+// =====================================================================
+// CAPTAIN'S LOG (future)
+// =====================================================================
+
+var captainsLog = {
+  id: 'captains-log',
+  name: "Captain's Log Icon",
+  description: 'Message/log indicator for vessel communications',
+
+  draw: function (ctx, size, color, t) {
+    var s = size * 0.5;
+    var c = color || 'rgba(201,168,76,0.7)';
+    var pulse = Math.sin((t || 0) * 3) * 0.15 + 0.85;
+
+    // Speech bubble
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.3, -s * 0.35);
+    ctx.lineTo(s * 0.3, -s * 0.35);
+    ctx.quadraticCurveTo(s * 0.4, -s * 0.35, s * 0.4, -s * 0.2);
+    ctx.lineTo(s * 0.4, s * 0.05);
+    ctx.quadraticCurveTo(s * 0.4, s * 0.15, s * 0.3, s * 0.15);
+    ctx.lineTo(-s * 0.05, s * 0.15);
+    ctx.lineTo(-s * 0.15, s * 0.35);
+    ctx.lineTo(-s * 0.1, s * 0.15);
+    ctx.lineTo(-s * 0.3, s * 0.15);
+    ctx.quadraticCurveTo(-s * 0.4, s * 0.15, -s * 0.4, s * 0.05);
+    ctx.lineTo(-s * 0.4, -s * 0.2);
+    ctx.quadraticCurveTo(-s * 0.4, -s * 0.35, -s * 0.3, -s * 0.35);
+    ctx.closePath();
+    ctx.fillStyle = c;
+    ctx.globalAlpha = pulse;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Text lines inside
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = size * 0.025;
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.22, -s * 0.18);
+    ctx.lineTo(s * 0.22, -s * 0.18);
+    ctx.moveTo(-s * 0.22, -s * 0.04);
+    ctx.lineTo(s * 0.12, -s * 0.04);
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// PERMISSION LOCK (future)
+// =====================================================================
+
+var permissionLock = {
+  id: 'permission-lock',
+  name: 'Permission / Private Lock',
+  description: 'Lock icon indicating restricted access info',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(139,175,196,0.5)';
+
+    // Lock body
+    ctx.beginPath();
+    ctx.roundRect(-s * 0.2, -s * 0.05, s * 0.4, s * 0.35, s * 0.04);
+    ctx.fillStyle = c;
+    ctx.fill();
+
+    // Shackle (arc)
+    ctx.beginPath();
+    ctx.arc(0, -s * 0.05, s * 0.15, Math.PI, 0);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.06;
+    ctx.stroke();
+
+    // Keyhole
+    ctx.beginPath();
+    ctx.arc(0, s * 0.1, s * 0.05, 0, TAU);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(-s * 0.02, s * 0.12, s * 0.04, s * 0.1);
+    ctx.fill();
+  },
+};
+
+// =====================================================================
+// Export
+// =====================================================================
+export var STATUS_SYMBOLS = {
+  'status-badge':     statusBadge,
+  'catch-tag':        catchTag,
+  'eta-display':      etaDisplay,
+  'speed-indicator':  speedIndicator,
+  'captains-log':     captainsLog,
+  'permission-lock':  permissionLock,
 };

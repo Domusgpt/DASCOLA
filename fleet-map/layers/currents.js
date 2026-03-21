@@ -27,7 +27,7 @@
  * @param {object} bounds — { latN, latS, lonW, lonE }
  * @returns {Array} particles
  */
-export function initParticles(config) {
+export function initParticles(config, w, h, bounds) {
   var isMobile = (typeof window !== 'undefined') && window.innerWidth < config.mobileBreakpoint;
   var count    = isMobile ? config.particleCountMobile : config.particleCount;
   var particles = new Array(count);
@@ -103,11 +103,7 @@ function segmentInfo(px, py, ax, ay, bx, by) {
  * @param {Array}    currentData — [{ points, strength, width }, ...]
  * @param {object}   bounds      — { latN, latS, lonW, lonE }
  */
-export function drawCurrents(ctx, cm, particles, currentData, config, t) {
-  var w = cm.w;
-  var h = cm.h;
-  var projFn = cm.proj.bind(cm);
-  var bounds = config.bounds;
+export function drawCurrents(ctx, w, h, projFn, config, t, particles, currentData, bounds) {
   ctx.clearRect(0, 0, w, h);
 
   var color = config.colors.blade;

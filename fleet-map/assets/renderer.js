@@ -1,325 +1,247 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Asset Renderer
-//  Central rendering pipeline: symbol lookup → theme styling → canvas draw
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Asset Renderer
+ * ============================
+ * Central rendering pipeline. Bridges the asset registry (symbol definitions)
+ * and canvas contexts. Handles scale, theme styling, rotation, and emphasis.
+ *
+ * Usage:
+ *   var renderer = new AssetRenderer(registry, theme, canvasWidth);
+ *   renderer.draw(ctx, 'vessels', 'trawler', x, y, { size: 'md', rotation: heading, color: gold });
+ *   renderer.drawVessel(ctx, vessel, { x, y }, { t: animTime });
+ */
 
-import { scaledSize, textSize } from './scale.js';
-import { getVesselSymbol, VESSEL_TYPE_MAP } from './symbols/vessels.js';
-import { drawLabel } from './text/labels.js';
+import { scaleFor, emphasisFor } from './scale.js';
+
+var TAU = Math.PI * 2;
+
+/**
+ * Map vessel type strings to symbol IDs.
+ */
+var VESSEL_TYPE_MAP = {
+  'Trawler':    'trawler',
+  'Dragger':    'trawler',
+  'Longliner':  'longliner',
+  'Scalloper':  'scalloper',
+  'Gillnetter': 'gillnetter',
+  'Lobster':    'lobster',
+  'Cargo':      'cargo',
+  'Sailboat':   'sailboat',
+  'Pot Boat':   'lobster',
+};
 
 export class AssetRenderer {
   /**
-   * @param {AssetRegistry} registry
-   * @param {string} themeId
+   * @param {import('./registry.js').AssetRegistry} registry
+   * @param {object} theme   — resolved theme object
+   * @param {number} canvasWidth — logical canvas width (for scaling)
    */
-  constructor(registry, themeId) {
+  constructor(registry, theme, canvasWidth) {
     this.registry = registry;
-    this.theme = registry.getTheme(themeId);
+    this.theme = theme;
+    this.w = canvasWidth;
   }
 
   /**
-   * Switch theme at runtime
+   * Update canvas width (call on resize).
+   * @param {number} w
    */
-  setTheme(themeId) {
-    this.theme = this.registry.getTheme(themeId);
+  setWidth(w) {
+    this.w = w;
   }
 
   /**
-   * Draw a registered symbol at a position
+   * Draw a symbol from the registry at a given position.
+   *
    * @param {CanvasRenderingContext2D} ctx
-   * @param {string} symbolId
-   * @param {number} x
-   * @param {number} y
-   * @param {object} opts — { size, rotation, color, alpha, category, data, t }
+   * @param {string} category — 'vessels', 'nav-aids', 'ports', etc.
+   * @param {string} id       — symbol ID within category
+   * @param {number} x        — screen x
+   * @param {number} y        — screen y
+   * @param {object} [opts]   — drawing options
+   * @param {string} [opts.size='md']      — scale step
+   * @param {number} [opts.rotation=0]     — radians
+   * @param {string} [opts.color]          — fill color override
+   * @param {number} [opts.alpha=1]        — globalAlpha
+   * @param {number} [opts.t=0]            — animation time
+   * @param {string} [opts.style]          — draw variant: 'topDown', 'profile', 'icon'
    */
-  draw(ctx, symbolId, x, y, opts = {}) {
-    const sym = this.registry.getSymbol(symbolId);
-    if (!sym || !sym.draw) return;
+  draw(ctx, category, id, x, y, opts) {
+    var sym = this.registry.getSymbol(category, id);
+    if (!sym) return;
 
-    const {
-      size = 16,
-      rotation = 0,
-      color,
-      alpha = 1,
-      data = {},
-      t,
-    } = opts;
+    opts = opts || {};
+    var size     = opts.size || 'md';
+    var rotation = opts.rotation || 0;
+    var alpha    = opts.alpha !== undefined ? opts.alpha : 1;
+    var t        = opts.t || 0;
+    var emphasis = emphasisFor(category, this.theme);
+    var px       = scaleFor(category, size, this.w, emphasis);
+    var color    = opts.color || (this.theme && this.theme.colors && this.theme.colors.creme) || 'rgba(240,235,224,1)';
+
+    // Determine which draw variant to use
+    var style = opts.style || (this.theme && this.theme.symbols && this.theme.symbols.vessel && this.theme.symbols.vessel.style) || 'profile';
+    var drawFn = null;
+
+    if (style === 'topDown' && sym.drawTopDown) {
+      drawFn = sym.drawTopDown;
+    } else if (style === 'icon' && sym.drawIcon) {
+      drawFn = sym.drawIcon;
+    } else if (sym.drawProfile) {
+      drawFn = sym.drawProfile;
+    } else if (sym.draw) {
+      drawFn = sym.draw;
+    }
+
+    if (!drawFn) return;
 
     ctx.save();
+    ctx.globalAlpha = alpha;
     ctx.translate(x, y);
     if (rotation) ctx.rotate(rotation);
-    ctx.globalAlpha *= alpha;
 
-    sym.draw(ctx, size, color, data, t);
+    drawFn(ctx, px, color, t);
 
     ctx.restore();
   }
 
   /**
-   * Draw a vessel with full theme-aware rendering
+   * Draw a vessel with full decoration: halo, trail, icon, ping, label, badge.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {object} vessel    — vessel data object
+   * @param {{ x: number, y: number }} sp — screen position
+   * @param {object} opts
+   * @param {number} opts.t           — animation time
+   * @param {object} opts.colors      — color palette
+   * @param {object} opts.fonts       — font config
+   * @param {number} opts.w           — canvas width
+   * @param {number} opts.index       — vessel index (for phase offset)
    */
-  drawVessel(ctx, vessel, sx, sy, opts = {}) {
-    const {
-      canvasWidth = 1200,
-      t = 0,
-      showLabel = true,
-      showBadge = false,
-      showEta = false,
-    } = opts;
+  drawVessel(ctx, vessel, sp, opts) {
+    var colors = opts.colors;
+    var fonts  = opts.fonts;
+    var t      = opts.t || 0;
+    var i      = opts.index || 0;
+    var w      = opts.w || this.w;
 
-    const theme = this.theme;
-    const vesselStyle = theme.symbols.vessel.style;
-    const sym = getVesselSymbol(vessel.type);
-    const size = scaledSize('vessel', 'md', canvasWidth, theme);
-    const heading = vessel.heading || 0;
-    const headingRad = (heading * Math.PI) / 180;
+    var statusCol = this._statusColor(colors, vessel.status, 0.9);
+    var heading   = (vessel.heading || 0) * Math.PI / 180;
 
-    // Status color
-    const statusColor = this._statusColor(vessel.status);
-    const alpha = vessel.status === 'Fishing' ? 0.9 : 0.7;
+    // Resolve symbol ID from vessel type
+    var symId = VESSEL_TYPE_MAP[vessel.type] || 'generic';
+    var style = (this.theme && this.theme.symbols && this.theme.symbols.vessel && this.theme.symbols.vessel.style) || 'profile';
 
-    // Fishing zone halo
-    if (vessel.status === 'Fishing') {
-      const glowR = theme.symbols.vessel.glowRadius;
-      const pulse = glowR + Math.sin(t * 1.5) * 6;
-      const grad = ctx.createRadialGradient(sx, sy, 2, sx, sy, pulse);
-      grad.addColorStop(0, this._rgba(statusColor, 0.08));
-      grad.addColorStop(1, this._rgba(statusColor, 0));
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(sx, sy, pulse, 0, Math.PI * 2);
-      ctx.fill();
+    // Draw the vessel symbol
+    this.draw(ctx, 'vessels', symId, sp.x, sp.y, {
+      size: 'md',
+      rotation: heading,
+      color: statusCol,
+      alpha: vessel.status === 'In Port' ? 0.7 : 0.9,
+      t: t,
+      style: style,
+    });
+  }
+
+  /**
+   * Draw a port using asset symbols instead of a plain dot.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {object} port — { name, lat, lon, size, facilities? }
+   * @param {{ x: number, y: number }} pp — screen position
+   * @param {object} opts — { t, colors, fonts, w }
+   */
+  drawPort(ctx, port, pp, opts) {
+    var colors = opts.colors;
+    var t      = opts.t || 0;
+    var major  = port.size === 'major';
+    var portColor = colors.verde || 'rgba(0,104,71,1)';
+
+    // Draw dock symbol
+    this.draw(ctx, 'ports', 'dock', pp.x, pp.y, {
+      size: major ? 'lg' : 'md',
+      color: portColor,
+      alpha: 0.85,
+      t: t,
+    });
+
+    // Draw facility icons if present
+    if (port.facilities && port.facilities.length) {
+      var spacing = scaleFor('icon', 'xs', this.w, emphasisFor('icon', this.theme));
+      for (var fi = 0; fi < port.facilities.length; fi++) {
+        var facId = port.facilities[fi];
+        this.draw(ctx, 'ports', facId, pp.x + (fi + 1) * spacing * 1.5, pp.y - spacing, {
+          size: 'xs',
+          color: portColor,
+          alpha: 0.5,
+          t: t,
+        });
+      }
     }
+  }
 
-    // Trail
-    if (vessel.trail && vessel.trail.length > 1) {
-      this._drawTrail(ctx, vessel.trail, statusColor, theme.symbols.vessel.trailStyle);
-    }
+  /**
+   * Draw a weather station — cluster of weather icons at a point.
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {object} data — { wind: { speed, direction }, waves, temp, conditions, warnings }
+   * @param {{ x: number, y: number }} sp — screen position
+   * @param {object} opts — { t, colors }
+   */
+  drawWeatherStation(ctx, data, sp, opts) {
+    var t = opts.t || 0;
+    var warnColor = 'rgba(220,60,60,0.9)';
+    var normalColor = (opts.colors && opts.colors.blade) || 'rgba(139,175,196,1)';
 
-    // Vessel shape
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(headingRad);
-    ctx.globalAlpha = alpha;
-
-    const drawFn = vesselStyle === 'profile' ? 'drawProfile' :
-                   vesselStyle === 'icon' ? 'drawIcon' : 'drawTopDown';
-    if (sym[drawFn]) {
-      sym[drawFn](ctx, size, heading, statusColor);
-    } else {
-      sym.drawTopDown(ctx, size, heading, statusColor);
-    }
-
-    ctx.restore();
-
-    // Ping ring
-    const pingPhase = ((t * 0.7 + (vessel._idx || 0) * 0.3) % 1);
-    const pingR = 4 + pingPhase * 12;
-    ctx.beginPath();
-    ctx.arc(sx, sy, pingR, 0, Math.PI * 2);
-    ctx.strokeStyle = this._rgba(statusColor, 0.3 * (1 - pingPhase));
-    ctx.lineWidth = 0.8;
-    ctx.stroke();
-
-    // Name label
-    if (showLabel && vessel.name) {
-      drawLabel(ctx, 'vessel-name', vessel.name, sx, sy + size * 0.7, {
-        canvasWidth,
-        fonts: theme.fonts,
-        color: theme.colors.creme,
-        theme,
+    // Wind barb
+    if (data.wind) {
+      var windDir = (data.wind.direction || 0) * Math.PI / 180;
+      this.draw(ctx, 'weather', 'wind-barb', sp.x, sp.y, {
+        size: 'md',
+        rotation: windDir,
+        color: normalColor,
+        alpha: 0.7,
+        t: t,
       });
     }
 
-    // Status badge
-    if (showBadge && vessel.status) {
-      const badge = this.registry.getSymbol('status-badge');
-      if (badge) {
-        ctx.save();
-        ctx.translate(sx + size * 0.6, sy - size * 0.5);
-        badge.draw(ctx, size * 0.6, statusColor, {
-          label: vessel.status,
-          bgColor: this._rgba(statusColor, 0.6),
-        });
-        ctx.restore();
-      }
+    // Wave height indicator (offset below)
+    if (data.waves) {
+      this.draw(ctx, 'weather', 'wave-height', sp.x, sp.y + 20, {
+        size: 'sm',
+        color: normalColor,
+        alpha: 0.6,
+        t: t,
+      });
     }
 
-    // ETA display
-    if (showEta && vessel.eta) {
-      const eta = this.registry.getSymbol('eta-display');
-      if (eta) {
-        ctx.save();
-        ctx.translate(sx, sy + size * 1.2);
-        eta.draw(ctx, size * 0.7, theme.colors.blade, {
-          eta: vessel.eta,
-          port: vessel.etaPort || '',
-        });
-        ctx.restore();
-      }
+    // Warning flag
+    if (data.warnings && data.warnings.length) {
+      this.draw(ctx, 'weather', 'storm-warning', sp.x + 16, sp.y - 16, {
+        size: 'sm',
+        color: warnColor,
+        alpha: 0.9,
+        t: t,
+      });
     }
   }
 
   /**
-   * Draw a weather station (cluster of weather icons at a point)
+   * Return a fill color for a vessel based on status.
+   * @private
    */
-  drawWeatherStation(ctx, weatherData, sx, sy, opts = {}) {
-    const { canvasWidth = 1200, t = 0 } = opts;
-    const theme = this.theme;
-    const iconSize = scaledSize('icon', 'md', canvasWidth, theme);
-
-    let offsetY = 0;
-
-    // Wind barb
-    if (weatherData.wind) {
-      const wb = this.registry.getSymbol('wind-barb');
-      if (wb) {
-        ctx.save();
-        ctx.translate(sx, sy + offsetY);
-        wb.draw(ctx, iconSize, theme.colors.creme, {
-          speed: weatherData.wind.speed,
-          direction: weatherData.wind.direction,
-        });
-        ctx.restore();
-        offsetY += iconSize * 0.8;
-      }
-    }
-
-    // Wave height
-    if (weatherData.waves && weatherData.waves.height > 0) {
-      const wh = this.registry.getSymbol('wave-height');
-      if (wh) {
-        ctx.save();
-        ctx.translate(sx, sy + offsetY);
-        wh.draw(ctx, iconSize * 0.8, theme.colors.blade, {
-          height: weatherData.waves.height,
-        });
-        ctx.restore();
-        offsetY += iconSize * 0.6;
-      }
-    }
-
-    // Temperature
-    if (weatherData.temp && weatherData.temp.water != null) {
-      const temp = this.registry.getSymbol('temperature');
-      if (temp) {
-        ctx.save();
-        ctx.translate(sx + iconSize, sy);
-        temp.draw(ctx, iconSize * 0.7, null, {
-          temp: weatherData.temp.water,
-          unit: 'F',
-        });
-        ctx.restore();
-      }
-    }
-
-    // Condition symbol (fog, rain, storm, etc.)
-    if (weatherData.conditionSymbol) {
-      const cs = this.registry.getSymbol(weatherData.conditionSymbol);
-      if (cs) {
-        ctx.save();
-        ctx.translate(sx - iconSize, sy);
-        cs.draw(ctx, iconSize * 0.8, theme.colors.creme);
-        ctx.restore();
-      }
-    }
-  }
-
-  /**
-   * Draw a port with facility icons
-   */
-  drawPort(ctx, port, sx, sy, opts = {}) {
-    const { canvasWidth = 1200, t = 0 } = opts;
-    const theme = this.theme;
-    const portSize = scaledSize('port', port.size === 'major' ? 'lg' : 'md', canvasWidth, theme);
-    const color = theme.colors.verde;
-
-    // Port symbol
-    if (theme.symbols.port.shape === 'square') {
-      ctx.fillStyle = this._rgba(color, 0.85);
-      ctx.fillRect(sx - portSize / 2, sy - portSize / 2, portSize, portSize);
-    } else {
-      ctx.beginPath();
-      ctx.arc(sx, sy, portSize / 2, 0, Math.PI * 2);
-      ctx.fillStyle = this._rgba(color, 0.85);
-      ctx.fill();
-    }
-
-    // Pulse ring for major ports
-    if (port.size === 'major') {
-      const pulse = Math.sin(t * theme.symbols.port.pulseSpeed) * 0.5 + 0.5;
-      const ringR = portSize / 2 + 4 + pulse * 6;
-      ctx.beginPath();
-      ctx.arc(sx, sy, ringR, 0, Math.PI * 2);
-      ctx.strokeStyle = this._rgba(color, 0.3 * (1 - pulse));
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
-
-    // Port label
-    drawLabel(ctx, 'port-name', port.name, sx + portSize / 2 + 6, sy, {
-      canvasWidth,
-      fonts: theme.fonts,
-      color,
-      theme,
-    });
-
-    // Facility icons (if any)
-    if (port.facilities && port.facilities.length) {
-      const fSize = scaledSize('icon', 'sm', canvasWidth, theme) * 0.6;
-      let fx = sx - (port.facilities.length * fSize) / 2;
-      const fy = sy + portSize / 2 + fSize + 2;
-      for (const fac of port.facilities) {
-        const sym = this.registry.getSymbol(fac);
-        if (sym && sym.draw) {
-          ctx.save();
-          ctx.translate(fx + fSize / 2, fy);
-          ctx.globalAlpha = 0.6;
-          sym.draw(ctx, fSize, color);
-          ctx.restore();
-        }
-        fx += fSize + 2;
-      }
-    }
-  }
-
-  // ── Helpers ──────────────────────────────────────
-
-  _statusColor(status) {
-    const c = this.theme.colors;
+  _statusColor(colors, status, alpha) {
+    var base;
     switch (status) {
-      case 'Fishing':    return c.ouro;
-      case 'In Port':    return c.verde;
-      case 'In Transit': return c.blade;
-      case 'Returning':  return c.blade;
-      default:           return c.blade;
+      case 'Fishing':
+      case 'Scalloping': base = colors.ouro;  break;
+      case 'In Port':    base = colors.verde; break;
+      case 'In Transit':
+      case 'Returning':  base = colors.blade; break;
+      default:           base = colors.blade; break;
     }
-  }
-
-  _drawTrail(ctx, trail, color, style) {
-    if (trail.length < 2) return;
-    ctx.strokeStyle = this._rgba(color, 0.15);
-    ctx.lineWidth = 1;
-    if (style === 'dotted') {
-      ctx.setLineDash([2, 4]);
+    if (alpha !== undefined && alpha !== 1) {
+      return base.replace(/[\d.]+\)$/, alpha + ')');
     }
-    ctx.beginPath();
-    ctx.moveTo(trail[0]._sx, trail[0]._sy);
-    for (let i = 1; i < trail.length; i++) {
-      if (trail[i]._sx != null) {
-        ctx.lineTo(trail[i]._sx, trail[i]._sy);
-      }
-    }
-    ctx.stroke();
-    if (style === 'dotted') {
-      ctx.setLineDash([]);
-    }
-  }
-
-  _rgba(cssColor, alpha) {
-    if (!cssColor) return `rgba(128,128,128,${alpha})`;
-    const m = cssColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    if (m) return `rgba(${m[1]},${m[2]},${m[3]},${alpha})`;
-    return cssColor;
+    return base;
   }
 }

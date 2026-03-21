@@ -1,47 +1,51 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Treasure Map Theme
-//  Parchment, hand-drawn, sea monsters, aged aesthetic
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Treasure Map Theme
+ * =================================
+ * Old parchment feel, hand-drawn wobbly lines, aged serif fonts,
+ * sea monster decorations, compass rose with fleur-de-lis,
+ * "Here Be Dragons" style labels, stained atmosphere overlay.
+ *
+ * Vessel style: profile (side-view — old ship engravings)
+ */
 
-export const treasureMap = {
-  id: 'treasure-map',
-  name: 'Treasure Map',
+import { createTheme } from './theme.js';
 
+export var TREASURE_MAP = createTheme('treasure-map', 'Treasure Map', {
   colors: {
-    deep:      'rgba(180,155,110,1)',        // Parchment tan
-    ouro:      'rgba(120,75,30,1)',           // Dark ink brown
-    verde:     'rgba(85,110,65,1)',           // Faded green
-    blade:     'rgba(100,85,70,1)',           // Muted brown
-    creme:     'rgba(60,40,25,1)',            // Dark ink
-    land:      ['rgba(160,135,95,0.7)', 'rgba(145,125,90,0.6)', 'rgba(130,115,85,0.5)'],
-    ocean:     ['rgba(155,140,110,0.3)', 'rgba(165,148,118,0.2)', 'rgba(175,158,128,0.1)'],
-    fathom:    'rgba(100,80,55,0.12)',
-    grid:      'rgba(120,75,30,0.06)',
-    coastGlow: 'rgba(120,75,30,0.1)',
-    coastLine: 'rgba(80,55,30,0.5)',
+    deep:      'rgba(180,155,110,1)',           // Parchment base
+    ouro:      'rgba(140,90,30,1)',             // Dark ink brown
+    verde:     'rgba(60,90,50,1)',              // Aged green ink
+    blade:     'rgba(100,80,60,1)',             // Faded brown
+    creme:     'rgba(50,35,20,1)',              // Dark ink for text
+    land:      ['rgba(160,140,100,0.7)', 'rgba(170,150,110,0.6)', 'rgba(150,130,95,0.5)'],
+    ocean:     ['rgba(165,145,105,0.15)', 'rgba(170,150,115,0.1)', 'rgba(180,155,110,0.05)'],
+    fathom:    'rgba(100,80,55,0.15)',
+    grid:      'rgba(120,95,60,0.06)',
+    coastGlow: 'rgba(140,90,30,0.1)',
+    coastLine: 'rgba(80,55,25,0.6)',
   },
 
   fonts: {
-    display: '"IM Fell English", "Playfair Display", Georgia, serif',
-    sans:    '"IM Fell English", Georgia, serif',
+    display: '"Playfair Display", "Garamond", Georgia, serif',
+    sans:    '"IM Fell English", "Palatino", serif',  // Even sans uses a serif for old map feel
   },
 
   symbols: {
     vessel: {
       style: 'profile',
-      strokeWidth: 1.2,
+      strokeWidth: 1.0,         // Thicker lines like ink drawings
       fillAlpha: 0.75,
-      glowRadius: 20,
-      trailStyle: 'dotted',
+      glowRadius: 0,            // No modern glow effects
+      trailStyle: 'dotted',     // Dotted wake like old charts
     },
     port: {
-      shape: 'circle',
-      pulseSpeed: 1.5,
-      labelStyle: 'uppercase',
+      shape: 'anchorage',       // Anchor symbol for ports
+      pulseSpeed: 0,            // No pulse animation (static like a drawn map)
+      labelStyle: 'upper',
     },
     buoy: {
+      bobAnimation: false,      // Static
       reflectionEnabled: false,
-      bobAnimation: false,
     },
     weather: {
       iconStyle: 'hand-drawn',
@@ -49,22 +53,24 @@ export const treasureMap = {
   },
 
   emphasis: {
-    vessel: 1.2,
-    port:   2.0,
-    marker: 1.3,
-    icon:   1.2,
-    text:   1.1,
+    vessel:  1.2,               // Slightly larger ships (like old map illustrations)
+    port:    2.0,               // Large, prominent port markers
+    marker:  1.3,
+    icon:    1.2,
+    text:    1.1,
+    compass: 1.5,               // Big ornate compass rose
   },
 
   atmosphere: {
-    vignetteStrength: 1.5,
-    noiseTexture: true,
-    colorFilter: 'sepia',
+    vignetteStrength: 0.8,      // Heavy edge darkening
+    noiseTexture: true,         // Paper grain texture
+    colorFilter: 'sepia',       // Aged coloring
   },
 
   decorations: {
-    compassRose: 'ornate',
-    cartouche:   'scroll',
-    borderStyle: 'rope',
+    compassRose: 'ornate',      // Fleur-de-lis style
+    cartouche: 'scroll',        // Decorative scroll border
+    borderStyle: 'rope',        // Rope-style border
+    seaMonsters: true,          // "Here Be Dragons" decorations
   },
-};
+});

@@ -1,175 +1,282 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Cartographic Chart Symbols
-//  Depth soundings, boundaries, hazard areas
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Cartography Symbols
+ * ==================================
+ * Depth soundings, shipping lanes, boundaries, hazard areas,
+ * fishing grounds, restricted zones, and anchorage areas.
+ *
+ * These are chart annotation symbols drawn on the depth or coast layers.
+ * All draw functions render centered at origin.
+ */
 
-export const CARTOGRAPHY = {
-  'depth-sounding': {
-    name: 'Spot Depth Number',
-    draw(ctx, size, color, { depth = 0, unit = 'fm' } = {}) {
-      ctx.fillStyle = color || 'rgba(139,175,196,0.35)';
-      ctx.font = `${Math.round(size * 0.7)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(`${depth}`, 0, 0);
-    },
-  },
+var TAU = Math.PI * 2;
 
-  'shipping-lane': {
-    name: 'Traffic Separation Line',
-    drawLine(ctx, points, size, color) {
-      if (points.length < 2) return;
-      ctx.setLineDash([size * 1.5, size]);
-      ctx.strokeStyle = color || 'rgba(180,120,200,0.25)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    },
-  },
+// =====================================================================
+// DEPTH SOUNDING
+// =====================================================================
 
-  'boundary': {
-    name: 'Jurisdictional Boundary',
-    drawLine(ctx, points, size, color) {
-      if (points.length < 2) return;
-      ctx.setLineDash([size * 2, size * 0.5, size * 0.5, size * 0.5]);
-      ctx.strokeStyle = color || 'rgba(200,168,76,0.2)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    },
-  },
+var depthSounding = {
+  id: 'depth-sounding',
+  name: 'Spot Depth Number',
+  description: 'Individual depth value plotted on the chart',
 
-  'hazard-area': {
-    name: 'Hatched Danger Zone',
-    drawArea(ctx, points, size, color) {
-      if (points.length < 3) return;
-      ctx.save();
-      // Clip to area
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.closePath();
-      ctx.clip();
-      // Cross-hatch fill
-      ctx.strokeStyle = color || 'rgba(200,60,60,0.15)';
-      ctx.lineWidth = 0.5;
-      const bounds = getBounds(points);
-      const step = size * 1.5;
-      for (let x = bounds.minX - bounds.h; x < bounds.maxX + bounds.h; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, bounds.minY);
-        ctx.lineTo(x + bounds.h, bounds.maxY);
-        ctx.stroke();
-      }
-      ctx.restore();
-      // Outline
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = color || 'rgba(200,60,60,0.25)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    },
-  },
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} size — font size equivalent
+   * @param {string} color
+   * @param {number} t — unused
+   * @param {object} [data] — { depth: number, unit: 'fm'|'m'|'ft' }
+   */
+  draw: function (ctx, size, color, t, data) {
+    var depth = (data && data.depth) || '';
+    var c = color || 'rgba(27,58,92,0.4)';
 
-  'fishing-ground': {
-    name: 'Named Fishing Area',
-    drawArea(ctx, points, size, color, { name = '' } = {}) {
-      if (points.length < 3) return;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.closePath();
-      ctx.fillStyle = color || 'rgba(201,168,76,0.04)';
-      ctx.fill();
-      ctx.setLineDash([4, 6]);
-      ctx.strokeStyle = color || 'rgba(201,168,76,0.15)';
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      // Name label
-      if (name) {
-        const center = getCenter(points);
-        ctx.fillStyle = color || 'rgba(201,168,76,0.12)';
-        ctx.font = `italic ${Math.round(size * 0.8)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(name, center[0], center[1]);
-      }
-    },
-  },
-
-  'restricted-area': {
-    name: 'Restricted / Prohibited Zone',
-    drawArea(ctx, points, size, color) {
-      if (points.length < 3) return;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(200,60,60,0.05)';
-      ctx.fill();
-      ctx.strokeStyle = color || 'rgba(200,60,60,0.3)';
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([6, 3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    },
-  },
-
-  'anchorage-area': {
-    name: 'Designated Anchorage Boundary',
-    drawArea(ctx, points, size, color) {
-      if (points.length < 3) return;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], points[0][1]);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
-      }
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(201,168,76,0.03)';
-      ctx.fill();
-      ctx.strokeStyle = color || 'rgba(201,168,76,0.2)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    },
+    ctx.font = Math.max(6, size * 0.7) + 'px sans-serif';
+    ctx.fillStyle = c;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(depth), 0, 0);
   },
 };
 
-function getBounds(points) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for (const [x, y] of points) {
-    if (x < minX) minX = x;
-    if (y < minY) minY = y;
-    if (x > maxX) maxX = x;
-    if (y > maxY) maxY = y;
-  }
-  return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
-}
+// =====================================================================
+// SHIPPING LANE
+// =====================================================================
 
-function getCenter(points) {
-  let sx = 0, sy = 0;
-  for (const [x, y] of points) { sx += x; sy += y; }
-  return [sx / points.length, sy / points.length];
-}
+var shippingLane = {
+  id: 'shipping-lane',
+  name: 'Traffic Separation Line',
+  description: 'Dashed magenta line for shipping lane boundaries',
+
+  /**
+   * Draws a short segment sample. In practice, the layer draws full
+   * paths using this style configuration.
+   */
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(180,50,180,0.4)';
+
+    ctx.beginPath();
+    ctx.setLineDash([s * 0.3, s * 0.15]);
+    ctx.moveTo(-s, 0);
+    ctx.lineTo(s, 0);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.06;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arrow indicating traffic direction
+    ctx.beginPath();
+    ctx.moveTo(s * 0.4, 0);
+    ctx.lineTo(s * 0.2, -s * 0.12);
+    ctx.moveTo(s * 0.4, 0);
+    ctx.lineTo(s * 0.2, s * 0.12);
+    ctx.stroke();
+  },
+
+  /** Style config for layer rendering */
+  lineStyle: {
+    dash: [8, 6],
+    color: 'rgba(180,50,180,0.4)',
+    width: 1.5,
+  },
+};
+
+// =====================================================================
+// BOUNDARY
+// =====================================================================
+
+var boundary = {
+  id: 'boundary',
+  name: 'Jurisdictional Boundary',
+  description: 'Alternating dot-dash line for territorial/EEZ boundaries',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(139,175,196,0.3)';
+
+    ctx.beginPath();
+    ctx.setLineDash([s * 0.25, s * 0.1, s * 0.05, s * 0.1]);
+    ctx.moveTo(-s, 0);
+    ctx.lineTo(s, 0);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
+
+  lineStyle: {
+    dash: [10, 4, 2, 4],
+    color: 'rgba(139,175,196,0.3)',
+    width: 1,
+  },
+};
+
+// =====================================================================
+// HAZARD AREA
+// =====================================================================
+
+var hazardArea = {
+  id: 'hazard-area',
+  name: 'Hazard / Danger Zone',
+  description: 'Hatched area indicating danger (rocks, shoals, wrecks)',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(200,60,60,0.3)';
+
+    // Circle outline
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.4, 0, TAU);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+
+    // Hatch lines inside
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.38, 0, TAU);
+    ctx.clip();
+
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.02;
+    for (var hx = -s * 0.5; hx < s * 0.5; hx += s * 0.12) {
+      ctx.beginPath();
+      ctx.moveTo(hx, -s * 0.5);
+      ctx.lineTo(hx + s * 0.3, s * 0.5);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Danger cross
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.12, -s * 0.12);
+    ctx.lineTo(s * 0.12, s * 0.12);
+    ctx.moveTo(s * 0.12, -s * 0.12);
+    ctx.lineTo(-s * 0.12, s * 0.12);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.05;
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// FISHING GROUND
+// =====================================================================
+
+var fishingGround = {
+  id: 'fishing-ground',
+  name: 'Named Fishing Area',
+  description: 'Dashed outline with fish icon marking a fishing ground',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(201,168,76,0.25)';
+
+    // Dashed circle boundary
+    ctx.beginPath();
+    ctx.setLineDash([s * 0.15, s * 0.1]);
+    ctx.arc(0, 0, s * 0.5, 0, TAU);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Small fish icon in center
+    ctx.beginPath();
+    ctx.moveTo(s * 0.15, 0);
+    ctx.quadraticCurveTo(s * 0.05, -s * 0.1, -s * 0.1, 0);
+    ctx.quadraticCurveTo(s * 0.05, s * 0.1, s * 0.15, 0);
+    ctx.fillStyle = c;
+    ctx.fill();
+
+    // Tail
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.1, 0);
+    ctx.lineTo(-s * 0.18, -s * 0.06);
+    ctx.lineTo(-s * 0.18, s * 0.06);
+    ctx.closePath();
+    ctx.fill();
+  },
+};
+
+// =====================================================================
+// RESTRICTED AREA
+// =====================================================================
+
+var restrictedArea = {
+  id: 'restricted-area',
+  name: 'Restricted / Prohibited Zone',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(200,60,60,0.4)';
+
+    // Circle with diagonal line (prohibition symbol)
+    ctx.beginPath();
+    ctx.arc(0, 0, s * 0.4, 0, TAU);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.05;
+    ctx.stroke();
+
+    // Diagonal slash
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.28, -s * 0.28);
+    ctx.lineTo(s * 0.28, s * 0.28);
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// ANCHORAGE AREA
+// =====================================================================
+
+var anchorageArea = {
+  id: 'anchorage-area',
+  name: 'Designated Anchorage',
+
+  draw: function (ctx, size, color) {
+    var s = size * 0.5;
+    var c = color || 'rgba(0,104,71,0.3)';
+
+    // Dashed circle
+    ctx.beginPath();
+    ctx.setLineDash([s * 0.2, s * 0.1]);
+    ctx.arc(0, 0, s * 0.5, 0, TAU);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Anchor icon (small)
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.2);
+    ctx.lineTo(0, s * 0.15);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.15, s * 0.05);
+    ctx.quadraticCurveTo(-s * 0.15, s * 0.2, 0, s * 0.15);
+    ctx.quadraticCurveTo(s * 0.15, s * 0.2, s * 0.15, s * 0.05);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.1, -s * 0.15);
+    ctx.lineTo(s * 0.1, -s * 0.15);
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// Export
+// =====================================================================
+export var CARTO_SYMBOLS = {
+  'depth-sounding':  depthSounding,
+  'shipping-lane':   shippingLane,
+  'boundary':        boundary,
+  'hazard-area':     hazardArea,
+  'fishing-ground':  fishingGround,
+  'restricted-area': restrictedArea,
+  'anchorage-area':  anchorageArea,
+};

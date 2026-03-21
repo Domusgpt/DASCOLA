@@ -1,12 +1,16 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Classic Nautical Theme
-//  Refined gold/deep-blue aesthetic — the default look
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Classic Nautical Theme
+ * =====================================
+ * Refined version of the current gold/deep blue aesthetic.
+ * Elegant compass rose, serif typography, warm gold accents
+ * on deep ocean blue. This is the default theme.
+ *
+ * Vessel style: profile (side-view silhouettes)
+ */
 
-export const classicNautical = {
-  id: 'classic-nautical',
-  name: 'Classic Nautical',
+import { createTheme } from './theme.js';
 
+export var CLASSIC_NAUTICAL = createTheme('classic-nautical', 'Classic Nautical', {
   colors: {
     deep:      'rgba(4,10,16,1)',
     ouro:      'rgba(201,168,76,1)',
@@ -29,42 +33,40 @@ export const classicNautical = {
   symbols: {
     vessel: {
       style: 'profile',
-      strokeWidth: 0.7,
-      fillAlpha: 0.85,
+      strokeWidth: 0.5,
+      fillAlpha: 0.9,
       glowRadius: 32,
       trailStyle: 'line',
     },
     port: {
-      shape: 'circle',
+      shape: 'dock',
       pulseSpeed: 2.5,
-      labelStyle: 'uppercase',
-    },
-    buoy: {
-      reflectionEnabled: false,
-      bobAnimation: true,
+      labelStyle: 'upper',
     },
     weather: {
-      iconStyle: 'outlined',
+      iconStyle: 'filled',
     },
   },
 
   emphasis: {
-    vessel: 1.0,
-    port:   1.5,
-    marker: 1.0,
-    icon:   1.0,
-    text:   1.0,
+    vessel:  1.0,
+    port:    1.5,
+    marker:  1.0,
+    icon:    1.0,
+    text:    1.0,
+    compass: 1.0,
   },
 
   atmosphere: {
-    vignetteStrength: 1.0,
-    noiseTexture: false,
+    vignetteStrength: 0.6,
+    noiseTexture: true,
     colorFilter: null,
   },
 
   decorations: {
     compassRose: 'classic',
-    cartouche:   'bordered',
+    cartouche: 'bordered',
     borderStyle: 'double-line',
+    seaMonsters: false,
   },
-};
+});

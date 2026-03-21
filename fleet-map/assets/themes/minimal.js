@@ -1,24 +1,28 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Minimal Theme
-//  Clean, flat, modern design with muted palette
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Minimal Theme
+ * ============================
+ * Clean, modern, flat design. Light background, thin lines,
+ * system font stack, no gradients, subtle animations.
+ * Dialed-down and cool.
+ *
+ * Vessel style: topDown (clean hull outlines)
+ */
 
-export const minimal = {
-  id: 'minimal',
-  name: 'Minimal',
+import { createTheme } from './theme.js';
 
+export var MINIMAL = createTheme('minimal', 'Minimal', {
   colors: {
-    deep:      'rgba(245,245,248,1)',        // Light gray background
-    ouro:      'rgba(55,65,81,1)',            // Dark gray accent
-    verde:     'rgba(34,150,110,1)',          // Teal
-    blade:     'rgba(100,116,139,1)',         // Slate
-    creme:     'rgba(30,41,59,1)',            // Near-black text
-    land:      ['rgba(226,232,240,0.8)', 'rgba(236,240,245,0.7)', 'rgba(241,245,249,0.6)'],
-    ocean:     ['rgba(219,234,254,0.3)', 'rgba(224,238,255,0.2)', 'rgba(240,249,255,0.1)'],
-    fathom:    'rgba(148,163,184,0.1)',
-    grid:      'rgba(148,163,184,0.08)',
-    coastGlow: 'rgba(148,163,184,0.05)',
-    coastLine: 'rgba(100,116,139,0.3)',
+    deep:      'rgba(245,247,250,1)',           // Light gray-white background
+    ouro:      'rgba(55,120,200,1)',            // Clean blue accent
+    verde:     'rgba(40,180,120,1)',            // Teal green
+    blade:     'rgba(120,140,160,1)',           // Muted steel
+    creme:     'rgba(30,40,55,1)',              // Dark text on light bg
+    land:      ['rgba(228,232,238,0.8)', 'rgba(235,238,243,0.6)', 'rgba(240,242,246,0.5)'],
+    ocean:     ['rgba(220,230,245,0.2)', 'rgba(230,238,250,0.1)', 'rgba(245,247,250,0.05)'],
+    fathom:    'rgba(180,195,215,0.15)',
+    grid:      'rgba(120,140,160,0.05)',
+    coastGlow: 'rgba(120,140,160,0.04)',
+    coastLine: 'rgba(120,140,160,0.3)',
   },
 
   fonts: {
@@ -28,43 +32,45 @@ export const minimal = {
 
   symbols: {
     vessel: {
-      style: 'topdown',
-      strokeWidth: 0.5,
-      fillAlpha: 0.75,
-      glowRadius: 16,
-      trailStyle: 'line',
+      style: 'topDown',
+      strokeWidth: 0.8,
+      fillAlpha: 0.85,
+      glowRadius: 0,            // No glow — clean and flat
+      trailStyle: 'dotted',
     },
     port: {
-      shape: 'circle',
-      pulseSpeed: 2.0,
-      labelStyle: 'capitalize',
+      shape: 'dock',
+      pulseSpeed: 0,            // No pulse — static dots
+      labelStyle: 'upper',
     },
     buoy: {
-      reflectionEnabled: false,
       bobAnimation: false,
+      reflectionEnabled: false,
     },
     weather: {
-      iconStyle: 'filled',
+      iconStyle: 'outlined',
     },
   },
 
   emphasis: {
-    vessel: 0.85,
-    port:   1.0,
-    marker: 0.85,
-    icon:   0.9,
-    text:   0.9,
+    vessel:  0.85,
+    port:    1.2,
+    marker:  0.9,
+    icon:    0.9,
+    text:    0.95,
+    compass: 0.6,               // Small unobtrusive compass
   },
 
   atmosphere: {
-    vignetteStrength: 0.3,
+    vignetteStrength: 0,        // No vignette
     noiseTexture: false,
     colorFilter: null,
   },
 
   decorations: {
-    compassRose: 'minimal',
-    cartouche:   'none',
+    compassRose: 'minimal',     // Just a thin ring + N indicator
+    cartouche: 'none',
     borderStyle: 'none',
+    seaMonsters: false,
   },
-};
+});

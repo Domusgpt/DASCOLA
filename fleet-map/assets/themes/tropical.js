@@ -1,70 +1,76 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Tropical Theme
-//  Bright, playful, island vibes
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Tropical Fun Theme
+ * =================================
+ * Bright ocean blue background, coral/teal/sunset accents,
+ * rounded playful icons, palm tree decorations, wave-pattern
+ * borders, fun beach-vibe typography.
+ *
+ * Vessel style: icon (simplified colorful pictograms)
+ */
 
-export const tropical = {
-  id: 'tropical',
-  name: 'Tropical',
+import { createTheme } from './theme.js';
 
+export var TROPICAL = createTheme('tropical', 'Tropical', {
   colors: {
-    deep:      'rgba(0,90,140,1)',           // Ocean blue
-    ouro:      'rgba(255,183,77,1)',          // Sunset orange
-    verde:     'rgba(0,180,120,1)',           // Bright teal
-    blade:     'rgba(72,202,228,1)',          // Cyan
-    creme:     'rgba(255,255,255,1)',         // White
-    land:      ['rgba(76,175,80,0.6)', 'rgba(102,187,106,0.5)', 'rgba(129,199,132,0.4)'],
-    ocean:     ['rgba(0,105,165,0.3)', 'rgba(0,85,140,0.2)', 'rgba(0,70,120,0.1)'],
-    fathom:    'rgba(72,202,228,0.12)',
-    grid:      'rgba(255,255,255,0.05)',
-    coastGlow: 'rgba(255,183,77,0.1)',
-    coastLine: 'rgba(255,183,77,0.4)',
+    deep:      'rgba(0,45,90,1)',               // Deep tropical ocean
+    ouro:      'rgba(255,140,50,1)',            // Sunset orange
+    verde:     'rgba(0,200,150,1)',             // Tropical teal
+    blade:     'rgba(100,200,255,1)',           // Sky blue
+    creme:     'rgba(255,250,240,1)',           // Warm white
+    land:      ['rgba(50,180,100,0.7)', 'rgba(60,200,120,0.6)', 'rgba(40,160,90,0.5)'],
+    ocean:     ['rgba(0,80,160,0.25)', 'rgba(0,60,130,0.15)', 'rgba(0,45,90,0.05)'],
+    fathom:    'rgba(0,150,200,0.12)',
+    grid:      'rgba(255,140,50,0.04)',
+    coastGlow: 'rgba(255,200,80,0.1)',
+    coastLine: 'rgba(255,200,80,0.4)',
   },
 
   fonts: {
-    display: '"Pacifico", "Comic Sans MS", cursive',
-    sans:    '"Nunito", "Josefin Sans", sans-serif',
+    display: '"Fredoka One", "Comic Sans MS", cursive, sans-serif',
+    sans:    '"Nunito", "Verdana", sans-serif',
   },
 
   symbols: {
     vessel: {
-      style: 'icon',
-      strokeWidth: 0.8,
-      fillAlpha: 0.9,
-      glowRadius: 24,
-      trailStyle: 'dotted',
+      style: 'icon',            // Simplified playful pictograms
+      strokeWidth: 0,
+      fillAlpha: 0.95,
+      glowRadius: 25,
+      trailStyle: 'dotted',     // Fun dotted trail
     },
     port: {
-      shape: 'circle',
-      pulseSpeed: 2.0,
-      labelStyle: 'capitalize',
+      shape: 'dock',
+      pulseSpeed: 1.5,          // Gentle pulse
+      labelStyle: 'upper',
     },
     buoy: {
-      reflectionEnabled: true,
-      bobAnimation: true,
+      bobAnimation: true,       // Bouncy buoys
+      reflectionEnabled: false,
     },
     weather: {
-      iconStyle: 'filled',
+      iconStyle: 'filled',      // Bright filled icons
     },
   },
 
   emphasis: {
-    vessel: 1.1,
-    port:   1.8,
-    marker: 1.1,
-    icon:   1.2,
-    text:   1.0,
+    vessel:  1.15,              // Slightly larger, playful
+    port:    1.8,               // Big friendly port markers
+    marker:  1.2,
+    icon:    1.2,
+    text:    1.05,
+    compass: 1.0,
   },
 
   atmosphere: {
-    vignetteStrength: 0.5,
+    vignetteStrength: 0.2,      // Light vignette
     noiseTexture: false,
     colorFilter: null,
   },
 
   decorations: {
-    compassRose: 'minimal',
-    cartouche:   'ribbon',
-    borderStyle: 'none',
+    compassRose: 'classic',     // Standard but colorful
+    cartouche: 'ribbon',        // Fun ribbon banner
+    borderStyle: 'none',        // Clean edges
+    seaMonsters: false,
   },
-};
+});

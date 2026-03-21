@@ -1,397 +1,567 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Vessel Symbol Definitions
-//  Procedural canvas draw functions for fishing vessel types
-//  Each vessel provides: drawTopDown, drawProfile, drawIcon
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Vessel Symbols
+ * ============================
+ * Ship silhouettes for each vessel type. Each symbol provides three
+ * draw variants for theme-specific rendering:
+ *
+ *   drawTopDown(ctx, size, color, t)  — birds-eye hull outline (tactical, minimal)
+ *   drawProfile(ctx, size, color, t)  — side-view silhouette (treasure map, classic)
+ *   drawIcon(ctx, size, color, t)     — simplified geometric pictogram (tropical)
+ *
+ * All draw functions render centered at the origin (0,0). The caller is
+ * responsible for ctx.translate() and ctx.rotate() to position and orient.
+ * Size is the bounding dimension in pixels.
+ */
 
-function drawTriangleTopDown(ctx, size, heading, color) {
-  const h = size, w = size * 0.6;
-  ctx.beginPath();
-  ctx.moveTo(0, -h / 2);
-  ctx.lineTo(-w / 2, h / 2);
-  ctx.lineTo(w / 2, h / 2);
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-}
+var TAU = Math.PI * 2;
+var HALF_PI = Math.PI / 2;
 
-export const VESSELS = {
-  trawler: {
-    name: 'Trawler',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size, w = size * 0.45;
-      ctx.beginPath();
-      // Hull — rounded bow, wide stern
-      ctx.moveTo(0, -h * 0.5);
-      ctx.bezierCurveTo(-w * 0.3, -h * 0.3, -w * 0.5, -h * 0.1, -w * 0.5, h * 0.15);
-      ctx.lineTo(-w * 0.45, h * 0.45);
-      ctx.lineTo(w * 0.45, h * 0.45);
-      ctx.lineTo(w * 0.5, h * 0.15);
-      ctx.bezierCurveTo(w * 0.5, -h * 0.1, w * 0.3, -h * 0.3, 0, -h * 0.5);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      // Outrigger booms
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.05);
-      ctx.lineTo(-size * 0.7, h * 0.1);
-      ctx.moveTo(0, -h * 0.05);
-      ctx.lineTo(size * 0.7, h * 0.1);
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.5;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.6, w = size;
-      ctx.beginPath();
-      // Hull side view
-      ctx.moveTo(-w * 0.5, 0);
-      ctx.quadraticCurveTo(-w * 0.4, h * 0.4, -w * 0.1, h * 0.35);
-      ctx.lineTo(w * 0.35, h * 0.3);
-      ctx.quadraticCurveTo(w * 0.5, h * 0.15, w * 0.45, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      // Cabin
-      ctx.fillRect(-w * 0.15, -h * 0.35, w * 0.25, h * 0.35);
-      // Mast
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.35);
-      ctx.lineTo(0, -h * 0.7);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Outrigger boom
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.lineTo(w * 0.45, -h * 0.15);
-      ctx.stroke();
-    },
-    drawIcon(ctx, size, heading, color) {
-      drawTriangleTopDown(ctx, size, heading, color);
-      // Add small boom lines
-      ctx.beginPath();
-      ctx.moveTo(0, -size * 0.1);
-      ctx.lineTo(-size * 0.5, size * 0.15);
-      ctx.moveTo(0, -size * 0.1);
-      ctx.lineTo(size * 0.5, size * 0.15);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 0.8;
-      ctx.globalAlpha = 0.6;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    },
+// =====================================================================
+// TRAWLER / DRAGGER
+// =====================================================================
+var trawler = {
+  id: 'trawler',
+  name: 'Trawler',
+  description: 'Side-profile trawler with outriggers',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    // Hull — elongated oval with pointed bow
+    ctx.moveTo(0, -s);                         // bow
+    ctx.bezierCurveTo(s * 0.35, -s * 0.7, s * 0.4, -s * 0.2, s * 0.35, s * 0.4);
+    ctx.lineTo(s * 0.3, s * 0.7);             // stern quarter
+    ctx.quadraticCurveTo(0, s * 0.85, -s * 0.3, s * 0.7);
+    ctx.lineTo(-s * 0.35, s * 0.4);
+    ctx.bezierCurveTo(-s * 0.4, -s * 0.2, -s * 0.35, -s * 0.7, 0, -s);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Outrigger arms
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.1, -s * 0.1);
+    ctx.lineTo(-s * 0.7, s * 0.3);
+    ctx.moveTo(s * 0.1, -s * 0.1);
+    ctx.lineTo(s * 0.7, s * 0.3);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
   },
 
-  longliner: {
-    name: 'Longliner',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size, w = size * 0.35;
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.bezierCurveTo(-w * 0.4, -h * 0.25, -w * 0.5, 0, -w * 0.45, h * 0.4);
-      ctx.lineTo(w * 0.45, h * 0.4);
-      ctx.bezierCurveTo(w * 0.5, 0, w * 0.4, -h * 0.25, 0, -h * 0.5);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      // Longline trailing astern
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.4);
-      ctx.lineTo(0, h * 0.8);
-      ctx.setLineDash([2, 3]);
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.35;
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1;
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.55, w = size;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.5, 0);
-      ctx.quadraticCurveTo(-w * 0.35, h * 0.35, 0, h * 0.3);
-      ctx.lineTo(w * 0.4, h * 0.2);
-      ctx.quadraticCurveTo(w * 0.5, h * 0.05, w * 0.45, -h * 0.05);
-      ctx.lineTo(-w * 0.45, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.fillRect(-w * 0.1, -h * 0.4, w * 0.2, h * 0.4);
-    },
-    drawIcon: drawTriangleTopDown,
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    // Hull
+    ctx.moveTo(-s, s * 0.2);                   // stern waterline
+    ctx.lineTo(-s * 0.8, s * 0.35);            // stern bottom
+    ctx.quadraticCurveTo(0, s * 0.45, s * 0.7, s * 0.15);   // keel
+    ctx.lineTo(s, -s * 0.05);                  // bow
+    ctx.lineTo(s * 0.85, -s * 0.1);
+    ctx.lineTo(s * 0.7, -s * 0.1);
+    // Superstructure
+    ctx.lineTo(s * 0.5, -s * 0.1);
+    ctx.lineTo(s * 0.4, -s * 0.35);            // wheelhouse front
+    ctx.lineTo(-s * 0.1, -s * 0.35);           // wheelhouse back
+    ctx.lineTo(-s * 0.2, -s * 0.1);
+    ctx.lineTo(-s * 0.8, -s * 0.1);
+    ctx.lineTo(-s, s * 0.2);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Outrigger mast
+    ctx.beginPath();
+    ctx.moveTo(s * 0.15, -s * 0.35);
+    ctx.lineTo(s * 0.15, -s * 0.85);
+    ctx.moveTo(s * 0.15, -s * 0.7);
+    ctx.lineTo(-s * 0.5, -s * 0.15);
+    ctx.moveTo(s * 0.15, -s * 0.7);
+    ctx.lineTo(s * 0.65, -s * 0.15);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.035;
+    ctx.stroke();
   },
 
-  scalloper: {
-    name: 'Scalloper',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size * 0.9, w = size * 0.55;
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.bezierCurveTo(-w * 0.3, -h * 0.3, -w * 0.55, -h * 0.05, -w * 0.55, h * 0.2);
-      ctx.lineTo(-w * 0.5, h * 0.45);
-      ctx.lineTo(w * 0.5, h * 0.45);
-      ctx.lineTo(w * 0.55, h * 0.2);
-      ctx.bezierCurveTo(w * 0.55, -h * 0.05, w * 0.3, -h * 0.3, 0, -h * 0.5);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      // Dredge gear boom
-      ctx.beginPath();
-      ctx.moveTo(0, h * 0.1);
-      ctx.lineTo(size * 0.6, h * 0.35);
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.4;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.6, w = size;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.45, 0);
-      ctx.quadraticCurveTo(-w * 0.3, h * 0.4, 0, h * 0.35);
-      ctx.lineTo(w * 0.35, h * 0.3);
-      ctx.quadraticCurveTo(w * 0.5, h * 0.1, w * 0.45, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.fillRect(-w * 0.2, -h * 0.3, w * 0.3, h * 0.3);
-      // Dredge A-frame
-      ctx.beginPath();
-      ctx.moveTo(w * 0.2, -h * 0.3);
-      ctx.lineTo(w * 0.35, -h * 0.6);
-      ctx.lineTo(w * 0.5, -h * 0.15);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    },
-    drawIcon: drawTriangleTopDown,
-  },
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    // Simple boat shape with outrigger lines
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.8);
+    ctx.lineTo(s * 0.35, s * 0.2);
+    ctx.quadraticCurveTo(0, s * 0.5, -s * 0.35, s * 0.2);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
 
-  gillnetter: {
-    name: 'Gillnetter',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size, w = size * 0.4;
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.48);
-      ctx.bezierCurveTo(-w * 0.35, -h * 0.25, -w * 0.5, 0, -w * 0.45, h * 0.4);
-      ctx.lineTo(w * 0.45, h * 0.4);
-      ctx.bezierCurveTo(w * 0.5, 0, w * 0.35, -h * 0.25, 0, -h * 0.48);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      // Net reel circle
-      ctx.beginPath();
-      ctx.arc(0, h * 0.15, size * 0.1, 0, Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.5;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.55, w = size;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.45, 0);
-      ctx.quadraticCurveTo(-w * 0.3, h * 0.35, 0, h * 0.3);
-      ctx.lineTo(w * 0.35, h * 0.25);
-      ctx.quadraticCurveTo(w * 0.5, h * 0.1, w * 0.4, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.fillRect(-w * 0.1, -h * 0.35, w * 0.18, h * 0.35);
-      // Net reel
-      ctx.beginPath();
-      ctx.arc(w * 0.2, -h * 0.1, size * 0.08, 0, Math.PI * 2);
-      ctx.stroke();
-    },
-    drawIcon: drawTriangleTopDown,
-  },
-
-  lobster: {
-    name: 'Lobster Boat',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size * 0.85, w = size * 0.38;
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.bezierCurveTo(-w * 0.3, -h * 0.3, -w * 0.45, 0, -w * 0.4, h * 0.35);
-      ctx.quadraticCurveTo(0, h * 0.5, w * 0.4, h * 0.35);
-      ctx.bezierCurveTo(w * 0.45, 0, w * 0.3, -h * 0.3, 0, -h * 0.5);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.5, w = size * 0.9;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.45, 0);
-      ctx.quadraticCurveTo(-w * 0.3, h * 0.35, 0, h * 0.3);
-      ctx.lineTo(w * 0.3, h * 0.25);
-      ctx.quadraticCurveTo(w * 0.45, h * 0.1, w * 0.4, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      // Small cabin
-      ctx.fillRect(-w * 0.05, -h * 0.3, w * 0.15, h * 0.3);
-    },
-    drawIcon: drawTriangleTopDown,
-  },
-
-  cargo: {
-    name: 'Cargo',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size * 1.1, w = size * 0.4;
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.lineTo(-w * 0.4, -h * 0.3);
-      ctx.lineTo(-w * 0.5, h * 0.35);
-      ctx.lineTo(-w * 0.4, h * 0.45);
-      ctx.lineTo(w * 0.4, h * 0.45);
-      ctx.lineTo(w * 0.5, h * 0.35);
-      ctx.lineTo(w * 0.4, -h * 0.3);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-      // Hold hatches
-      for (let i = 0; i < 3; i++) {
-        const y = -h * 0.15 + i * h * 0.18;
-        ctx.strokeRect(-w * 0.25, y, w * 0.5, h * 0.1);
-      }
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.55, w = size * 1.1;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.5, 0);
-      ctx.lineTo(-w * 0.4, h * 0.3);
-      ctx.lineTo(w * 0.4, h * 0.25);
-      ctx.lineTo(w * 0.5, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      // Superstructure at stern
-      ctx.fillRect(w * 0.2, -h * 0.5, w * 0.2, h * 0.5);
-      // Crane
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.1, -h * 0.05);
-      ctx.lineTo(-w * 0.1, -h * 0.5);
-      ctx.lineTo(w * 0.1, -h * 0.35);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    },
-    drawIcon: drawTriangleTopDown,
-  },
-
-  sailboat: {
-    name: 'Sailboat',
-    drawTopDown(ctx, size, heading, color) {
-      const h = size, w = size * 0.3;
-      // Hull
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.5);
-      ctx.bezierCurveTo(-w * 0.4, -h * 0.2, -w * 0.5, h * 0.1, 0, h * 0.45);
-      ctx.bezierCurveTo(w * 0.5, h * 0.1, w * 0.4, -h * 0.2, 0, -h * 0.5);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 0.7;
-      ctx.stroke();
-    },
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.8, w = size;
-      // Hull
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.4, 0);
-      ctx.quadraticCurveTo(-w * 0.2, h * 0.35, w * 0.1, h * 0.3);
-      ctx.quadraticCurveTo(w * 0.4, h * 0.15, w * 0.35, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-      // Mast
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(0, -h * 0.9);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Sail
-      ctx.beginPath();
-      ctx.moveTo(0, -h * 0.85);
-      ctx.quadraticCurveTo(w * 0.35, -h * 0.4, 0, h * 0.05);
-      ctx.closePath();
-      ctx.globalAlpha = 0.3;
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    },
-    drawIcon: drawTriangleTopDown,
-  },
-
-  generic: {
-    name: 'Generic',
-    drawTopDown: drawTriangleTopDown,
-    drawProfile(ctx, size, heading, color) {
-      const h = size * 0.5, w = size * 0.8;
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.4, 0);
-      ctx.lineTo(-w * 0.2, h * 0.3);
-      ctx.lineTo(w * 0.3, h * 0.25);
-      ctx.lineTo(w * 0.4, 0);
-      ctx.closePath();
-      ctx.fillStyle = color;
-      ctx.fill();
-    },
-    drawIcon: drawTriangleTopDown,
+    // Outrigger lines
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.3);
+    ctx.lineTo(-s * 0.6, s * 0.15);
+    ctx.moveTo(0, -s * 0.3);
+    ctx.lineTo(s * 0.6, s * 0.15);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.05;
+    ctx.stroke();
   },
 };
 
-/**
- * Map vessel type strings to symbol IDs
- */
-export const VESSEL_TYPE_MAP = {
-  'Trawler':    'trawler',
-  'Dragger':    'trawler',
-  'Longliner':  'longliner',
-  'Scalloper':  'scalloper',
-  'Gillnetter': 'gillnetter',
-  'Lobster':    'lobster',
-  'Pot Boat':   'lobster',
-  'Cargo':      'cargo',
-  'Freighter':  'cargo',
-  'Sailboat':   'sailboat',
-  'Sailing':    'sailboat',
+// =====================================================================
+// LONGLINER
+// =====================================================================
+var longliner = {
+  id: 'longliner',
+  name: 'Longliner',
+  description: 'Sleek hull with longline gear',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.25, -s * 0.8, s * 0.3, -s * 0.3, s * 0.25, s * 0.5);
+    ctx.quadraticCurveTo(0, s * 0.7, -s * 0.25, s * 0.5);
+    ctx.bezierCurveTo(-s * 0.3, -s * 0.3, -s * 0.25, -s * 0.8, 0, -s);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Longline trailing aft
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.5);
+    ctx.setLineDash([2, 3]);
+    ctx.lineTo(0, s * 1.2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.9, s * 0.15);
+    ctx.lineTo(-s * 0.7, s * 0.3);
+    ctx.quadraticCurveTo(0, s * 0.4, s * 0.8, s * 0.05);
+    ctx.lineTo(s, -s * 0.1);
+    ctx.lineTo(s * 0.75, -s * 0.1);
+    ctx.lineTo(s * 0.5, -s * 0.3);
+    ctx.lineTo(s * 0.15, -s * 0.3);
+    ctx.lineTo(0, -s * 0.1);
+    ctx.lineTo(-s * 0.7, -s * 0.1);
+    ctx.lineTo(-s * 0.9, s * 0.15);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Mast with spreader
+    ctx.beginPath();
+    ctx.moveTo(s * 0.3, -s * 0.3);
+    ctx.lineTo(s * 0.3, -s * 0.8);
+    ctx.moveTo(s * 0.1, -s * 0.6);
+    ctx.lineTo(s * 0.5, -s * 0.6);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.85);
+    ctx.lineTo(s * 0.25, s * 0.15);
+    ctx.quadraticCurveTo(0, s * 0.4, -s * 0.25, s * 0.15);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Line trailing
+    ctx.beginPath();
+    ctx.setLineDash([1, 2]);
+    ctx.moveTo(0, s * 0.3);
+    ctx.lineTo(0, s * 0.9);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  },
 };
 
-/**
- * Resolve a vessel type to a symbol object, falling back to generic
- */
-export function getVesselSymbol(type) {
-  const id = VESSEL_TYPE_MAP[type] || 'generic';
-  return VESSELS[id] || VESSELS.generic;
-}
+// =====================================================================
+// SCALLOPER
+// =====================================================================
+var scalloper = {
+  id: 'scalloper',
+  name: 'Scalloper',
+  description: 'Broad beam with dredge gear',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    // Wide hull
+    ctx.moveTo(0, -s * 0.8);
+    ctx.bezierCurveTo(s * 0.45, -s * 0.5, s * 0.5, 0, s * 0.4, s * 0.5);
+    ctx.quadraticCurveTo(0, s * 0.65, -s * 0.4, s * 0.5);
+    ctx.bezierCurveTo(-s * 0.5, 0, -s * 0.45, -s * 0.5, 0, -s * 0.8);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Dredge booms
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.15, s * 0.1);
+    ctx.lineTo(-s * 0.7, s * 0.6);
+    ctx.moveTo(s * 0.15, s * 0.1);
+    ctx.lineTo(s * 0.7, s * 0.6);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.85, s * 0.15);
+    ctx.lineTo(-s * 0.7, s * 0.35);
+    ctx.quadraticCurveTo(0, s * 0.45, s * 0.7, s * 0.1);
+    ctx.lineTo(s * 0.85, -s * 0.05);
+    ctx.lineTo(s * 0.6, -s * 0.05);
+    ctx.lineTo(s * 0.35, -s * 0.4);
+    ctx.lineTo(-s * 0.15, -s * 0.4);
+    ctx.lineTo(-s * 0.35, -s * 0.05);
+    ctx.lineTo(-s * 0.85, -s * 0.05);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // A-frame stern
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.5, -s * 0.4);
+    ctx.lineTo(-s * 0.5, -s * 0.75);
+    ctx.lineTo(-s * 0.85, -s * 0.05);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.035;
+    ctx.stroke();
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    // Wide boat shape
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.7);
+    ctx.lineTo(s * 0.45, s * 0.15);
+    ctx.quadraticCurveTo(0, s * 0.45, -s * 0.45, s * 0.15);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Scallop shell indicator
+    ctx.beginPath();
+    ctx.arc(0, s * 0.55, s * 0.15, 0, Math.PI, true);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// GILLNETTER
+// =====================================================================
+var gillnetter = {
+  id: 'gillnetter',
+  name: 'Gillnetter',
+  description: 'Mid-size with net reel',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.9);
+    ctx.bezierCurveTo(s * 0.3, -s * 0.6, s * 0.35, 0, s * 0.3, s * 0.5);
+    ctx.quadraticCurveTo(0, s * 0.65, -s * 0.3, s * 0.5);
+    ctx.bezierCurveTo(-s * 0.35, 0, -s * 0.3, -s * 0.6, 0, -s * 0.9);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Net reel circle at stern
+    ctx.beginPath();
+    ctx.arc(0, s * 0.3, s * 0.12, 0, TAU);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.8, s * 0.15);
+    ctx.lineTo(-s * 0.65, s * 0.3);
+    ctx.quadraticCurveTo(0, s * 0.38, s * 0.75, s * 0.08);
+    ctx.lineTo(s * 0.9, -s * 0.05);
+    ctx.lineTo(s * 0.6, -s * 0.05);
+    ctx.lineTo(s * 0.4, -s * 0.25);
+    ctx.lineTo(s * 0.05, -s * 0.25);
+    ctx.lineTo(-s * 0.1, -s * 0.05);
+    ctx.lineTo(-s * 0.7, -s * 0.05);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Net reel on stern
+    ctx.beginPath();
+    ctx.arc(-s * 0.55, -s * 0.2, s * 0.12, 0, TAU);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.03;
+    ctx.stroke();
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.85);
+    ctx.lineTo(s * 0.3, s * 0.15);
+    ctx.quadraticCurveTo(0, s * 0.4, -s * 0.3, s * 0.15);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+};
+
+// =====================================================================
+// LOBSTER / POT BOAT
+// =====================================================================
+var lobster = {
+  id: 'lobster',
+  name: 'Lobster Boat',
+  description: 'Small pot boat',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.85);
+    ctx.bezierCurveTo(s * 0.25, -s * 0.6, s * 0.28, 0, s * 0.22, s * 0.55);
+    ctx.quadraticCurveTo(0, s * 0.7, -s * 0.22, s * 0.55);
+    ctx.bezierCurveTo(-s * 0.28, 0, -s * 0.25, -s * 0.6, 0, -s * 0.85);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.7, s * 0.1);
+    ctx.lineTo(-s * 0.55, s * 0.25);
+    ctx.quadraticCurveTo(0, s * 0.32, s * 0.6, s * 0.05);
+    ctx.lineTo(s * 0.75, -s * 0.08);
+    ctx.lineTo(s * 0.5, -s * 0.08);
+    ctx.lineTo(s * 0.3, -s * 0.28);
+    ctx.lineTo(s * 0.05, -s * 0.28);
+    ctx.lineTo(-s * 0.1, -s * 0.08);
+    ctx.lineTo(-s * 0.6, -s * 0.08);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.lineTo(s * 0.3, s * 0.3);
+    ctx.quadraticCurveTo(0, s * 0.6, -s * 0.3, s * 0.3);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+};
+
+// =====================================================================
+// CARGO
+// =====================================================================
+var cargo = {
+  id: 'cargo',
+  name: 'Cargo Vessel',
+  description: 'Large freighter silhouette',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.3, -s * 0.8, s * 0.35, -s * 0.3, s * 0.35, s * 0.4);
+    ctx.lineTo(s * 0.3, s * 0.7);
+    ctx.lineTo(-s * 0.3, s * 0.7);
+    ctx.lineTo(-s * 0.35, s * 0.4);
+    ctx.bezierCurveTo(-s * 0.35, -s * 0.3, -s * 0.3, -s * 0.8, 0, -s);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Cargo holds (rectangles)
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(-s * 0.18, -s * 0.3, s * 0.36, s * 0.2);
+    ctx.fillRect(-s * 0.18, s * 0.05, s * 0.36, s * 0.2);
+    ctx.globalAlpha = 1;
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-s, s * 0.1);
+    ctx.lineTo(-s * 0.85, s * 0.3);
+    ctx.lineTo(s * 0.8, s * 0.3);
+    ctx.lineTo(s, 0);
+    ctx.lineTo(s * 0.85, -s * 0.05);
+    // Superstructure (tall block at stern)
+    ctx.lineTo(s * 0.6, -s * 0.05);
+    ctx.lineTo(s * 0.55, -s * 0.5);
+    ctx.lineTo(s * 0.3, -s * 0.5);
+    ctx.lineTo(s * 0.25, -s * 0.05);
+    // Holds / deck line
+    ctx.lineTo(-s * 0.75, -s * 0.05);
+    ctx.lineTo(-s, s * 0.1);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Funnel
+    ctx.fillRect(s * 0.35, -s * 0.65, s * 0.12, s * 0.15);
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.7);
+    ctx.lineTo(s * 0.4, s * 0.1);
+    ctx.lineTo(s * 0.35, s * 0.4);
+    ctx.lineTo(-s * 0.35, s * 0.4);
+    ctx.lineTo(-s * 0.4, s * 0.1);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+};
+
+// =====================================================================
+// SAILBOAT
+// =====================================================================
+var sailboat = {
+  id: 'sailboat',
+  name: 'Sailboat',
+  description: 'Sailing vessel',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.bezierCurveTo(s * 0.2, -s * 0.7, s * 0.22, 0, s * 0.18, s * 0.6);
+    ctx.quadraticCurveTo(0, s * 0.75, -s * 0.18, s * 0.6);
+    ctx.bezierCurveTo(-s * 0.22, 0, -s * 0.2, -s * 0.7, 0, -s);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  },
+
+  drawProfile: function (ctx, size, color) {
+    var s = size * 0.5;
+    // Hull
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.6, s * 0.15);
+    ctx.lineTo(-s * 0.4, s * 0.3);
+    ctx.quadraticCurveTo(0, s * 0.35, s * 0.55, s * 0.08);
+    ctx.lineTo(s * 0.7, -s * 0.05);
+    ctx.lineTo(-s * 0.5, -s * 0.05);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Mast
+    ctx.beginPath();
+    ctx.moveTo(s * 0.1, -s * 0.05);
+    ctx.lineTo(s * 0.1, -s * 0.95);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.025;
+    ctx.stroke();
+
+    // Sail
+    ctx.beginPath();
+    ctx.moveTo(s * 0.1, -s * 0.9);
+    ctx.quadraticCurveTo(s * 0.55, -s * 0.45, s * 0.1, -s * 0.05);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.3;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  },
+
+  drawIcon: function (ctx, size, color) {
+    var s = size * 0.5;
+    // Sail triangle
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.9);
+    ctx.lineTo(s * 0.4, s * 0.1);
+    ctx.lineTo(-s * 0.05, s * 0.1);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Hull arc
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.35, s * 0.2);
+    ctx.quadraticCurveTo(0, s * 0.5, s * 0.5, s * 0.2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size * 0.06;
+    ctx.stroke();
+  },
+};
+
+// =====================================================================
+// GENERIC (current triangle fallback)
+// =====================================================================
+var generic = {
+  id: 'generic',
+  name: 'Generic',
+  description: 'Simple triangle (default fallback)',
+
+  drawTopDown: function (ctx, size, color) {
+    var s = size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -s);
+    ctx.lineTo(-s * 0.5, s * 0.6);
+    ctx.lineTo(s * 0.5, s * 0.6);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  },
+
+  drawProfile: function (ctx, size, color) {
+    // Same as topDown for generic
+    generic.drawTopDown(ctx, size, color);
+  },
+
+  drawIcon: function (ctx, size, color) {
+    generic.drawTopDown(ctx, size, color);
+  },
+
+  // Legacy draw function for backward compatibility
+  draw: function (ctx, size, color) {
+    generic.drawTopDown(ctx, size, color);
+  },
+};
+
+// =====================================================================
+// Export all vessel symbols
+// =====================================================================
+export var VESSEL_SYMBOLS = {
+  trawler:    trawler,
+  longliner:  longliner,
+  scalloper:  scalloper,
+  gillnetter: gillnetter,
+  lobster:    lobster,
+  cargo:      cargo,
+  sailboat:   sailboat,
+  generic:    generic,
+};

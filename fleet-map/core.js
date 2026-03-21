@@ -1,16 +1,14 @@
 /**
  * Fleet Map — Canvas Manager
- * Creates and manages the multi-canvas parallax stack.
+ * Creates and manages the 5-canvas parallax stack.
  * Handles DPR-aware resizing and the render loop.
  *
  * Layer stack (bottom to top):
- *   1. depth       — Bathymetry, fathom lines, grid (static)
- *   2. currents    — Particle ocean currents (60fps)
- *   3. coast       — Coastline, land, ports, routes, labels (static + port pulse)
- *   4. weather     — Weather overlay (static, refreshes on NOAA update)
- *   5. markers     — Channel markers & nav aids (static)
- *   6. vessels     — Vessel silhouettes, trails, halos (60fps)
- *   7. atmosphere  — Fog vignette (static)
+ *   1. depth     — Bathymetry, fathom lines, grid (static)
+ *   2. currents  — Particle ocean currents (60fps)
+ *   3. coast     — Coastline, land, ports, routes, labels (static + port pulse)
+ *   4. vessels   — Vessel triangles, trails, halos (60fps)
+ *   5. atmosphere — Fog vignette (static)
  */
 
 import { proj, invProj } from './projection.js';
@@ -19,13 +17,16 @@ var LAYER_IDS = {
   depth:      'fleetCanvasDepth',
   currents:   'fleetCanvasCurrents',
   coast:      'fleetCanvasCoast',
-  weather:    'fleetCanvasWeather',
   markers:    'fleetCanvasMarkers',
+  weather:    'fleetCanvasWeather',
   vessels:    'fleetCanvasVessels',
   atmosphere: 'fleetCanvasAtmo',
 };
 
-var LAYER_NAMES = ['depth', 'currents', 'coast', 'weather', 'markers', 'vessels', 'atmosphere'];
+var LAYER_NAMES = ['depth', 'currents', 'coast', 'markers', 'weather', 'vessels', 'atmosphere'];
+
+// Layers that are optional — don't throw if canvas is missing
+var OPTIONAL_LAYERS = { markers: true, weather: true };
 
 export class CanvasManager {
   /**
@@ -45,30 +46,27 @@ export class CanvasManager {
     this._rafId = null;
 
     // Find each canvas by ID and build layer objects
-    // New layers (weather, markers) are optional — created dynamically if missing
     for (var i = 0; i < LAYER_NAMES.length; i++) {
       var name = LAYER_NAMES[i];
       var canvasId = LAYER_IDS[name];
       var canvas = container.querySelector('#' + canvasId);
       if (!canvas) {
+        // If canvas not found by ID, try finding it inside the container
+        // by data attribute as fallback
         canvas = container.querySelector('[data-layer="' + name + '"]');
       }
       if (!canvas) {
-        // New optional layers — create canvas dynamically
-        if (name === 'weather' || name === 'markers') {
+        if (OPTIONAL_LAYERS[name]) {
+          // Optional layers: create canvas dynamically if not in DOM
           canvas = document.createElement('canvas');
           canvas.id = canvasId;
           canvas.style.position = 'absolute';
           canvas.style.top = '0';
           canvas.style.left = '0';
           canvas.style.pointerEvents = 'none';
-          // Insert before vessels canvas if it exists, otherwise append
-          var vesselsCanvas = container.querySelector('#' + LAYER_IDS.vessels);
-          if (vesselsCanvas) {
-            container.insertBefore(canvas, vesselsCanvas);
-          } else {
-            container.appendChild(canvas);
-          }
+          // Insert before the first existing canvas to maintain z-order
+          var mapArea = container.querySelector('.fleet-map-area') || container;
+          mapArea.appendChild(canvas);
         } else {
           throw new Error('FleetMap: missing canvas #' + canvasId);
         }
@@ -98,7 +96,6 @@ export class CanvasManager {
 
     for (var i = 0; i < LAYER_NAMES.length; i++) {
       var layer = this.layers[LAYER_NAMES[i]];
-      if (!layer) continue;
       var canvas = layer.canvas;
       var ctx = layer.ctx;
 
@@ -114,6 +111,9 @@ export class CanvasManager {
 
   /**
    * Project geographic coordinates to screen coordinates.
+   * @param {number} lat
+   * @param {number} lon
+   * @returns {{ x: number, y: number }}
    */
   proj(lat, lon) {
     return proj(lat, lon, this.config.bounds, this.w, this.h);
@@ -121,6 +121,9 @@ export class CanvasManager {
 
   /**
    * Inverse project screen coordinates to geographic.
+   * @param {number} x
+   * @param {number} y
+   * @returns {{ lat: number, lon: number }}
    */
   invProj(x, y) {
     return invProj(x, y, this.config.bounds, this.w, this.h);
@@ -128,6 +131,8 @@ export class CanvasManager {
 
   /**
    * Get a layer object by name.
+   * @param {string} name — one of: depth, currents, coast, vessels, atmosphere
+   * @returns {{ canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, dirty: boolean }}
    */
   getLayer(name) {
     return this.layers[name];
@@ -135,6 +140,7 @@ export class CanvasManager {
 
   /**
    * Mark a layer as needing redraw.
+   * @param {string} name
    */
   markDirty(name) {
     if (this.layers[name]) {
@@ -144,6 +150,7 @@ export class CanvasManager {
 
   /**
    * Start the render loop.
+   * @param {function} drawFn — called each frame with (t)
    */
   startLoop(drawFn) {
     this._drawFn = drawFn;

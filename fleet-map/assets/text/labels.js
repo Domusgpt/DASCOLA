@@ -1,179 +1,213 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Typography & Label System
-//  Standardized text rendering for all map label types
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Label System
+ * ==========================
+ * Standardized text rendering for different label types on the map.
+ * Each label type defines font, size, alpha, letter spacing, and
+ * text transform so all map text is consistent and theme-aware.
+ *
+ * Usage:
+ *   import { LABEL_STYLES, drawLabel } from './text/labels.js';
+ *   drawLabel(ctx, 'port-name', 'BARNEGAT LIGHT', x, y, { w, fonts, colors });
+ */
 
-import { textSize } from '../scale.js';
+import { scaleFor, emphasisFor } from '../scale.js';
 
 /**
- * Label type definitions with default styling
+ * Label style definitions.
+ * Each style has: sizeStep, fontKey, alpha, transform, tracking, align, baseline.
  */
-export const LABEL_TYPES = {
+export var LABEL_STYLES = {
   'water-body': {
-    sizeKey: 'lg',
+    sizeStep: 'lg',
+    fontKey: 'display',
     alpha: 0.08,
-    fontType: 'display',
-    transform: 'wide-track',
-    baseline: 'middle',
+    transform: 'spaced-upper',   // "S O U T H   A T L A N T I C"
     align: 'center',
+    baseline: 'middle',
   },
+
   'land-mass': {
-    sizeKey: 'lg',
+    sizeStep: 'lg',
+    fontKey: 'display',
     alpha: 0.35,
-    fontType: 'display',
-    transform: 'wide-track',
-    baseline: 'middle',
+    transform: 'spaced-upper',
     align: 'center',
+    baseline: 'middle',
   },
+
   'port-name': {
-    sizeKey: 'sm',
+    sizeStep: 'sm',
+    fontKey: 'sans',
     alpha: 0.65,
-    fontType: 'sans',
-    transform: 'uppercase',
-    baseline: 'middle',
+    transform: 'upper',
     align: 'left',
+    baseline: 'middle',
   },
+
   'vessel-name': {
-    sizeKey: 'xs',
+    sizeStep: 'xs',
+    fontKey: 'sans',
     alpha: 0.3,
-    fontType: 'sans',
     transform: 'none',
-    baseline: 'top',
     align: 'center',
+    baseline: 'top',
   },
+
   'depth-sounding': {
-    sizeKey: 'xs',
+    sizeStep: 'xs',
+    fontKey: 'sans',
     alpha: 0.2,
-    fontType: 'sans',
     transform: 'none',
-    baseline: 'middle',
     align: 'center',
+    baseline: 'middle',
   },
+
   'coordinate': {
-    sizeKey: 'xs',
+    sizeStep: 'xs',
+    fontKey: 'sans',
     alpha: 0.15,
-    fontType: 'sans',
     transform: 'none',
-    baseline: 'middle',
-    align: 'center',
+    align: 'left',
+    baseline: 'top',
   },
+
   'fishing-ground': {
-    sizeKey: 'sm',
+    sizeStep: 'sm',
+    fontKey: 'sans',
     alpha: 0.12,
-    fontType: 'sans',
-    transform: 'italic',
-    baseline: 'middle',
+    transform: 'none',
     align: 'center',
+    baseline: 'middle',
+    italic: true,
   },
+
   'warning': {
-    sizeKey: 'md',
+    sizeStep: 'md',
+    fontKey: 'sans',
     alpha: 0.9,
-    fontType: 'sans',
-    transform: 'uppercase-bold',
-    baseline: 'middle',
+    transform: 'upper',
     align: 'center',
+    baseline: 'middle',
+    bold: true,
   },
-  'route-name': {
-    sizeKey: 'xs',
+
+  'route-label': {
+    sizeStep: 'xs',
+    fontKey: 'sans',
     alpha: 0.25,
-    fontType: 'sans',
     transform: 'none',
-    baseline: 'top',
     align: 'left',
+    baseline: 'middle',
   },
+
   'title': {
-    sizeKey: 'xl',
+    sizeStep: 'xl',
+    fontKey: 'display',
     alpha: 0.6,
-    fontType: 'display',
     transform: 'none',
-    baseline: 'top',
     align: 'left',
+    baseline: 'top',
   },
+
   'subtitle': {
-    sizeKey: 'sm',
-    alpha: 0.3,
-    fontType: 'sans',
-    transform: 'uppercase',
-    baseline: 'top',
+    sizeStep: 'sm',
+    fontKey: 'sans',
+    alpha: 0.4,
+    transform: 'none',
     align: 'left',
+    baseline: 'top',
+  },
+
+  'stat-value': {
+    sizeStep: 'lg',
+    fontKey: 'display',
+    alpha: 0.8,
+    transform: 'none',
+    align: 'center',
+    baseline: 'middle',
+  },
+
+  'stat-label': {
+    sizeStep: 'xs',
+    fontKey: 'sans',
+    alpha: 0.4,
+    transform: 'upper',
+    align: 'center',
+    baseline: 'top',
   },
 };
 
 /**
- * Apply wide tracking to a string
+ * Apply text transform to a string.
+ * @param {string} text
+ * @param {string} transform — 'none', 'upper', 'spaced-upper'
+ * @returns {string}
  */
-function wideTrack(str) {
-  return str.split('').join(' ');
-}
-
-/**
- * Transform text based on label type
- */
-function transformText(text, transform) {
+function applyTransform(text, transform) {
+  if (!text) return '';
   switch (transform) {
-    case 'wide-track':    return wideTrack(text.toUpperCase());
-    case 'uppercase':     return text.toUpperCase();
-    case 'uppercase-bold':return text.toUpperCase();
-    case 'italic':        return text;
-    default:              return text;
+    case 'upper':
+      return text.toUpperCase();
+    case 'spaced-upper':
+      return text.toUpperCase().split('').join(' ');
+    default:
+      return text;
   }
 }
 
 /**
- * Build CSS font string for a label type
- */
-function buildFont(type, fontSize, fonts) {
-  const def = LABEL_TYPES[type];
-  if (!def) return `${fontSize}px sans-serif`;
-  const family = def.fontType === 'display' ? fonts.display : fonts.sans;
-  const prefix = def.transform === 'uppercase-bold' ? 'bold ' :
-                 def.transform === 'italic' ? 'italic ' : '';
-  return `${prefix}${fontSize}px ${family}`;
-}
-
-/**
- * Draw a label on the canvas
+ * Draw a label at the given position using a named label style.
+ *
  * @param {CanvasRenderingContext2D} ctx
- * @param {string} type — label type key from LABEL_TYPES
- * @param {string} text — raw text to render
- * @param {number} x — screen x
- * @param {number} y — screen y
- * @param {object} opts — { canvasWidth, fonts, color, theme, rotation }
+ * @param {string} styleId  — key from LABEL_STYLES
+ * @param {string} text     — text to render
+ * @param {number} x        — screen x
+ * @param {number} y        — screen y
+ * @param {object} opts
+ * @param {number} opts.w       — canvas width (for scaling)
+ * @param {object} opts.fonts   — { display, sans }
+ * @param {object} opts.colors  — color palette
+ * @param {string} [opts.color] — explicit color override
+ * @param {number} [opts.alpha] — explicit alpha override
+ * @param {number} [opts.rotation] — text rotation in radians
+ * @param {object} [opts.theme] — theme for emphasis overrides
  */
-export function drawLabel(ctx, type, text, x, y, opts = {}) {
-  const def = LABEL_TYPES[type];
-  if (!def) return;
+export function drawLabel(ctx, styleId, text, x, y, opts) {
+  var style = LABEL_STYLES[styleId];
+  if (!style) return;
 
-  const { canvasWidth = 1200, fonts = {}, color, theme, rotation } = opts;
-  const fontSize = textSize(def.sizeKey, canvasWidth, theme);
-  const displayText = transformText(text, def.transform);
+  var w      = opts.w || 1200;
+  var fonts  = opts.fonts || {};
+  var colors = opts.colors || {};
+  var theme  = opts.theme || null;
+
+  var emphasis = emphasisFor('text', theme);
+  var px = scaleFor('text', style.sizeStep, w, emphasis);
+
+  var fontFamily = (style.fontKey === 'display') ? (fonts.display || 'serif') : (fonts.sans || 'sans-serif');
+  var fontPrefix = '';
+  if (style.italic) fontPrefix += 'italic ';
+  if (style.bold) fontPrefix += 'bold ';
+
+  var displayText = applyTransform(text, style.transform);
+  var alpha = (opts.alpha !== undefined) ? opts.alpha : style.alpha;
+  var color = opts.color || colors.creme || 'rgba(240,235,224,1)';
 
   ctx.save();
-  ctx.translate(x, y);
-  if (rotation) ctx.rotate(rotation);
 
-  ctx.font = buildFont(type, fontSize, fonts);
-  ctx.textAlign = def.align;
-  ctx.textBaseline = def.baseline;
-  ctx.globalAlpha = def.alpha;
-  ctx.fillStyle = color || '#fff';
-  ctx.fillText(displayText, 0, 0);
+  if (opts.rotation) {
+    ctx.translate(x, y);
+    ctx.rotate(opts.rotation);
+    x = 0;
+    y = 0;
+  }
+
+  ctx.font         = fontPrefix + px + 'px ' + fontFamily;
+  ctx.fillStyle    = color;
+  ctx.globalAlpha  = alpha;
+  ctx.textAlign    = style.align;
+  ctx.textBaseline = style.baseline;
+  ctx.fillText(displayText, x, y);
 
   ctx.restore();
-}
-
-/**
- * Measure label width for layout calculations
- */
-export function measureLabel(ctx, type, text, opts = {}) {
-  const def = LABEL_TYPES[type];
-  if (!def) return 0;
-  const { canvasWidth = 1200, fonts = {}, theme } = opts;
-  const fontSize = textSize(def.sizeKey, canvasWidth, theme);
-  const displayText = transformText(text, def.transform);
-  ctx.save();
-  ctx.font = buildFont(type, fontSize, fonts);
-  const w = ctx.measureText(displayText).width;
-  ctx.restore();
-  return w;
 }

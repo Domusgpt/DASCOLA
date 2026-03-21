@@ -1,71 +1,120 @@
-// ─────────────────────────────────────────────────────────
-//  DASCOLA — Asset Registry
-//  Central registry for all symbols and themes
-// ─────────────────────────────────────────────────────────
+/**
+ * Fleet Map — Asset Registry
+ * ============================
+ * Central registry for discovering and loading symbol packs and themes.
+ * All built-in assets are registered at startup. Custom packs can be
+ * registered at runtime for customer-specific presets.
+ *
+ * Usage:
+ *   import { createDefaultRegistry } from './assets/registry.js';
+ *   var registry = createDefaultRegistry();
+ *   var symbol = registry.getSymbol('vessels', 'trawler');
+ *   var theme  = registry.getTheme('classic-nautical');
+ */
 
-import { VESSELS } from './symbols/vessels.js';
-import { NAV_AIDS } from './symbols/nav-aids.js';
-import { CHANNEL_MARKERS } from './symbols/channel-markers.js';
-import { PORTS } from './symbols/ports.js';
-import { WEATHER } from './symbols/weather.js';
-import { CARTOGRAPHY } from './symbols/cartography.js';
-import { STATUS } from './symbols/status.js';
-import { mergeTheme } from './themes/theme.js';
-import { classicNautical } from './themes/classic-nautical.js';
-import { treasureMap } from './themes/treasure-map.js';
-import { tactical } from './themes/tactical.js';
-import { minimal } from './themes/minimal.js';
-import { tropical } from './themes/tropical.js';
+// Built-in symbol packs
+import { VESSEL_SYMBOLS }   from './symbols/vessels.js';
+import { NAV_AID_SYMBOLS }  from './symbols/nav-aids.js';
+import { CHANNEL_SYMBOLS }  from './symbols/channel-markers.js';
+import { PORT_SYMBOLS }     from './symbols/ports.js';
+import { WEATHER_SYMBOLS }  from './symbols/weather.js';
+import { CARTO_SYMBOLS }    from './symbols/cartography.js';
+import { STATUS_SYMBOLS }   from './symbols/status.js';
+
+// Built-in themes
+import { CLASSIC_NAUTICAL } from './themes/classic-nautical.js';
+import { TREASURE_MAP }     from './themes/treasure-map.js';
+import { TACTICAL }         from './themes/tactical.js';
+import { MINIMAL }          from './themes/minimal.js';
+import { TROPICAL }         from './themes/tropical.js';
 
 export class AssetRegistry {
   constructor() {
+    /** @type {Object<string, Object<string, object>>} category → { id → symbol } */
     this.symbols = {};
-    this.categories = {};
+    /** @type {Object<string, object>} themeId → theme object */
     this.themes = {};
   }
 
+  // -------------------------------------------------------------------
+  // Symbols
+  // -------------------------------------------------------------------
+
   /**
-   * Register a set of symbols under a category
+   * Register a map of symbols under a category.
+   * @param {string} category — e.g. 'vessels', 'nav-aids', 'weather'
+   * @param {Object<string, object>} symbolMap — { id: symbolDef, ... }
    */
-  registerSymbols(category, symbols) {
-    this.categories[category] = this.categories[category] || [];
-    for (const [id, def] of Object.entries(symbols)) {
-      this.symbols[id] = { ...def, category };
-      this.categories[category].push(id);
+  registerSymbols(category, symbolMap) {
+    if (!this.symbols[category]) {
+      this.symbols[category] = {};
+    }
+    for (var id in symbolMap) {
+      if (symbolMap.hasOwnProperty(id)) {
+        this.symbols[category][id] = symbolMap[id];
+      }
     }
   }
 
   /**
-   * Register a theme (merges with defaults)
+   * Get a single symbol definition.
+   * @param {string} category
+   * @param {string} id
+   * @returns {object|null}
    */
-  registerTheme(themePartial) {
-    const theme = mergeTheme(themePartial);
+  getSymbol(category, id) {
+    var cat = this.symbols[category];
+    return (cat && cat[id]) || null;
+  }
+
+  /**
+   * List all symbol IDs in a category.
+   * @param {string} [category] — if omitted, returns all categories
+   * @returns {string[]}
+   */
+  listSymbols(category) {
+    if (category) {
+      return this.symbols[category] ? Object.keys(this.symbols[category]) : [];
+    }
+    return Object.keys(this.symbols);
+  }
+
+  /**
+   * Get all symbols in a category.
+   * @param {string} category
+   * @returns {Object<string, object>}
+   */
+  getCategory(category) {
+    return this.symbols[category] || {};
+  }
+
+  // -------------------------------------------------------------------
+  // Themes
+  // -------------------------------------------------------------------
+
+  /**
+   * Register a theme.
+   * @param {object} theme — must have an `id` property
+   */
+  registerTheme(theme) {
+    if (!theme || !theme.id) {
+      throw new Error('AssetRegistry: theme must have an id');
+    }
     this.themes[theme.id] = theme;
   }
 
   /**
-   * Get a symbol definition by ID
-   */
-  getSymbol(id) {
-    return this.symbols[id] || null;
-  }
-
-  /**
-   * Get a theme by ID (falls back to classic-nautical)
+   * Get a theme by ID.
+   * @param {string} id
+   * @returns {object|null}
    */
   getTheme(id) {
-    return this.themes[id] || this.themes['classic-nautical'] || null;
+    return this.themes[id] || null;
   }
 
   /**
-   * List all symbol IDs in a category
-   */
-  listSymbols(category) {
-    return this.categories[category] || [];
-  }
-
-  /**
-   * List all registered theme IDs
+   * List all registered theme IDs.
+   * @returns {string[]}
    */
   listThemes() {
     return Object.keys(this.themes);
@@ -73,24 +122,27 @@ export class AssetRegistry {
 }
 
 /**
- * Create a fully-loaded registry with all built-in assets
+ * Create a registry pre-loaded with all built-in symbols and themes.
+ * @returns {AssetRegistry}
  */
 export function createDefaultRegistry() {
-  const reg = new AssetRegistry();
+  var reg = new AssetRegistry();
 
-  reg.registerSymbols('vessel', VESSELS);
-  reg.registerSymbols('nav-aid', NAV_AIDS);
-  reg.registerSymbols('channel-marker', CHANNEL_MARKERS);
-  reg.registerSymbols('port', PORTS);
-  reg.registerSymbols('weather', WEATHER);
-  reg.registerSymbols('cartography', CARTOGRAPHY);
-  reg.registerSymbols('status', STATUS);
+  // Register built-in symbol packs
+  reg.registerSymbols('vessels',         VESSEL_SYMBOLS);
+  reg.registerSymbols('nav-aids',        NAV_AID_SYMBOLS);
+  reg.registerSymbols('channel-markers', CHANNEL_SYMBOLS);
+  reg.registerSymbols('ports',           PORT_SYMBOLS);
+  reg.registerSymbols('weather',         WEATHER_SYMBOLS);
+  reg.registerSymbols('cartography',     CARTO_SYMBOLS);
+  reg.registerSymbols('status',          STATUS_SYMBOLS);
 
-  reg.registerTheme(classicNautical);
-  reg.registerTheme(treasureMap);
-  reg.registerTheme(tactical);
-  reg.registerTheme(minimal);
-  reg.registerTheme(tropical);
+  // Register built-in themes
+  reg.registerTheme(CLASSIC_NAUTICAL);
+  reg.registerTheme(TREASURE_MAP);
+  reg.registerTheme(TACTICAL);
+  reg.registerTheme(MINIMAL);
+  reg.registerTheme(TROPICAL);
 
   return reg;
 }
