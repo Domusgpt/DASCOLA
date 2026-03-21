@@ -334,13 +334,17 @@
 #fleetCanvasDepth    { z-index: 1; }
 #fleetCanvasCurrents { z-index: 2; }
 #fleetCanvasCoast    { z-index: 3; }
-#fleetCanvasVessels  { z-index: 4; }
-#fleetCanvasAtmo     { z-index: 5; pointer-events: none; }
+#fleetCanvasMarkers  { z-index: 4; }
+#fleetCanvasWeather  { z-index: 5; }
+#fleetCanvasVessels  { z-index: 6; }
+#fleetCanvasAtmo     { z-index: 7; }
 
 /* Disable pointer events on all non-interactive canvas layers. */
 #fleetCanvasDepth,
 #fleetCanvasCurrents,
 #fleetCanvasCoast,
+#fleetCanvasMarkers,
+#fleetCanvasWeather,
 #fleetCanvasAtmo {
   pointer-events: none;
 }

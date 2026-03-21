@@ -138,18 +138,21 @@ export class FleetMap {
     this.cm = new CanvasManager(this.container, this.config);
 
     // Init current particles
-    this.particles = initParticles(this.config);
+    this.particles = initParticles(this.config, this.cm.w, this.cm.h, this.config.bounds);
 
     // Build roster panel
     this.rosterEl = buildRoster(this.container, this.vessels, this.config);
 
     // Setup mouse/touch interaction
-    this._interactionCleanup = setupInteraction(this.cm, this.vessels, this.config);
+    this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
 
     // AIS live-tracking client
     this.aisClient = null;
     if (this.config.aisEndpoint) {
-      this.aisClient = new AISClient(this.config.aisEndpoint, this.config.aisRefreshMs);
+      var self0 = this;
+      this.aisClient = new AISClient(this.config, this.vessels, function (updatedVessels) {
+        self0.updateVessels(updatedVessels);
+      });
     }
 
     // Asset system — registry, theme, renderer
@@ -190,10 +193,7 @@ export class FleetMap {
 
     // Start AIS polling if configured
     if (this.aisClient) {
-      var self2 = this;
-      this.aisClient.start(function (updatedVessels) {
-        self2.updateVessels(updatedVessels);
-      });
+      this.aisClient.start();
     }
 
     // Start NOAA weather polling if configured
@@ -432,7 +432,8 @@ export class FleetMap {
     // --- Animated layers: always redraw (60fps) ---
 
     var currLayer = cm.getLayer('currents');
-    drawCurrents(currLayer.ctx, cm, this.particles, this.currentData, this.config, t);
+    var projFnC = cm.proj.bind(cm);
+    drawCurrents(currLayer.ctx, cm.w, cm.h, projFnC, this.config, t, this.particles, this.currentData, this.config.bounds);
 
     var vesselLayer = cm.getLayer('vessels');
     drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t, this.renderer);
