@@ -1099,15 +1099,20 @@ body {
   --fm-font-display: 'Playfair Display', Georgia, serif;
   --fm-font-sans: 'Josefin Sans', sans-serif;
   background: var(--deep);
+  overflow: hidden;
 }
 
 /* Full-viewport fleet map when pinned */
-/* Fleet map — full-screen immersive layout */
+#fleetP { overflow: hidden; }
+
+/* Fleet map — full-screen immersive layout with cinematic zoom */
 .fleet-section .fleet-map {
   max-height: none !important;
   aspect-ratio: unset !important;
   border: none !important;
   border-radius: 0 !important;
+  transform-origin: 78% 72%;
+  will-change: transform, opacity;
 }
 .fleet-section .fleet-map canvas {
   position: absolute;
@@ -1345,7 +1350,7 @@ body {
 </div>
 
 <!-- Fleet Map Section — full-screen locked immersive -->
-<div class="fleet-section ss" id="fleet" style="height:400vh">
+<div class="fleet-section ss" id="fleet" style="height:600vh">
   <div id="fleetP" style="position:relative;width:100%;height:100vh;overflow:hidden;background:var(--deep)">
     <!-- FULL-SCREEN MAP (fills entire viewport as background) -->
     <div class="fleet-map" id="fleetMap" style="position:absolute;inset:0;width:100%;height:100%">
@@ -1768,9 +1773,9 @@ window.addEventListener('load', function() {
   Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
   Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
-  // Fleet Map — full-screen immersive, title shows then fades, map stays locked
+  // Fleet Map — full-screen immersive, cinematic orbital-to-surface zoom
   var Fl = gsap.timeline({ scrollTrigger: {
-    trigger: '#fleet', start: 'top top', end: '+=300%',
+    trigger: '#fleet', start: 'top top', end: '+=500%',
     pin: '#fleetP', scrub: 1, anticipatePin: 1,
     onEnter: function() {
       if (window.fleetMapInstance) {
@@ -1780,26 +1785,49 @@ window.addEventListener('load', function() {
     },
     onLeaveBack: function() { if (window.fleetMapInstance) window.fleetMapInstance.stop(); }
   }});
-  // Phase 1: Map fades in from black + title appears (0 → 0.2)
-  Fl.to(V.s, { hue: 210, int: 0.08, spd: 0.06, chaos: 0.01, duration: 0.08 }, 0);
-  Fl.fromTo('#fleetMap', { opacity: 0 }, { opacity: 1, duration: 0.12 }, 0);
-  Fl.fromTo('#flA', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.08 }, 0.04);
-  Fl.fromTo('#flH', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.10 }, 0.06);
-  Fl.fromTo('#flP', { opacity: 0, y: 20 }, { opacity: 0.7, y: 0, duration: 0.08 }, 0.10);
-  // Phase 2: Title holds (0.2 → 0.35)
-  Fl.to({}, { duration: 0.15 });
-  // Phase 3: Title fades out, UI elements fade in (0.35 → 0.55)
-  Fl.to('#fleetTitle', { opacity: 0, scale: 0.97, duration: 0.12 }, 0.35);
-  Fl.fromTo('#fleetRoster', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.10 }, 0.40);
-  Fl.fromTo('#flSt', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.08 }, 0.42);
-  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.08 }, 0.44);
-  // Phase 4: Hold on full map view (0.55 → 0.85)
-  Fl.to({}, { duration: 0.30 });
-  // Phase 5: Fade out as we leave (0.85 → 1.0)
-  Fl.to('#fleetRoster', { opacity: 0, duration: 0.06 }, 0.88);
-  Fl.to('#flSt', { opacity: 0, duration: 0.06 }, 0.88);
-  Fl.to('#flLeg', { opacity: 0, duration: 0.06 }, 0.88);
-  Fl.to('#fleetMap', { opacity: 0, duration: 0.08 }, 0.92);
+
+  // === CINEMATIC CAMERA — CSS transforms on the map container ===
+  // The map renders the full Atlantic at 1x. CSS scale() zooms the pixels.
+  // transform-origin set in CSS to center on Santos fishing grounds.
+
+  // Phase 1 (0 → 0.12): Orbital arrival — zoomed out, slight rotation, fading in
+  Fl.fromTo('#fleetMap',
+    { opacity: 0, scale: 0.55, rotation: 2, transformOrigin: '78% 72%' },
+    { opacity: 1, scale: 0.65, rotation: 1.2, duration: 0.12, ease: 'power2.out' }, 0);
+
+  // Title fades in over the orbital view
+  Fl.fromTo('#flA', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.06 }, 0.04);
+  Fl.fromTo('#flH', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
+  Fl.fromTo('#flP', { opacity: 0, y: 20 }, { opacity: 0.7, y: 0, duration: 0.06 }, 0.10);
+  Fl.to(V.s, { hue: 210, int: 0.08, spd: 0.06, chaos: 0.01, duration: 0.06 }, 0);
+
+  // Phase 2 (0.12 → 0.28): Descend through atmosphere — zoom toward the Atlantic
+  Fl.to('#fleetMap', { scale: 0.85, rotation: 0.5, duration: 0.16, ease: 'power1.inOut' }, 0.12);
+
+  // Phase 3 (0.28 → 0.40): Title fades, camera pushes into fishing grounds
+  Fl.to('#fleetTitle', { opacity: 0, scale: 0.95, duration: 0.08 }, 0.28);
+  Fl.to('#fleetMap', { scale: 1.15, rotation: 0, duration: 0.12, ease: 'power2.inOut' }, 0.28);
+
+  // Phase 4 (0.40 → 0.52): Deep zoom into Santos / vessel cluster — the "birds eye" moment
+  Fl.to('#fleetMap', { scale: 2.0, x: '-15%', y: '-8%', duration: 0.12, ease: 'power2.inOut' }, 0.40);
+  Fl.fromTo('#fleetRoster', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.08 }, 0.44);
+  Fl.fromTo('#flSt', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.06 }, 0.46);
+
+  // Phase 5 (0.52 → 0.65): Hold on close-up with subtle drift — feeling of a satellite hovering
+  Fl.to('#fleetMap', { scale: 2.15, x: '-17%', y: '-6%', duration: 0.13, ease: 'none' }, 0.52);
+  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.54);
+
+  // Phase 6 (0.65 → 0.78): Pull back to reveal the full network — air routes visible
+  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.13, ease: 'power2.inOut' }, 0.65);
+
+  // Phase 7 (0.78 → 0.88): Hold on full network view
+  Fl.to({}, { duration: 0.10 });
+
+  // Phase 8 (0.88 → 1.0): Zoom back to orbital as we leave — the farewell shot
+  Fl.to('#fleetRoster', { opacity: 0, duration: 0.04 }, 0.88);
+  Fl.to('#flSt', { opacity: 0, duration: 0.04 }, 0.88);
+  Fl.to('#flLeg', { opacity: 0, duration: 0.04 }, 0.88);
+  Fl.to('#fleetMap', { scale: 0.6, opacity: 0, rotation: -1, duration: 0.10, ease: 'power2.in' }, 0.90);
   Fl.to(V.s, { int: 0.06, duration: 0.06 });
 
   // How We Work

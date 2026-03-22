@@ -1,24 +1,15 @@
 /**
  * Fleet Map — Depth Layer
  * ========================
- * Renders the ocean background: bathymetry gradient, fathom contour
- * lines, and the latitude/longitude grid.
+ * Renders the ocean background: multi-band bathymetry gradient,
+ * continental shelf contours, lat/lon grid, and depth zone coloring
+ * that creates a satellite-imagery feel.
  *
  * This is a STATIC layer — only redraws on resize.
  * Canvas: fleetCanvasDepth (z-index: 1, bottom layer)
- *
- * Customizable via config.colors:
- *   .deep    — Deepest ocean color
- *   .ocean   — Array of 3 gradient stops [center, mid, edge]
- *   .fathom  — Contour line color
- *   .grid    — Grid line color
- *
- * Customizable via config.fonts:
- *   .sans    — Font for coordinate labels
  */
 
 // Continental shelf edge — ~14 points tracing the shelf break
-// off the southeastern Brazilian coast (lat, lon pairs).
 var SHELF = [
   [-15.0, -37.5],
   [-16.5, -37.0],
@@ -36,7 +27,7 @@ var SHELF = [
   [-34.0, -50.5],
 ];
 
-// Fathom labels placed at selected contour indices
+// Fathom labels at selected contour indices
 var FATHOM_LABELS = [
   { idx: 2,  offset: 0, text: '100 fm' },
   { idx: 6,  offset: 1, text: '500 fm' },
@@ -44,18 +35,12 @@ var FATHOM_LABELS = [
   { idx: 12, offset: 2, text: '2000 fm' },
 ];
 
-/**
- * Format a latitude value as a label string.
- */
 function latLabel(deg) {
   var abs = Math.abs(deg);
   var dir = deg >= 0 ? 'N' : 'S';
   return abs + '\u00B0' + dir;
 }
 
-/**
- * Format a longitude value as a label string.
- */
 function lonLabel(deg) {
   var abs = Math.abs(deg);
   var dir = deg >= 0 ? 'E' : 'W';
@@ -63,28 +48,22 @@ function lonLabel(deg) {
 }
 
 /**
- * Draw the depth layer: ocean gradient, lat/lon grid, and fathom contours.
+ * Draw the depth layer.
  *
  * Supports two call signatures:
  *   drawDepth(ctx, cm, config)                    — CanvasManager style
  *   drawDepth(ctx, w, h, projFn, config, t)       — explicit style
- *
- * @param {CanvasRenderingContext2D} ctx
- * @param {CanvasManager|number} cmOrW
- * @param {object|number} configOrH
  */
 export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
   var w, h, projFn, config, t;
 
   if (typeof cmOrW === 'object' && cmOrW.w !== undefined) {
-    // CanvasManager style: (ctx, cm, config)
     w = cmOrW.w;
     h = cmOrW.h;
     projFn = cmOrW.proj.bind(cmOrW);
     config = configOrH;
     t = 0;
   } else {
-    // Explicit style: (ctx, w, h, projFn, config, t)
     w = cmOrW;
     h = configOrH;
     projFn = projFnArg;
@@ -97,26 +76,57 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
   var bounds = config.bounds;
 
   // ------------------------------------------------------------------
-  // 1. Clear canvas with the deepest ocean color
+  // 1. Clear canvas with deepest ocean
   // ------------------------------------------------------------------
   ctx.fillStyle = colors.deep;
   ctx.fillRect(0, 0, w, h);
 
   // ------------------------------------------------------------------
-  // 2. Radial ocean gradient (3 stops from center outward)
+  // 2. Multi-band ocean gradient — satellite bathymetry feel
+  //    Multiple radial gradients layered for depth variation
   // ------------------------------------------------------------------
   var cx = w * 0.5;
   var cy = h * 0.5;
   var maxR = Math.sqrt(cx * cx + cy * cy);
-  var oceanStops = colors.ocean; // [center, mid, edge]
+  var oceanStops = colors.ocean;
 
+  // Base ocean gradient
   var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
   grad.addColorStop(0.0, oceanStops[0]);
   grad.addColorStop(0.5, oceanStops[1]);
   grad.addColorStop(1.0, oceanStops[2]);
-
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
+
+  // Deep ocean trench zone — darker band across the mid-Atlantic
+  var trenchY = h * 0.42;
+  var trenchGrad = ctx.createLinearGradient(0, trenchY - h * 0.15, 0, trenchY + h * 0.15);
+  trenchGrad.addColorStop(0.0, 'rgba(2,6,14,0)');
+  trenchGrad.addColorStop(0.3, 'rgba(2,6,14,0.08)');
+  trenchGrad.addColorStop(0.5, 'rgba(2,6,14,0.12)');
+  trenchGrad.addColorStop(0.7, 'rgba(2,6,14,0.08)');
+  trenchGrad.addColorStop(1.0, 'rgba(2,6,14,0)');
+  ctx.fillStyle = trenchGrad;
+  ctx.fillRect(0, trenchY - h * 0.15, w, h * 0.3);
+
+  // Shallow coastal shelf — warmer blue near the Brazilian coast
+  var shelfGrad = ctx.createLinearGradient(w * 0.7, 0, w, 0);
+  shelfGrad.addColorStop(0.0, 'rgba(12,35,55,0)');
+  shelfGrad.addColorStop(0.5, 'rgba(12,40,60,0.06)');
+  shelfGrad.addColorStop(0.8, 'rgba(15,50,70,0.1)');
+  shelfGrad.addColorStop(1.0, 'rgba(10,42,58,0.14)');
+  ctx.fillStyle = shelfGrad;
+  ctx.fillRect(w * 0.7, 0, w * 0.3, h);
+
+  // Tropical warm band — subtle warmth in the equatorial zone
+  var eqY = projFn(0, bounds.lonW).y;
+  var tropicGrad = ctx.createLinearGradient(0, eqY - h * 0.1, 0, eqY + h * 0.1);
+  tropicGrad.addColorStop(0.0, 'rgba(15,30,50,0)');
+  tropicGrad.addColorStop(0.4, 'rgba(18,35,55,0.04)');
+  tropicGrad.addColorStop(0.6, 'rgba(18,35,55,0.04)');
+  tropicGrad.addColorStop(1.0, 'rgba(15,30,50,0)');
+  ctx.fillStyle = tropicGrad;
+  ctx.fillRect(0, eqY - h * 0.1, w, h * 0.2);
 
   // ------------------------------------------------------------------
   // 3. Lat/Lon grid — every 5 degrees
@@ -127,7 +137,6 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
 
   var lat, lon, p1, p2;
 
-  // Latitude lines (horizontal)
   var latStart = Math.ceil(bounds.latS / 5) * 5;
   var latEnd   = Math.floor(bounds.latN / 5) * 5;
   for (lat = latStart; lat <= latEnd; lat += 5) {
@@ -139,7 +148,6 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
     ctx.stroke();
   }
 
-  // Longitude lines (vertical)
   var lonStart = Math.ceil(bounds.lonW / 5) * 5;
   var lonEnd   = Math.floor(bounds.lonE / 5) * 5;
   for (lon = lonStart; lon <= lonEnd; lon += 5) {
@@ -153,20 +161,45 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
 
   ctx.setLineDash([]);
 
+  // Equator highlight — slightly brighter line
+  var eq1 = projFn(0, bounds.lonW);
+  var eq2 = projFn(0, bounds.lonE);
+  ctx.beginPath();
+  ctx.moveTo(eq1.x, eq1.y);
+  ctx.lineTo(eq2.x, eq2.y);
+  ctx.strokeStyle = 'rgba(212,165,74,0.06)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Tropics — faint lines at 23.5°N and 23.5°S
+  ctx.strokeStyle = 'rgba(212,165,74,0.03)';
+  ctx.setLineDash([2, 6]);
+  var tN1 = projFn(23.5, bounds.lonW);
+  var tN2 = projFn(23.5, bounds.lonE);
+  ctx.beginPath();
+  ctx.moveTo(tN1.x, tN1.y);
+  ctx.lineTo(tN2.x, tN2.y);
+  ctx.stroke();
+  var tS1 = projFn(-23.5, bounds.lonW);
+  var tS2 = projFn(-23.5, bounds.lonE);
+  ctx.beginPath();
+  ctx.moveTo(tS1.x, tS1.y);
+  ctx.lineTo(tS2.x, tS2.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
   // Grid labels
   var fontSize = Math.max(9, Math.round(w * 0.009));
   ctx.font      = fontSize + 'px ' + fonts.sans;
   ctx.fillStyle = colors.grid;
   ctx.textBaseline = 'top';
 
-  // Latitude labels (left edge)
   ctx.textAlign = 'left';
   for (lat = latStart; lat <= latEnd; lat += 5) {
     var pLabel = projFn(lat, bounds.lonW);
     ctx.fillText(latLabel(lat), 6, pLabel.y + 3);
   }
 
-  // Longitude labels (bottom edge)
   ctx.textBaseline = 'bottom';
   ctx.textAlign    = 'center';
   for (lon = lonStart; lon <= lonEnd; lon += 5) {
@@ -180,9 +213,8 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
   ctx.strokeStyle = colors.fathom;
   ctx.lineWidth   = 1;
 
-  // Draw 3 parallel contours, each offset further offshore
   for (var c = 0; c < 3; c++) {
-    var offset = c * 1.5; // degrees offshore
+    var offset = c * 1.5;
 
     ctx.beginPath();
 
@@ -190,7 +222,6 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
       var sLat = SHELF[i][0];
       var sLon = SHELF[i][1] - offset;
 
-      // Subtle sin() wave animation along the contour
       var wave = Math.sin(t * 0.6 + i * 0.9 + c * 1.2) * 0.15;
       sLat += wave;
       sLon += wave * 0.5;
@@ -200,7 +231,6 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
       if (i === 0) {
         ctx.moveTo(sp.x, sp.y);
       } else {
-        // Smooth curve through points using quadratic bezier
         var prev  = SHELF[i - 1];
         var pLat  = prev[0] + Math.sin(t * 0.6 + (i - 1) * 0.9 + c * 1.2) * 0.15;
         var pLon  = prev[1] - offset + Math.sin(t * 0.6 + (i - 1) * 0.9 + c * 1.2) * 0.15 * 0.5;
@@ -211,7 +241,6 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
       }
     }
 
-    // Draw the last segment to the final point
     var last = SHELF[SHELF.length - 1];
     var lastWave = Math.sin(t * 0.6 + (SHELF.length - 1) * 0.9 + c * 1.2) * 0.15;
     var lastP = projFn(last[0] + lastWave, last[1] - offset + lastWave * 0.5);
@@ -219,6 +248,19 @@ export function drawDepth(ctx, cmOrW, configOrH, projFnArg, configArg, tArg) {
 
     ctx.stroke();
   }
+
+  // Shelf zone fill — subtle tinted area between coast and first contour
+  ctx.beginPath();
+  for (i = 0; i < SHELF.length; i++) {
+    sp = projFn(SHELF[i][0], SHELF[i][1]);
+    if (i === 0) ctx.moveTo(sp.x, sp.y);
+    else ctx.lineTo(sp.x, sp.y);
+  }
+  ctx.lineTo(w + 10, projFn(SHELF[SHELF.length - 1][0], SHELF[SHELF.length - 1][1]).y);
+  ctx.lineTo(w + 10, projFn(SHELF[0][0], SHELF[0][1]).y);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(15,55,70,0.05)';
+  ctx.fill();
 
   // Fathom labels
   var fathomFontSize = Math.max(8, Math.round(w * 0.008));

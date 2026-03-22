@@ -1,7 +1,8 @@
 /**
  * Fleet Map — Atmosphere Layer
  * ==============================
- * Renders fog vignette and edge darkening over all other layers.
+ * Renders cinematic vignette simulating Earth curvature and atmospheric haze.
+ * Heavy edge darkening creates the "looking through atmosphere from orbit" feel.
  *
  * This is a STATIC layer — only redraws on resize or theme change.
  * Canvas: fleetCanvasAtmo (z-index: 5, top layer, pointer-events: none)
@@ -70,7 +71,8 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
   ctx.clearRect(0, 0, w, h);
 
   // ------------------------------------------------------------------
-  // 2. Radial vignette — strength controlled by theme
+  // 2. Primary cinematic vignette — heavy edge darkening
+  //    Simulates looking through Earth's atmosphere from orbit
   // ------------------------------------------------------------------
   var cx = w * 0.5;
   var cy = h * 0.5;
@@ -78,35 +80,50 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
 
   if (vignetteStrength > 0) {
     var vs = vignetteStrength;
+
+    // Main vignette — deep blacks at edges
     var vignette = ctx.createRadialGradient(cx, cy, 0, cx, cy, cornerR);
-    vignette.addColorStop(0.0, rgba(r, g, b, 0));
-    vignette.addColorStop(0.35, rgba(r, g, b, 0));
-    vignette.addColorStop(0.65, rgba(r, g, b, 0.1 * vs));
-    vignette.addColorStop(0.8, rgba(r, g, b, 0.22 * vs));
-    vignette.addColorStop(0.92, rgba(r, g, b, 0.38 * vs));
-    vignette.addColorStop(1.0, rgba(r, g, b, 0.5 * vs));
+    vignette.addColorStop(0.0,  rgba(r, g, b, 0));
+    vignette.addColorStop(0.25, rgba(r, g, b, 0));
+    vignette.addColorStop(0.45, rgba(r, g, b, 0.05 * vs));
+    vignette.addColorStop(0.58, rgba(r, g, b, 0.12 * vs));
+    vignette.addColorStop(0.70, rgba(r, g, b, 0.25 * vs));
+    vignette.addColorStop(0.82, rgba(r, g, b, 0.45 * vs));
+    vignette.addColorStop(0.92, rgba(r, g, b, 0.65 * vs));
+    vignette.addColorStop(1.0,  rgba(r, g, b, 0.85 * vs));
 
     ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, w, h);
+
+    // Second pass — atmospheric blue tint at horizon edges
+    var atmoGrad = ctx.createRadialGradient(cx, cy, cornerR * 0.5, cx, cy, cornerR);
+    atmoGrad.addColorStop(0.0, 'rgba(20,40,80,0)');
+    atmoGrad.addColorStop(0.6, 'rgba(15,30,60,0.03)');
+    atmoGrad.addColorStop(1.0, 'rgba(8,18,40,0.08)');
+
+    ctx.fillStyle = atmoGrad;
     ctx.fillRect(0, 0, w, h);
   }
 
   // ------------------------------------------------------------------
-  // 3. Warm accent glow — subtle gold light from bottom-center
+  // 3. Warm accent glow — subtle gold light from Santos area
+  //    Simulates city/port light scatter
   // ------------------------------------------------------------------
-  var glowGrad = ctx.createRadialGradient(w * 0.4, h * 0.85, 0, w * 0.4, h * 0.85, h * 0.6);
-  glowGrad.addColorStop(0.0, rgba(ar, ag, ab, 0.02));
-  glowGrad.addColorStop(0.5, rgba(ar, ag, ab, 0.008));
+  var glowGrad = ctx.createRadialGradient(w * 0.78, h * 0.72, 0, w * 0.78, h * 0.72, h * 0.5);
+  glowGrad.addColorStop(0.0, rgba(ar, ag, ab, 0.025));
+  glowGrad.addColorStop(0.3, rgba(ar, ag, ab, 0.012));
   glowGrad.addColorStop(1.0, rgba(ar, ag, ab, 0));
 
   ctx.fillStyle = glowGrad;
   ctx.fillRect(0, 0, w, h);
 
   // ------------------------------------------------------------------
-  // 4. Top fog band
+  // 4. Top fog band — atmosphere horizon
   // ------------------------------------------------------------------
-  var topH = h * 0.18;
+  var topH = h * 0.25;
   var topFog = ctx.createLinearGradient(0, 0, 0, topH);
-  topFog.addColorStop(0.0, rgba(r, g, b, 0.35 * vignetteStrength));
+  topFog.addColorStop(0.0, rgba(r, g, b, 0.55 * vignetteStrength));
+  topFog.addColorStop(0.4, rgba(r, g, b, 0.2 * vignetteStrength));
   topFog.addColorStop(1.0, rgba(r, g, b, 0));
 
   ctx.fillStyle = topFog;
@@ -115,21 +132,23 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
   // ------------------------------------------------------------------
   // 5. Bottom fog band
   // ------------------------------------------------------------------
-  var botH    = h * 0.15;
+  var botH    = h * 0.2;
   var botTop  = h - botH;
   var botFog  = ctx.createLinearGradient(0, h, 0, botTop);
-  botFog.addColorStop(0.0, rgba(r, g, b, 0.3 * vignetteStrength));
+  botFog.addColorStop(0.0, rgba(r, g, b, 0.45 * vignetteStrength));
+  botFog.addColorStop(0.4, rgba(r, g, b, 0.15 * vignetteStrength));
   botFog.addColorStop(1.0, rgba(r, g, b, 0));
 
   ctx.fillStyle = botFog;
   ctx.fillRect(0, botTop, w, botH);
 
   // ------------------------------------------------------------------
-  // 6. Left edge fade
+  // 6. Left edge fade — land mass haze
   // ------------------------------------------------------------------
-  var leftW = w * 0.06;
+  var leftW = w * 0.10;
   var leftFog = ctx.createLinearGradient(0, 0, leftW, 0);
-  leftFog.addColorStop(0.0, rgba(r, g, b, 0.2 * vignetteStrength));
+  leftFog.addColorStop(0.0, rgba(r, g, b, 0.35 * vignetteStrength));
+  leftFog.addColorStop(0.5, rgba(r, g, b, 0.12 * vignetteStrength));
   leftFog.addColorStop(1.0, rgba(r, g, b, 0));
 
   ctx.fillStyle = leftFog;
@@ -138,16 +157,42 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
   // ------------------------------------------------------------------
   // 7. Right edge fade
   // ------------------------------------------------------------------
-  var rightW = w * 0.04;
+  var rightW = w * 0.08;
   var rightFog = ctx.createLinearGradient(w, 0, w - rightW, 0);
-  rightFog.addColorStop(0.0, rgba(r, g, b, 0.15 * vignetteStrength));
+  rightFog.addColorStop(0.0, rgba(r, g, b, 0.3 * vignetteStrength));
+  rightFog.addColorStop(0.5, rgba(r, g, b, 0.1 * vignetteStrength));
   rightFog.addColorStop(1.0, rgba(r, g, b, 0));
 
   ctx.fillStyle = rightFog;
   ctx.fillRect(w - rightW, 0, rightW, h);
 
   // ------------------------------------------------------------------
-  // 8. Color filter (sepia, crt-green, crt-amber)
+  // 8. Corner darkening — extra shadow in corners for globe illusion
+  // ------------------------------------------------------------------
+  var corners = [
+    [0, 0],
+    [w, 0],
+    [0, h],
+    [w, h]
+  ];
+  for (var ci = 0; ci < corners.length; ci++) {
+    var ccx = corners[ci][0];
+    var ccy = corners[ci][1];
+    var crad = Math.min(w, h) * 0.45;
+    var cGrad = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, crad);
+    cGrad.addColorStop(0.0, rgba(r, g, b, 0.3 * vignetteStrength));
+    cGrad.addColorStop(0.5, rgba(r, g, b, 0.1 * vignetteStrength));
+    cGrad.addColorStop(1.0, rgba(r, g, b, 0));
+    ctx.fillStyle = cGrad;
+    ctx.fillRect(
+      ccx === 0 ? 0 : w - crad,
+      ccy === 0 ? 0 : h - crad,
+      crad, crad
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // 9. Color filter (sepia, crt-green, crt-amber)
   // ------------------------------------------------------------------
   if (colorFilter === 'sepia') {
     ctx.fillStyle = 'rgba(180,140,80,0.06)';
@@ -155,7 +200,6 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
   } else if (colorFilter === 'crt-green') {
     ctx.fillStyle = 'rgba(0,255,80,0.03)';
     ctx.fillRect(0, 0, w, h);
-    // Scanlines
     ctx.fillStyle = 'rgba(0,0,0,0.04)';
     for (var sl = 0; sl < h; sl += 3) {
       ctx.fillRect(0, sl, w, 1);
