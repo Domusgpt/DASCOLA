@@ -2074,12 +2074,13 @@ window.addEventListener('load', function() {
     }
   });
 
-  // Initial map state — zoomed into USA showing air routes
-  // At scale 2.0, the map is 2x its container. We shift it so
-  // the USA (upper-left quadrant of the full map) is centered.
-  // USA center ~lat 38, lon -96 maps to roughly 29%, 12% of canvas.
-  // To center that point: x = (50% - 29%) * scale = +42%, y = (50% - 12%) * scale = +76%
-  gsap.set('#fleetMap', { scale: 2.0, x: '42%', y: '55%', transformOrigin: 'center center' });
+  // Initial map state — show the full Americas with air routes visible.
+  // Start at scale 1.4 centered so both USA destinations AND Santos (route origin)
+  // are visible. This means centering roughly on lat 15, lon -75 (mid-Caribbean).
+  // Canvas position for that center:
+  //   x% = (-75 - (-125)) / 100 = 50%   y% = (48 - 15) / 84 = 39%
+  // To center that: x = (50-50)*s = 0%, y = (50-39)*s = +15%
+  gsap.set('#fleetMap', { scale: 1.4, x: '0%', y: '15%', transformOrigin: 'center center' });
 
   // Fade in the map during Values section
   gsap.fromTo('#fleetBg',
@@ -2097,9 +2098,9 @@ window.addEventListener('load', function() {
   // Dim the veil geometry as the map takes over
   gsap.to(V.s, { scrollTrigger: { trigger: '#vals', start: 'top 30%', end: 'top -50%', scrub: 1 }, hue: 210, int: 0.03, spd: 0.04, chaos: 0.01 });
 
-  // During Values scroll, slowly zoom out revealing more of the map
+  // During Values scroll, slowly drift camera south toward Santos
   gsap.to('#fleetMap', {
-    scale: 1.5, x: '25%', y: '35%', ease: 'none',
+    scale: 1.3, x: '-5%', y: '5%', ease: 'none',
     scrollTrigger: { trigger: '#vals', start: 'top top', end: 'bottom top', scrub: 1 }
   });
 
@@ -2115,9 +2116,10 @@ window.addEventListener('load', function() {
   Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
   Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
-  // While Products covers everything, silently reposition camera to wide view
+  // While Products covers everything, silently reposition to full map view
+  // centered on the mid-Atlantic so the fleet section starts with a dramatic reveal
   gsap.to('#fleetMap', {
-    scale: 1.0, x: '0%', y: '0%',
+    scale: 1.0, x: '-5%', y: '-5%',
     ease: 'none',
     scrollTrigger: { trigger: '#prods', start: 'top top', end: 'bottom top', scrub: 1 }
   });
@@ -2156,17 +2158,17 @@ window.addEventListener('load', function() {
   Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.05 }, 0.52);
   Fl.fromTo('#fleetInvite', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06, ease: 'power2.out' }, 0.54);
 
-  // Phase 6 (0.65 → 0.78): Pull back to show Santos + fishing waters
+  // Phase 6 (0.65 → 0.78): Pull back slightly — Santos region + fishing waters
   Fl.to('#fleetInvite', { opacity: 0, duration: 0.03 }, 0.65);
-  Fl.to('#fleetMap', { scale: 2.2, x: '-60%', y: '-75%', duration: 0.13, ease: 'power2.inOut' }, 0.65);
+  Fl.to('#fleetMap', { scale: 2.4, x: '-75%', y: '-90%', duration: 0.13, ease: 'power2.inOut' }, 0.65);
 
-  // Phase 7 (0.78 → 0.88): Settle into persistent background view
+  // Phase 7 (0.78 → 0.88): Settle — Santos/south Brazil fills viewport
   Fl.to('#fleetRoster', { opacity: 0, duration: 0.03 }, 0.80);
   Fl.to('#flSt', { opacity: 0, duration: 0.03 }, 0.80);
   Fl.to('#flLeg', { opacity: 0, duration: 0.03 }, 0.80);
-  Fl.to('#fleetMap', { scale: 1.6, x: '-35%', y: '-45%', duration: 0.10, ease: 'power2.out' }, 0.80);
+  Fl.to('#fleetMap', { scale: 2.0, x: '-62%', y: '-78%', duration: 0.10, ease: 'power2.out' }, 0.80);
 
-  // Phase 8 (0.88 → 1.0): Hold — map stays as background
+  // Phase 8 (0.88 → 1.0): Hold — map stays as background centered on Santos
   Fl.to({}, { duration: 0.12 });
 
   // ============================================
@@ -2175,7 +2177,11 @@ window.addEventListener('load', function() {
   // ============================================
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
   // Subtle map camera drift during this section
-  gsap.to('#fleetMap', { scale: 1.7, x: '-40%', y: '-50%', ease: 'none', scrollTrigger: { trigger: '#hww', start: 'top top', end: 'bottom top', scrub: 1 } });
+  gsap.fromTo('#fleetMap',
+    { scale: 2.0, x: '-62%', y: '-78%' },
+    { scale: 2.1, x: '-68%', y: '-85%', ease: 'none', immediateRender: false,
+      scrollTrigger: { trigger: '#hww', start: 'top top', end: 'bottom top', scrub: 1 }
+    });
   W.to(V.s, { hue: 175, int: 0.04, spd: 0.06, chaos: 0.01, duration: 0.08 }, 0);
   W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
@@ -2185,7 +2191,11 @@ window.addEventListener('load', function() {
 
   // Trust section — map still visible, subtle drift continues
   var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
-  gsap.to('#fleetMap', { scale: 1.8, x: '-45%', y: '-55%', ease: 'none', scrollTrigger: { trigger: '#trust', start: 'top top', end: 'bottom top', scrub: 1 } });
+  gsap.fromTo('#fleetMap',
+    { scale: 2.1, x: '-68%', y: '-85%' },
+    { scale: 2.2, x: '-72%', y: '-88%', ease: 'none', immediateRender: false,
+      scrollTrigger: { trigger: '#trust', start: 'top top', end: 'bottom top', scrub: 1 }
+    });
   Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
   Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
@@ -2242,12 +2252,12 @@ var fm = new FleetMap('#fleetMap', {
     verde:     'rgba(10,126,110,1)',
     blade:     'rgba(156,197,201,1)',
     creme:     'rgba(245,237,216,1)',
-    land:      ['rgba(6,52,45,0.7)', 'rgba(10,75,62,0.55)', 'rgba(6,52,45,0.4)'],
+    land:      ['rgba(8,72,58,0.85)', 'rgba(12,95,75,0.75)', 'rgba(8,62,50,0.6)'],
     ocean:     ['rgba(8,28,58,0.4)', 'rgba(6,22,45,0.25)', 'rgba(3,8,16,0.05)'],
     fathom:    'rgba(20,55,88,0.14)',
-    grid:      'rgba(212,165,74,0.035)',
-    coastGlow: 'rgba(212,165,74,0.12)',
-    coastLine: 'rgba(212,165,74,0.45)',
+    grid:      'rgba(212,165,74,0.04)',
+    coastGlow: 'rgba(212,165,74,0.2)',
+    coastLine: 'rgba(212,165,74,0.6)',
   },
   fonts: {
     display: '"Playfair Display", Georgia, serif',
