@@ -147,18 +147,32 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
   // ------------------------------------------------------------------
   // 3. Land labels — using the label system
   // ------------------------------------------------------------------
-  var bz = projFn(-18, -42);
+  var bz = projFn(-14, -40);
   drawLabel(ctx, 'land-mass', 'BRAZIL', bz.x, bz.y, {
     w: w, fonts: fonts, colors: colors, theme: theme,
     color: colors.coastLine,
     rotation: -0.35,
   });
 
-  var sa = projFn(-28, -38);
+  var sa = projFn(-26, -42);
   drawLabel(ctx, 'water-body', 'SOUTH ATLANTIC', sa.x, sa.y, {
     w: w, fonts: fonts, colors: colors, theme: theme,
     color: colors.blade,
-    rotation: -0.18,
+    rotation: -0.12,
+  });
+
+  var na = projFn(28, -55);
+  drawLabel(ctx, 'water-body', 'NORTH ATLANTIC', na.x, na.y, {
+    w: w, fonts: fonts, colors: colors, theme: theme,
+    color: colors.blade,
+    rotation: -0.08,
+  });
+
+  var cb = projFn(16, -70);
+  drawLabel(ctx, 'water-body', 'CARIBBEAN', cb.x, cb.y, {
+    w: w, fonts: fonts, colors: colors, theme: theme,
+    color: colors.blade,
+    rotation: 0.05,
   });
 
   ctx.globalAlpha = 1;
@@ -176,10 +190,7 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
       var rPts  = route.points;
       if (!rPts || rPts.length < 2) continue;
 
-      ctx.strokeStyle  = colors.blade;
-      ctx.globalAlpha  = 0.2;
-      ctx.lineDashOffset = -t * 30;
-
+      // Glow underneath the route
       ctx.beginPath();
       var rp0 = projFn(rPts[0][0], rPts[0][1]);
       ctx.moveTo(rp0.x, rp0.y);
@@ -187,6 +198,24 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
         var rp = projFn(rPts[ri][0], rPts[ri][1]);
         ctx.lineTo(rp.x, rp.y);
       }
+      ctx.strokeStyle  = colors.ouro;
+      ctx.globalAlpha  = 0.06;
+      ctx.lineWidth    = 6;
+      ctx.setLineDash([]);
+      ctx.stroke();
+
+      // Animated dashed line
+      ctx.beginPath();
+      ctx.moveTo(rp0.x, rp0.y);
+      for (ri = 1; ri < rPts.length; ri++) {
+        rp = projFn(rPts[ri][0], rPts[ri][1]);
+        ctx.lineTo(rp.x, rp.y);
+      }
+      ctx.strokeStyle  = colors.blade;
+      ctx.globalAlpha  = 0.25;
+      ctx.lineWidth    = 1;
+      ctx.setLineDash([6, 10]);
+      ctx.lineDashOffset = -t * 30;
       ctx.stroke();
 
       // Route label using label system
@@ -199,6 +228,74 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
       });
     }
 
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // ------------------------------------------------------------------
+  // 4b. Air freight routes — curved arcs (GRU → JFK, BOS, LAX, ORD, IAH)
+  // ------------------------------------------------------------------
+  var airRoutes = config._airRoutes;
+  if (airRoutes && airRoutes.length) {
+    ctx.save();
+    for (var ai = 0; ai < airRoutes.length; ai++) {
+      var ar = airRoutes[ai];
+      var afrom = projFn(ar.from[0], ar.from[1]);
+      var ato   = projFn(ar.to[0], ar.to[1]);
+
+      // Calculate arc control point — offset perpendicular to the line
+      var amx = (afrom.x + ato.x) / 2;
+      var amy = (afrom.y + ato.y) / 2;
+      var adx = ato.x - afrom.x;
+      var ady = ato.y - afrom.y;
+      var adist = Math.sqrt(adx * adx + ady * ady);
+      // Arc curves left (westward bulge for transatlantic feel)
+      var arcBulge = adist * 0.25;
+      var acpx = amx + (ady / adist) * arcBulge;
+      var acpy = amy - (adx / adist) * arcBulge;
+
+      // Soft glow underneath
+      ctx.beginPath();
+      ctx.moveTo(afrom.x, afrom.y);
+      ctx.quadraticCurveTo(acpx, acpy, ato.x, ato.y);
+      ctx.strokeStyle = colors.ouro;
+      ctx.globalAlpha = 0.04;
+      ctx.lineWidth = 5;
+      ctx.setLineDash([]);
+      ctx.stroke();
+
+      // Animated dotted arc
+      ctx.beginPath();
+      ctx.moveTo(afrom.x, afrom.y);
+      ctx.quadraticCurveTo(acpx, acpy, ato.x, ato.y);
+      ctx.strokeStyle = colors.ouro;
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 8]);
+      ctx.lineDashOffset = -t * 50;
+      ctx.stroke();
+
+      // Small airplane dot traveling along the arc
+      var tpos = ((t * 0.15 + ai * 0.18) % 1);
+      var inv = 1 - tpos;
+      var px = inv * inv * afrom.x + 2 * inv * tpos * acpx + tpos * tpos * ato.x;
+      var py = inv * inv * afrom.y + 2 * inv * tpos * acpy + tpos * tpos * ato.y;
+      ctx.beginPath();
+      ctx.arc(px, py, 2, 0, Math.PI * 2);
+      ctx.fillStyle = colors.ouro;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+
+      // Route label at midpoint of arc
+      var lx = 0.25 * afrom.x + 0.5 * acpx + 0.25 * ato.x;
+      var ly = 0.25 * afrom.y + 0.5 * acpy + 0.25 * ato.y;
+      ctx.globalAlpha = 1;
+      drawLabel(ctx, 'route-label', '\u2708 ' + ar.name, lx, ly - 6, {
+        w: w, fonts: fonts, colors: colors, theme: theme,
+        color: colors.ouro,
+      });
+    }
     ctx.setLineDash([]);
     ctx.globalAlpha = 1;
     ctx.restore();

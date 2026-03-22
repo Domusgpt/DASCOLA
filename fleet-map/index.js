@@ -115,6 +115,7 @@ export class FleetMap {
     this.vessels = prepareVessels(cloneArray(this.config.vessels));
     this.ports = cloneArray(this.config.ports);
     this.routes = cloneArray(this.config.routes);
+    this.airRoutes = cloneArray(this.config.airRoutes || []);
 
     // Resolve coast data
     if (this.config.coastData === 'brazil') {
@@ -403,6 +404,7 @@ export class FleetMap {
 
     var coastLayer = cm.getLayer('coast');
     if (coastLayer.dirty) {
+      this.config._airRoutes = this.airRoutes;
       drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t, this.renderer);
       coastLayer.dirty = false;
     }

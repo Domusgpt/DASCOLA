@@ -1,20 +1,7 @@
 {
   "_documentation": {
     "description": "D'Ascola Seafood fleet vessel data — real vessels from company operations.",
-    "version": "2.0",
-    "fields": {
-      "name": "Display name of the vessel",
-      "mmsi": "Maritime Mobile Service Identity number (for AIS tracking). Set to null if not tracked.",
-      "lat": "Current latitude in decimal degrees. Negative = south of equator.",
-      "lon": "Current longitude in decimal degrees. Negative = west of prime meridian.",
-      "heading": "Heading in degrees. 0 = north, 90 = east, 180 = south, 270 = west.",
-      "speed": "Speed in knots. 0 = stationary.",
-      "type": "Vessel type: 'Longliner', 'Trawler', 'Gillnetter', 'Seiner', etc.",
-      "status": "Current status: 'Fishing', 'In Transit', 'In Port', 'Returning'",
-      "catch": "Current or last catch species. Use '\u2014' if none.",
-      "captain": "Captain name (optional)",
-      "detail": "Short description (optional)"
-    }
+    "version": "3.0"
   },
 
   "vessels": [
@@ -29,14 +16,14 @@
       "status": "Fishing",
       "catch": "Swordfish",
       "captain": "Takeshi",
-      "detail": "Premium-grade swordfish longliner, Japanese captain"
+      "detail": "Premium-grade swordfish · Japanese captain · Starlink equipped"
     },
     {
       "name": "Brisa C",
       "mmsi": null,
-      "lat": -24.6,
-      "lon": -45.9,
-      "heading": 210,
+      "lat": -24.1,
+      "lon": -45.4,
+      "heading": 320,
       "speed": 7.5,
       "type": "Longliner",
       "status": "Returning",
@@ -46,39 +33,39 @@
     {
       "name": "Blaze I",
       "mmsi": null,
-      "lat": -26.8,
-      "lon": -46.5,
+      "lat": -33.2,
+      "lon": -49.8,
       "heading": 85,
       "speed": 5.2,
       "type": "Trawler",
       "status": "Fishing",
       "catch": "Monkfish",
-      "detail": "30.5m freezer-at-sea vessel, built to European standards"
+      "detail": "30.5m freezer-at-sea · Built to European standards"
     },
     {
       "name": "Cordeiro de Deus E",
       "mmsi": null,
-      "lat": -23.8,
-      "lon": -43.6,
-      "heading": 140,
+      "lat": -20.5,
+      "lon": -29.3,
+      "heading": 190,
       "speed": 4.1,
-      "type": "Trawler",
+      "type": "Factory Vessel",
       "status": "Fishing",
-      "catch": "Scarlet Prawn",
-      "detail": "Carabineros specialist — 20+ year relationship with owner"
+      "catch": "Carabineros",
+      "detail": "Scarlet prawn specialist · Owner invested 20+ years · $22/lb at boat"
     },
     {
       "name": "Prudence",
       "mmsi": null,
-      "lat": 11.8,
-      "lon": -61.4,
+      "lat": 12.4,
+      "lon": -62.1,
       "heading": 275,
       "speed": 8.3,
       "type": "Longliner",
       "status": "Fishing",
       "catch": "Yellowfin Tuna",
       "captain": "Gilbert",
-      "detail": "Caribbean yellowfin tuna vessel operating out of Grenada"
+      "detail": "Caribbean yellowfin · Operating out of Grenada · NOAA SIMP verified"
     }
   ],
 
@@ -108,53 +95,74 @@
       "size": "minor"
     },
     {
-      "name": "Paranaguá",
-      "lat": -25.52,
-      "lon": -48.51,
-      "size": "minor"
-    },
-    {
-      "name": "St. George's, Grenada",
-      "lat": 12.05,
-      "lon": -61.75,
-      "size": "minor"
+      "name": "Boston",
+      "lat": 42.36,
+      "lon": -71.05,
+      "size": "major"
     },
     {
       "name": "New York",
       "lat": 40.7,
       "lon": -74.0,
+      "size": "major"
+    },
+    {
+      "name": "St. George's",
+      "lat": 12.05,
+      "lon": -61.75,
+      "size": "minor"
+    },
+    {
+      "name": "Houston",
+      "lat": 29.76,
+      "lon": -95.37,
+      "size": "minor"
+    },
+    {
+      "name": "Montauk",
+      "lat": 41.04,
+      "lon": -71.95,
       "size": "minor"
     }
   ],
 
   "routes": [
     {
-      "name": "Santos → NYC",
+      "name": "Trindade Grounds",
       "points": [
         [-23.96, -46.33],
         [-22, -42],
-        [-18, -38],
-        [-12, -35],
-        [-5, -32],
-        [5, -40],
-        [15, -50],
-        [25, -60],
-        [35, -68],
-        [40, -73],
-        [40.7, -74]
+        [-20.5, -35],
+        [-20.5, -29.3]
       ]
+    }
+  ],
+
+  "airRoutes": [
+    {
+      "name": "GRU → JFK",
+      "from": [-23.43, -46.47],
+      "to": [40.64, -73.78]
     },
     {
-      "name": "Grenada → NYC",
-      "points": [
-        [12.05, -61.75],
-        [15, -63],
-        [20, -67],
-        [25, -70],
-        [30, -72],
-        [35, -73],
-        [40.7, -74]
-      ]
+      "name": "GRU → BOS",
+      "from": [-23.43, -46.47],
+      "to": [42.36, -71.01]
+    },
+    {
+      "name": "GRU → LAX",
+      "from": [-23.43, -46.47],
+      "to": [33.94, -118.41]
+    },
+    {
+      "name": "GRU → ORD",
+      "from": [-23.43, -46.47],
+      "to": [41.98, -87.90]
+    },
+    {
+      "name": "GRU → IAH",
+      "from": [-23.43, -46.47],
+      "to": [29.98, -95.34]
     }
   ]
 }

@@ -1377,15 +1377,15 @@ body {
     <div class="fleet-legend" id="flLeg" style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);z-index:12;opacity:0">
       <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
       <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Fishing Grounds</div>
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-air" style="border:1px dashed rgba(212,165,74,0.6);background:none"></div>Air Freight</div>
     </div>
     <!-- Stats — top-right overlay -->
     <div class="fleet-stats" id="flSt" style="position:absolute;top:1rem;right:1.5rem;z-index:12;opacity:0;flex-direction:column;gap:0.8rem">
       <div class="fleet-stat"><div class="fleet-stat-n">5</div><div class="fleet-stat-l">Active Vessels</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Ports Monitored</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">2</div><div class="fleet-stat-l">Ocean Routes</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">4</div><div class="fleet-stat-l">Species Tracked</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">9</div><div class="fleet-stat-l">Ports Connected</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">4</div><div class="fleet-stat-l">Ocean Routes</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">12+</div><div class="fleet-stat-l">Species</div></div>
     </div>
   </div>
 </div>
@@ -1855,10 +1855,11 @@ var data = await response.json();
 var fm = new FleetMap('#fleetMap', {
   title: "D'Ascola Seafood",
   subtitle: 'Est. 1893 · Santos, Brazil',
-  bounds: { latN: 45, latS: -35, lonW: -80, lonE: -25 },
+  bounds: { latN: 46, latS: -36, lonW: -122, lonE: -25 },
   vessels: data.vessels,
   ports: data.ports,
   routes: data.routes,
+  airRoutes: data.airRoutes,
   colors: {
     deep:      'rgba(3,8,16,1)',
     ouro:      'rgba(212,165,74,1)',
