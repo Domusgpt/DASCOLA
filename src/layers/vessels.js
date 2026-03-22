@@ -25,11 +25,12 @@ var TAU = Math.PI * 2;
 function statusColor(colors, status, alpha) {
   var base;
   switch (status) {
-    case 'Fishing':   base = colors.ouro;  break;
-    case 'In Port':   base = colors.verde; break;
+    case 'Fishing':
+    case 'Scalloping': base = colors.ouro;  break;
+    case 'In Port':    base = colors.verde; break;
     case 'In Transit':
-    case 'Returning': base = colors.blade; break;
-    default:          base = colors.blade; break;
+    case 'Returning':  base = colors.blade; break;
+    default:           base = colors.blade; break;
   }
   return base.replace(/[\d.]+\)$/, alpha + ')');
 }
@@ -37,17 +38,19 @@ function statusColor(colors, status, alpha) {
 /**
  * Draw the vessels layer.
  *
- * @param {CanvasRenderingContext2D} ctx     — canvas context
- * @param {number}   w       — logical canvas width
- * @param {number}   h       — logical canvas height
- * @param {function} projFn  — projFn(lat, lon) => { x, y }
- * @param {object}   config  — merged FleetMap config
- * @param {number}   t       — animation time counter
- * @param {Array}    vessels — array of vessel objects
+ * @param {CanvasRenderingContext2D} ctx — canvas context
+ * @param {CanvasManager} cm — canvas manager (provides w, h, proj)
+ * @param {Array} vessels — array of vessel objects
+ * @param {object} config — merged FleetMap config
+ * @param {number} t — animation time counter
  */
-export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
+export function drawVessels(ctx, cm, vessels, config, t) {
+  var w = cm.w;
+  var h = cm.h;
   var colors = config.colors;
   var fonts  = config.fonts;
+
+  function projFn(lat, lon) { return cm.proj(lat, lon); }
 
   // ------------------------------------------------------------------
   // 1. Clear canvas (transparent)
@@ -66,7 +69,7 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
   // ------------------------------------------------------------------
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
-    if (v.status !== 'Fishing') continue;
+    if (v.status !== 'Fishing' && v.status !== 'Scalloping') continue;
 
     sp = projFn(v.lat, v.lon);
     var haloRadius = 32 + Math.sin(t * 1.5 + i) * 6;
@@ -132,9 +135,10 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     // Fill based on status
     var fillAlpha;
     switch (v.status) {
-      case 'Fishing':   fillAlpha = 0.9; break;
-      case 'In Port':   fillAlpha = 0.7; break;
-      default:          fillAlpha = 0.7; break;
+      case 'Fishing':
+      case 'Scalloping': fillAlpha = 0.9; break;
+      case 'In Port':    fillAlpha = 0.7; break;
+      default:           fillAlpha = 0.7; break;
     }
     ctx.fillStyle = statusColor(colors, v.status, fillAlpha);
     ctx.fill();

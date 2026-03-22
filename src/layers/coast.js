@@ -4,8 +4,6 @@
  * Renders the coastline, land fill, labels, ports, shipping routes,
  * and a decorative cartouche.
  *
- * This layer redraws each frame when animated elements are present
- * (shipping route dashes, port pulses).
  * Canvas: fleetCanvasCoast (z-index: 2)
  *
  * Customizable via config.colors:
@@ -24,8 +22,6 @@
 
 /**
  * Build the smooth coastline path using quadratic bezier curves.
- * Uses midpoints between consecutive projected points as curve targets
- * so the line passes smoothly near each data point.
  *
  * @param {CanvasRenderingContext2D} ctx
  * @param {Array}    coastData — [[lat,lon], ...]
@@ -59,22 +55,26 @@ function traceCoast(ctx, coastData, projFn) {
  * Draw the coast layer.
  *
  * @param {CanvasRenderingContext2D} ctx
- * @param {number}   w          — logical canvas width
- * @param {number}   h          — logical canvas height
- * @param {function} projFn     — projFn(lat, lon) => { x, y }
- * @param {object}   config     — merged FleetMap config
- * @param {number}   t          — animation time counter
+ * @param {CanvasManager} cm — canvas manager (provides w, h, proj)
  * @param {Array}    coastData  — [[lat,lon], ...] coastline points
  * @param {Array}    ports      — [{ name, lat, lon, size }, ...]
  * @param {Array}    routes     — [{ name, points: [[lat,lon],...] }, ...]
+ * @param {object}   config     — merged FleetMap config
+ * @param {number}   t          — animation time counter
  */
-export function drawCoast(ctx, w, h, projFn, config, t, coastData, ports, routes) {
+export function drawCoast(ctx, cm, coastData, ports, routes, config, t) {
+  var w = cm.w;
+  var h = cm.h;
   var colors = config.colors;
   var fonts  = config.fonts;
+
+  function projFn(lat, lon) { return cm.proj(lat, lon); }
 
   // ------------------------------------------------------------------
   // 1. Land fill — coastline closed along right edge of canvas
   // ------------------------------------------------------------------
+  if (!coastData || !coastData.length) return;
+
   var ends = traceCoast(ctx, coastData, projFn);
 
   // Close the path along the right/bottom edge (land is east)

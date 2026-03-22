@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fleet Map — Interactive Fishing Fleet Tracker</title>
+  <title>DASCOLA — Dynamic Maritime Intelligence Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #080E18;
+      background: #050B12;
       color: #D4B896;
       font-family: 'Josefin Sans', sans-serif;
       min-height: 100vh;
@@ -22,7 +22,7 @@
 
     .hero {
       text-align: center;
-      padding: 4rem 2rem 2rem;
+      padding: 4rem 2rem 1.5rem;
       max-width: 800px;
     }
 
@@ -36,7 +36,7 @@
     }
 
     .hero h1 span {
-      color: #C41E3A;
+      color: #C9A84C;
     }
 
     .hero .tagline {
@@ -46,7 +46,19 @@
       text-transform: uppercase;
       color: #3BA99C;
       opacity: 0.8;
-      margin-bottom: 2rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .hero .vib3-badge {
+      display: inline-block;
+      padding: 0.15rem 0.7rem;
+      font-size: 0.4rem;
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      border: 1px solid rgba(59, 169, 156, 0.3);
+      color: #3BA99C;
+      margin-bottom: 1.5rem;
     }
 
     .hero p {
@@ -56,80 +68,165 @@
       letter-spacing: 0.05em;
       color: #D4B896;
       opacity: 0.7;
-      max-width: 600px;
+      max-width: 620px;
       margin: 0 auto 2rem;
     }
 
     .divider {
-      width: 60px;
+      width: 80px;
       height: 1px;
-      background: linear-gradient(90deg, transparent, #C41E3A, transparent);
+      background: linear-gradient(90deg, transparent, #C9A84C, transparent);
       margin: 0 auto 2.5rem;
-      opacity: 0.4;
+      opacity: 0.3;
     }
 
+    /* Primary CTA */
+    .primary-cta {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .primary-cta a {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: #050B12;
+      background: linear-gradient(135deg, #C9A84C, #E0C872);
+      transition: all 0.3s;
+    }
+
+    .primary-cta a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(201, 168, 76, 0.2);
+    }
+
+    .primary-cta .sub-link {
+      display: block;
+      margin-top: 0.8rem;
+      font-size: 0.45rem;
+      letter-spacing: 0.2em;
+      color: rgba(139, 175, 196, 0.4);
+      text-decoration: none;
+    }
+
+    .primary-cta .sub-link:hover {
+      color: rgba(139, 175, 196, 0.7);
+    }
+
+    /* Demo cards */
     .demos {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-      max-width: 900px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
       width: 100%;
       padding: 0 2rem 3rem;
     }
 
     .demo-card {
-      background: rgba(15, 27, 61, 0.5);
-      border: 1px solid rgba(196, 30, 58, 0.12);
-      padding: 2rem;
+      background: rgba(13, 24, 45, 0.5);
+      border: 1px solid rgba(201, 168, 76, 0.08);
+      padding: 1.8rem;
       text-decoration: none;
       transition: border-color 0.3s, transform 0.3s;
       display: block;
     }
 
     .demo-card:hover {
-      border-color: rgba(196, 30, 58, 0.35);
+      border-color: rgba(201, 168, 76, 0.25);
       transform: translateY(-2px);
+    }
+
+    .demo-card.featured {
+      border-color: rgba(201, 168, 76, 0.2);
+      background: rgba(13, 24, 45, 0.7);
+      grid-column: 1 / -1;
     }
 
     .demo-card h2 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 400;
-      color: #C41E3A;
-      margin-bottom: 0.4rem;
+      color: #C9A84C;
+      margin-bottom: 0.3rem;
+    }
+
+    .demo-card.featured h2 {
+      font-size: 1.5rem;
     }
 
     .demo-card .location {
       font-weight: 200;
-      font-size: 0.6rem;
+      font-size: 0.5rem;
       letter-spacing: 0.3em;
       text-transform: uppercase;
       color: #3BA99C;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
 
     .demo-card p {
       font-weight: 200;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       line-height: 1.8;
       letter-spacing: 0.05em;
       color: #D4B896;
-      opacity: 0.6;
+      opacity: 0.55;
     }
 
-    .demo-card .vessel-count {
-      display: inline-block;
-      margin-top: 1rem;
-      padding: 0.2rem 0.6rem;
-      font-size: 0.5rem;
-      letter-spacing: 0.2em;
+    .demo-card .tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.8rem;
+    }
+
+    .demo-card .tag {
+      padding: 0.12rem 0.4rem;
+      font-size: 0.35rem;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      border: 1px solid rgba(59, 169, 156, 0.3);
+      border: 1px solid;
+    }
+
+    .tag-vib3 {
+      border-color: rgba(59, 169, 156, 0.3) !important;
       color: #3BA99C;
     }
 
+    .tag-vessels {
+      border-color: rgba(201, 168, 76, 0.25) !important;
+      color: rgba(201, 168, 76, 0.6);
+    }
+
+    .tag-weather {
+      border-color: rgba(139, 175, 196, 0.25) !important;
+      color: rgba(139, 175, 196, 0.6);
+    }
+
+    .tag-coord {
+      border-color: rgba(59, 169, 156, 0.2) !important;
+      color: rgba(59, 169, 156, 0.5);
+    }
+
+    /* Features */
+    .section-title {
+      text-align: center;
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.5rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(201, 168, 76, 0.35);
+      margin-bottom: 1.5rem;
+    }
+
     .features {
-      max-width: 800px;
+      max-width: 1000px;
       width: 100%;
       padding: 2rem;
       display: grid;
@@ -140,49 +237,79 @@
 
     .feature {
       padding: 1rem;
+      border-left: 1px solid rgba(201, 168, 76, 0.06);
     }
 
     .feature h3 {
       font-family: 'Josefin Sans', sans-serif;
       font-weight: 300;
-      font-size: 0.65rem;
-      letter-spacing: 0.25em;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: #C41E3A;
-      margin-bottom: 0.5rem;
+      color: #C9A84C;
+      margin-bottom: 0.4rem;
     }
 
     .feature p {
       font-weight: 200;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       line-height: 1.7;
       color: #D4B896;
-      opacity: 0.5;
+      opacity: 0.45;
     }
 
-    .cta {
-      text-align: center;
+    /* Architecture */
+    .arch {
+      max-width: 800px;
+      width: 100%;
       padding: 2rem;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
 
-    .cta a {
-      display: inline-block;
-      padding: 0.8rem 2rem;
-      font-family: 'Josefin Sans', sans-serif;
+    .arch-layers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .arch-layer {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid rgba(201, 168, 76, 0.04);
+    }
+
+    .arch-layer-num {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.8rem;
+      color: rgba(201, 168, 76, 0.3);
+      min-width: 20px;
+    }
+
+    .arch-layer-name {
       font-weight: 300;
-      font-size: 0.65rem;
-      letter-spacing: 0.3em;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      text-decoration: none;
-      color: #F0EBE0;
-      border: 1px solid rgba(196, 30, 58, 0.4);
-      transition: all 0.3s;
+      color: rgba(240, 235, 224, 0.5);
+      min-width: 120px;
     }
 
-    .cta a:hover {
-      background: rgba(196, 30, 58, 0.15);
-      border-color: #C41E3A;
+    .arch-layer-desc {
+      font-weight: 200;
+      font-size: 0.5rem;
+      color: rgba(139, 175, 196, 0.35);
+      letter-spacing: 0.05em;
+    }
+
+    .arch-layer.vib3-layer {
+      border-color: rgba(59, 169, 156, 0.1);
+      background: rgba(59, 169, 156, 0.02);
+    }
+
+    .arch-layer.vib3-layer .arch-layer-num {
+      color: rgba(59, 169, 156, 0.4);
     }
 
     footer {
@@ -194,7 +321,7 @@
       text-transform: uppercase;
       color: #D4B896;
       opacity: 0.2;
-      border-top: 1px solid rgba(196, 30, 58, 0.06);
+      border-top: 1px solid rgba(201, 168, 76, 0.04);
       width: 100%;
     }
 
@@ -207,26 +334,38 @@
 <body>
 
   <div class="hero">
-    <h1>Fleet <span>Map</span></h1>
-    <div class="tagline">Interactive Fishing Fleet Tracker</div>
+    <h1>D'Ascola <span>Fleet Intelligence</span></h1>
+    <div class="tagline">Dynamic Maritime Visualization Platform</div>
+    <span class="vib3-badge">Powered by VIB3 SDK</span>
     <div class="divider"></div>
     <p>
-      A canvas-based, animated fleet tracking map for the fishing industry.
-      5-layer rendering, particle ocean currents, interactive vessel tracking,
-      AIS integration. Zero dependencies. Zero build step. Just ES modules.
+      A layered, real-time fleet tracking system with water surface visualization,
+      live weather, expandable vessel and port panels, fleet coordination,
+      and an event-driven plugin architecture. Zero dependencies.
     </p>
   </div>
 
+  <div class="primary-cta">
+    <a href="demos/water-visualizer/">Launch Water Visualizer</a>
+    <a class="sub-link" href="demos/water-visualizer/">Full VIB3 SDK demo with weather, coordination, and expandable panels</a>
+  </div>
+
   <div class="demos">
-    <a class="demo-card" href="demos/viking-village/">
-      <h2>Viking Village</h2>
-      <div class="location">Barnegat Light, NJ &middot; Est. 1927</div>
+    <a class="demo-card featured" href="demos/water-visualizer/">
+      <h2>Water Visualizer</h2>
+      <div class="location">VIB3 SDK &middot; Full Feature Demo</div>
       <p>
-        Commercial scallop and longline fleet at Long Beach Island.
-        Barnegat Lighthouse compass rose, NJ fishing grounds,
-        Gulf Stream currents, Hudson Canyon.
+        The complete maritime intelligence experience. Dynamic water surface effects,
+        live weather HUD, click-to-expand vessel telemetry and port data panels,
+        fleet coordination messaging, and real-time event stream.
+        Click vessels and ports to explore.
       </p>
-      <span class="vessel-count">22 Vessels</span>
+      <div class="tags">
+        <span class="tag tag-vib3">VIB3 SDK</span>
+        <span class="tag tag-vessels">7 Vessels</span>
+        <span class="tag tag-weather">Weather</span>
+        <span class="tag tag-coord">Coordination</span>
+      </div>
     </a>
 
     <a class="demo-card" href="demos/dascola/">
@@ -237,43 +376,108 @@
         Brazil coastline, South Atlantic currents,
         US East Coast shipping route.
       </p>
-      <span class="vessel-count">7 Vessels</span>
+      <div class="tags">
+        <span class="tag tag-vessels">7 Vessels</span>
+        <span class="tag tag-vib3">VIB3</span>
+      </div>
+    </a>
+
+    <a class="demo-card" href="demos/viking-village/">
+      <h2>Viking Village</h2>
+      <div class="location">Barnegat Light, NJ &middot; Est. 1927</div>
+      <p>
+        Commercial scallop and longline fleet at Long Beach Island.
+        NJ fishing grounds, Gulf Stream currents, Hudson Canyon.
+      </p>
+      <div class="tags">
+        <span class="tag tag-vessels">22 Vessels</span>
+      </div>
     </a>
   </div>
 
+  <div class="section-title">Layer Architecture</div>
+
+  <div class="arch">
+    <div class="arch-layers">
+      <div class="arch-layer">
+        <span class="arch-layer-num">1</span>
+        <span class="arch-layer-name">Depth</span>
+        <span class="arch-layer-desc">Bathymetry gradient, fathom contours, lat/lon grid</span>
+      </div>
+      <div class="arch-layer vib3-layer">
+        <span class="arch-layer-num">2</span>
+        <span class="arch-layer-name">Water Surface</span>
+        <span class="arch-layer-desc">Caustics, wave lines, shimmer, swell patterns &mdash; VIB3</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-num">3</span>
+        <span class="arch-layer-name">Currents</span>
+        <span class="arch-layer-desc">250 particles flowing along real ocean current paths</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-num">4</span>
+        <span class="arch-layer-name">Coast</span>
+        <span class="arch-layer-desc">Bezier coastline, land fill, ports, shipping routes, cartouche</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-num">5</span>
+        <span class="arch-layer-name">Vessels</span>
+        <span class="arch-layer-desc">Heading triangles, halos, wake trails, ping rings, compass rose</span>
+      </div>
+      <div class="arch-layer vib3-layer">
+        <span class="arch-layer-num">6</span>
+        <span class="arch-layer-name">Weather</span>
+        <span class="arch-layer-desc">Wind field, rain, fog, weather HUD overlay &mdash; VIB3</span>
+      </div>
+      <div class="arch-layer">
+        <span class="arch-layer-num">7</span>
+        <span class="arch-layer-name">Atmosphere</span>
+        <span class="arch-layer-desc">Fog vignette, edge darkening, porthole effect</span>
+      </div>
+      <div class="arch-layer vib3-layer">
+        <span class="arch-layer-num">8</span>
+        <span class="arch-layer-name">Panels</span>
+        <span class="arch-layer-desc">Expandable vessel/port detail overlays &mdash; VIB3</span>
+      </div>
+      <div class="arch-layer vib3-layer">
+        <span class="arch-layer-num">9</span>
+        <span class="arch-layer-name">Coordination</span>
+        <span class="arch-layer-desc">Fleet messaging, ops status, alerts &mdash; VIB3</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Capabilities</div>
+
   <div class="features">
     <div class="feature">
-      <h3>5-Layer Canvas</h3>
-      <p>Depth, currents, coastline, vessels, atmosphere — stacked and composited for rich visuals.</p>
+      <h3>Water Surface</h3>
+      <p>Caustic light refraction, wave line patterns, sun shimmer, and dynamic swell direction indicators.</p>
     </div>
     <div class="feature">
-      <h3>250 Particles</h3>
-      <p>Ocean currents visualized with flowing particles that follow real current paths.</p>
+      <h3>Live Weather</h3>
+      <p>Evolving atmospheric simulation with wind field arrows, precipitation, fog zones, and HUD overlay.</p>
     </div>
     <div class="feature">
-      <h3>AIS Ready</h3>
-      <p>Point it at any REST endpoint returning vessel positions for live tracking.</p>
+      <h3>Expandable Panels</h3>
+      <p>Click any vessel or port. Full telemetry, weather at position, tide data, operational status.</p>
+    </div>
+    <div class="feature">
+      <h3>Fleet Coordination</h3>
+      <p>Cross-vessel messaging backbone, zone assignments, alert propagation, operational logging.</p>
+    </div>
+    <div class="feature">
+      <h3>Event Architecture</h3>
+      <p>Pub/sub event bus. All subsystems communicate decoupled. Plugin-ready for future extensions.</p>
     </div>
     <div class="feature">
       <h3>Zero Dependencies</h3>
-      <p>Vanilla JS ES modules. No React, no build step, no npm. Just link and go.</p>
+      <p>Vanilla JS ES modules. No frameworks, no build step, no npm. Deploy anywhere static files serve.</p>
     </div>
-    <div class="feature">
-      <h3>Rebrand in 5 Lines</h3>
-      <p>Change 5 CSS variables to completely retheme the map for your brand.</p>
-    </div>
-    <div class="feature">
-      <h3>Home Decor Ready</h3>
-      <p>Designed to look beautiful on a framed screen as wall art.</p>
-    </div>
-  </div>
-
-  <div class="cta">
-    <a href="https://github.com/Domusgpt/fleet-map">View on GitHub</a>
   </div>
 
   <footer>
-    Fleet Map &middot; MIT License &middot; <a href="https://github.com/Domusgpt/fleet-map">GitHub</a>
+    DASCOLA Fleet Intelligence &middot; VIB3 SDK &middot; MIT License &middot; <a href="https://github.com/Domusgpt/DASCOLA">GitHub</a>
   </footer>
 
 </body>

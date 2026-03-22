@@ -30,12 +30,13 @@ function rgba(r, g, b, a) {
 /**
  * Draw the atmosphere layer: vignette, top fog, and bottom fog.
  *
- * @param {CanvasRenderingContext2D} ctx    — canvas context
- * @param {number}   w      — logical canvas width
- * @param {number}   h      — logical canvas height
- * @param {object}   config — merged FleetMap config
+ * @param {CanvasRenderingContext2D} ctx — canvas context
+ * @param {CanvasManager} cm — canvas manager (provides w, h)
+ * @param {object} config — merged FleetMap config
  */
-export function drawAtmosphere(ctx, w, h, config) {
+export function drawAtmosphere(ctx, cm, config) {
+  var w = cm.w;
+  var h = cm.h;
   var deep = parseRGB(config.colors.deep);
   var r = deep.r;
   var g = deep.g;

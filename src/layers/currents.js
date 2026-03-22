@@ -7,9 +7,8 @@
  * Canvas: fleetCanvasCurrents (z-index: 3)
  *
  * Two exports:
- *   initParticles(config, w, h, bounds) — creates particle array
- *   drawCurrents(ctx, w, h, projFn, config, t, particles, currentData, bounds)
- *     — updates + draws every frame at 60fps
+ *   initParticles(config) — creates particle array
+ *   drawCurrents(ctx, cm, particles, currentData, config, t) — updates + draws
  *
  * Customizable via config:
  *   .particleCount       — number of particles (desktop)
@@ -22,18 +21,15 @@
  * Create the initial particle pool.
  *
  * @param {object} config — merged FleetMap config
- * @param {number} w      — canvas width
- * @param {number} h      — canvas height
- * @param {object} bounds — { latN, latS, lonW, lonE }
  * @returns {Array} particles
  */
-export function initParticles(config, w, h, bounds) {
+export function initParticles(config) {
   var isMobile = (typeof window !== 'undefined') && window.innerWidth < config.mobileBreakpoint;
   var count    = isMobile ? config.particleCountMobile : config.particleCount;
   var particles = new Array(count);
 
   for (var i = 0; i < count; i++) {
-    particles[i] = spawnParticle(w, h);
+    particles[i] = spawnParticle(1200, 800); // Initial size, will adapt
   }
 
   return particles;
@@ -94,17 +90,22 @@ function segmentInfo(px, py, ax, ay, bx, by) {
  * Draw (and advance) the particle current layer.
  *
  * @param {CanvasRenderingContext2D} ctx
- * @param {number}   w           — canvas width
- * @param {number}   h           — canvas height
- * @param {function} projFn      — projFn(lat, lon) => {x,y}
- * @param {object}   config      — merged FleetMap config
- * @param {number}   t           — animation time counter
+ * @param {CanvasManager} cm — canvas manager (provides w, h, proj, config)
  * @param {Array}    particles   — particle pool (mutated in place)
  * @param {Array}    currentData — [{ points, strength, width }, ...]
- * @param {object}   bounds      — { latN, latS, lonW, lonE }
+ * @param {object}   config      — merged FleetMap config
+ * @param {number}   t           — animation time counter
  */
-export function drawCurrents(ctx, w, h, projFn, config, t, particles, currentData, bounds) {
+export function drawCurrents(ctx, cm, particles, currentData, config, t) {
+  var w = cm.w;
+  var h = cm.h;
+  var bounds = config.bounds;
+
+  function projFn(lat, lon) { return cm.proj(lat, lon); }
+
   ctx.clearRect(0, 0, w, h);
+
+  if (!currentData || !currentData.length) return;
 
   var color = config.colors.blade;
 
