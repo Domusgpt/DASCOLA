@@ -1087,6 +1087,21 @@ body {
 .acc::after { left: calc(100% + 12px); }
 
 /* Fleet map styles: see fleet-map/styles.css */
+/* Override fleet-map CSS vars to match main site palette */
+.fleet-section {
+  --fm-deep: var(--deep);
+  --fm-accent: var(--ouro);
+  --fm-accent-lt: var(--ouro-lt);
+  --fm-land: var(--verde);
+  --fm-text: #F0EBE0;
+  --fm-text-warm: #D8D0C0;
+  --fm-text-muted: var(--blade);
+  --fm-font-display: 'Playfair Display', Georgia, serif;
+  --fm-font-sans: 'Josefin Sans', sans-serif;
+  background: var(--deep);
+  min-height: auto;
+  padding: 4rem 0;
+}
 </style>
 <link rel="stylesheet" href="fleet-map/styles.css">
 </head>
@@ -1122,7 +1137,7 @@ body {
   <ul class="nav-links">
     <li><a href="#phil">Operation</a></li>
     <li><a href="#prods">Catch</a></li>
-    <li><a href="#heri">Heritage</a></li>
+    <li><a href="#fleet">Fleet</a></li>
     <li><a href="#hww">Process</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -1278,21 +1293,45 @@ body {
   <img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1920&q=60&auto=format" alt="">
 </div>
 
-<!-- Heritage Section -->
-<div class="ss" id="heri" style="height:280vh">
-  <div class="sp bg-h" id="heriP">
-    <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2rem">
-      <div class="sc-c">
-        <span class="acc" id="ha">Since 1893</span>
-        <h2 class="sh" id="hh">A Family Built<br>on the Water</h2>
-        <p class="stx stx-l" id="hp">The D'Ascola family has worked the waters and wholesale markets of Brazil for over 130 years. What started on fishing boats off the coast of Santos has grown into a direct-supply pipeline trusted by the most respected seafood distributors on the U.S. East Coast. Victor D'Ascola carries that legacy forward — not with corporate infrastructure, but with personal relationships, daily presence at the docks, and an unbroken commitment to the quality of every single box.</p>
+<!-- Fleet Map Section — replaces Heritage -->
+<div class="fleet-section" id="fleet" style="position:relative;z-index:5">
+  <div class="fleet-map-wrap">
+    <div class="fleet-header" style="text-align:center;margin-bottom:2.5rem">
+      <span class="acc" id="flA">Live Fleet Tracking</span>
+      <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
+      <p class="stx stx-l" id="flP">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
+    </div>
+    <div class="fleet-map-panel-wrap">
+      <aside class="fleet-roster" id="fleetRoster">
+        <div class="fleet-roster-title">Vessel Roster</div>
+        <div id="rosterList"></div>
+      </aside>
+      <div class="fleet-map" id="fleetMap">
+        <canvas id="fleetCanvasDepth"></canvas>
+        <canvas id="fleetCanvasCurrents"></canvas>
+        <canvas id="fleetCanvasCoast"></canvas>
+        <canvas id="fleetCanvasMarkers"></canvas>
+        <canvas id="fleetCanvasWeather"></canvas>
+        <canvas id="fleetCanvasVessels"></canvas>
+        <canvas id="fleetCanvasAtmo"></canvas>
+        <div class="vessel-info" id="vesselInfo">
+          <h4 id="viName">—</h4>
+          <p id="viDetail">—</p>
+          <span class="vi-status" id="viStatus">—</span>
+        </div>
       </div>
-      <div class="stg" id="stg">
-        <div class="st"><div class="st-n">130+</div><div class="st-l">Years in the Trade</div></div>
-        <div class="st"><div class="st-n">Daily</div><div class="st-l">Air Freight Shipments</div></div>
-        <div class="st"><div class="st-n">24hr</div><div class="st-l">Origin to Destination</div></div>
-        <div class="st"><div class="st-n">100%</div><div class="st-l">Fresh · Never Frozen</div></div>
-      </div>
+    </div>
+    <div class="fleet-legend" id="flLeg">
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
+      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
+    </div>
+    <div class="fleet-stats" id="flSt">
+      <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
     </div>
   </div>
 </div>
@@ -1364,58 +1403,6 @@ body {
 </div>
 
 
-<!-- Wave Divider into Fleet -->
-<div class="wave-div wave-div-top wave-div-deep" style="position:relative;z-index:6">
-  <svg viewBox="0 0 2400 60" preserveAspectRatio="none"><path d="M0,30 C200,50 400,10 600,30 C800,50 1000,10 1200,30 C1400,50 1600,10 1800,30 C2000,50 2200,10 2400,30 L2400,60 L0,60Z"/></svg>
-</div>
-
-<!-- The Southern Brazil Fleet -->
-<div class="fleet-section ss" id="fleet" style="height:280vh">
-  <div class="sp" id="fleetP" style="background:transparent">
-    <div class="fleet-map-wrap">
-      <div class="fleet-header">
-        <span class="acc" id="flA">Live Fleet Tracking</span>
-        <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
-        <p class="stx stx-l" id="flP">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
-      </div>
-      <div class="fleet-map-panel-wrap">
-        <!-- Side Panel: Vessel Roster -->
-        <aside class="fleet-roster" id="fleetRoster">
-          <div class="fleet-roster-title">Vessel Roster</div>
-          <div class="fleet-roster-list" id="rosterList"></div>
-        </aside>
-        <!-- Map Container: 7 parallax canvases -->
-        <div class="fleet-map" id="fleetMap">
-          <canvas id="fleetCanvasDepth"></canvas>
-          <canvas id="fleetCanvasCurrents"></canvas>
-          <canvas id="fleetCanvasCoast"></canvas>
-          <canvas id="fleetCanvasMarkers"></canvas>
-          <canvas id="fleetCanvasWeather"></canvas>
-          <canvas id="fleetCanvasVessels"></canvas>
-          <canvas id="fleetCanvasAtmo"></canvas>
-          <!-- Vessel Info Tooltip -->
-          <div class="vessel-info" id="vesselInfo">
-            <h4 id="viName">—</h4>
-            <p id="viDetail">—</p>
-            <span class="vi-status" id="viStatus">—</span>
-          </div>
-        </div>
-      </div>
-      <div class="fleet-legend" id="flLeg">
-        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
-        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
-        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
-        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
-      </div>
-      <div class="fleet-stats" id="flSt">
-        <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
-        <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
-        <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
-        <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- Contact -->
 <section id="contact" style="min-height:55vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:4rem 2rem;background:var(--deep);position:relative;z-index:5">
   <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ouro),transparent)"></div>
@@ -1727,15 +1714,21 @@ window.addEventListener('load', function() {
   Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
   Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
-  // Heritage
-  var He = gsap.timeline({ scrollTrigger: { trigger: '#heri', start: 'top top', end: '+=150%', pin: '#heriP', scrub: 1, anticipatePin: 1 } });
-  He.to(V.s, { hue: 145, int: 0.22, spd: 0.18, chaos: 0.05, xw: 5, duration: 0.08 }, 0);
-  He.fromTo('#ha', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
-  He.fromTo('#hh', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.1 }, 0.03);
-  He.fromTo('#hp', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.08);
-  gsap.utils.toArray('.st').forEach(function(s, i) { He.fromTo(s, { opacity: 0, y: 35 }, { opacity: 1, y: 0, duration: 0.06 }, 0.16 + i * 0.04); });
-  He.to({}, { duration: 0.18 });
-  He.to(V.s, { int: 0.08, duration: 0.06 });
+  // Fleet Map — scroll-triggered entrance (replaces Heritage)
+  gsap.to(V.s, { scrollTrigger: { trigger: '#fleet', start: 'top 60%', end: 'top 20%', scrub: 1 }, hue: 210, int: 0.12, spd: 0.1, chaos: 0.02 });
+  gsap.fromTo('#flA', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#flA', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+  gsap.fromTo('#flH', { opacity: 0, y: 30 }, { scrollTrigger: { trigger: '#flH', start: 'top 85%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' });
+  gsap.fromTo('#flP', { opacity: 0, y: 22 }, { scrollTrigger: { trigger: '#flP', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 0.8, y: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
+  gsap.fromTo('#fleetMap', { opacity: 0, scale: 0.98 }, { scrollTrigger: { trigger: '#fleetMap', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' });
+  gsap.fromTo('#fleetRoster', { opacity: 0, x: -20 }, { scrollTrigger: { trigger: '#fleetRoster', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, x: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' });
+  gsap.fromTo('#flLeg', { opacity: 0 }, { scrollTrigger: { trigger: '#flLeg', start: 'top 92%', toggleActions: 'play none none reverse' }, opacity: 1, duration: 0.6, delay: 0.2, ease: 'power3.out' });
+  gsap.fromTo('#flSt', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#flSt', start: 'top 92%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
+  ScrollTrigger.create({
+    trigger: '#fleet',
+    start: 'top 80%',
+    onEnter: function() { if (fleetMapInstance) fleetMapInstance.start(); },
+    onLeaveBack: function() { if (fleetMapInstance) fleetMapInstance.stop(); }
+  });
 
   // How We Work
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
@@ -1767,67 +1760,6 @@ window.addEventListener('load', function() {
   var rt;
   window.addEventListener('resize', function() { clearTimeout(rt); rt = setTimeout(function() { ScrollTrigger.refresh(); }, 200); });
 
-// ============================================
-// ANIMATED STAT COUNTERS
-// ============================================
-function animateCounters() {
-  document.querySelectorAll('.st').forEach(function(st) {
-    st.classList.add('revealed');
-  });
-}
-
-// ============================================
-// FLEET SECTION GSAP ANIMATIONS
-// ============================================
-function initFleetAnimations() {
-  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
-  if (!document.getElementById('fleet')) return;
-  
-  // Fleet section pinned scroll
-  var Fl = gsap.timeline({ scrollTrigger: {
-    trigger: '#fleet', start: 'top top', end: '+=150%',
-    pin: '#fleetP', scrub: 1, anticipatePin: 1,
-    onEnter: function() { if (fleetMapInstance) fleetMapInstance.start(); },
-    onLeaveBack: function() { if (fleetMapInstance) fleetMapInstance.stop(); }
-  }});
-  
-  Fl.to(V.s, { hue: 210, int: 0.12, spd: 0.1, chaos: 0.02, duration: 0.06 }, 0);
-  Fl.fromTo('#flA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
-  Fl.fromTo('#flH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
-  Fl.fromTo('#flP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
-  Fl.fromTo('#fleetMap', { opacity: 0, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.1 }, 0.08);
-  Fl.fromTo('#fleetRoster', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.08 }, 0.12);
-  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.16);
-  Fl.fromTo('#flSt', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0.18);
-  Fl.to({}, { duration: 0.3 });
-  Fl.to(V.s, { int: 0.06, duration: 0.06 });
-}
-
-// Add nav link for Fleet
-(function() {
-  var navLinks = document.querySelector('.nav-links');
-  if (navLinks) {
-    var li = document.createElement('li');
-    var a = document.createElement('a');
-    a.href = '#fleet';
-    a.textContent = 'Fleet';
-    li.appendChild(a);
-    // Insert before Contact
-    var links = navLinks.querySelectorAll('li');
-    navLinks.insertBefore(li, links[links.length - 1]);
-  }
-})();
-
-  // Init fleet animations
-  initFleetAnimations();
-  
-  // Trigger stat counter animation when heritage stats come into view
-  ScrollTrigger.create({
-    trigger: '#stg',
-    start: 'top 80%',
-    onEnter: animateCounters,
-    once: true
-  });
 });
 
 // ============================================
