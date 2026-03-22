@@ -1099,8 +1099,60 @@ body {
   --fm-font-display: 'Playfair Display', Georgia, serif;
   --fm-font-sans: 'Josefin Sans', sans-serif;
   background: var(--deep);
-  min-height: auto;
-  padding: 4rem 0;
+}
+
+/* Full-viewport fleet map when pinned */
+/* Override .sp centering — fleet map must stretch to fill the viewport */
+.fleet-section .sp,
+.fleet-section.ss .sp {
+  align-items: stretch;
+  justify-content: stretch;
+}
+.fleet-section .fleet-map-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  box-sizing: border-box;
+}
+.fleet-section .fleet-header {
+  padding: 1.5rem 2rem 0;
+  flex-shrink: 0;
+}
+.fleet-section .fleet-map-panel-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 0;
+}
+.fleet-section .fleet-map {
+  flex: 1;
+  min-height: 0;
+  max-height: none !important;
+  aspect-ratio: unset !important;
+  height: auto !important;
+}
+.fleet-section .fleet-legend {
+  flex-shrink: 0;
+  padding: 0.5rem 2rem;
+}
+.fleet-section .fleet-stats {
+  flex-shrink: 0;
+  padding: 0.5rem 2rem 1rem;
+}
+
+@media (max-width: 768px) {
+  .fleet-section .fleet-map-panel-wrap {
+    flex-direction: column;
+  }
+  .fleet-section .fleet-roster {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .fleet-section .fleet-map {
+    min-height: 50vh;
+  }
 }
 </style>
 <link rel="stylesheet" href="fleet-map/styles.css">
@@ -1293,45 +1345,47 @@ body {
   <img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1920&q=60&auto=format" alt="">
 </div>
 
-<!-- Fleet Map Section — replaces Heritage -->
-<div class="fleet-section" id="fleet" style="position:relative;z-index:5">
-  <div class="fleet-map-wrap">
-    <div class="fleet-header" style="text-align:center;margin-bottom:2.5rem">
-      <span class="acc" id="flA">Live Fleet Tracking</span>
-      <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
-      <p class="stx stx-l" id="flP">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
-    </div>
-    <div class="fleet-map-panel-wrap">
-      <aside class="fleet-roster" id="fleetRoster">
-        <div class="fleet-roster-title">Vessel Roster</div>
-        <div id="rosterList"></div>
-      </aside>
-      <div class="fleet-map" id="fleetMap">
-        <canvas id="fleetCanvasDepth"></canvas>
-        <canvas id="fleetCanvasCurrents"></canvas>
-        <canvas id="fleetCanvasCoast"></canvas>
-        <canvas id="fleetCanvasMarkers"></canvas>
-        <canvas id="fleetCanvasWeather"></canvas>
-        <canvas id="fleetCanvasVessels"></canvas>
-        <canvas id="fleetCanvasAtmo"></canvas>
-        <div class="vessel-info" id="vesselInfo">
-          <h4 id="viName">—</h4>
-          <p id="viDetail">—</p>
-          <span class="vi-status" id="viStatus">—</span>
+<!-- Fleet Map Section — scroll-pinned full viewport -->
+<div class="fleet-section ss" id="fleet" style="height:300vh">
+  <div class="sp" id="fleetP" style="background:var(--deep)">
+    <div class="fleet-map-wrap">
+      <div class="fleet-header" style="text-align:center">
+        <span class="acc" id="flA">Live Fleet Tracking</span>
+        <h2 class="sh" id="flH" style="color:var(--ouro)">The Southern<br>Brazil Fleet</h2>
+        <p class="stx stx-l" id="flP" style="margin-bottom:0">Real-time positions of our vessels operating off the coast of Santos. From the deep waters of the South Atlantic to the wholesale markets of the East Coast — every boat, every catch, tracked.</p>
+      </div>
+      <div class="fleet-map-panel-wrap">
+        <aside class="fleet-roster" id="fleetRoster">
+          <div class="fleet-roster-title">Vessel Roster</div>
+          <div id="rosterList"></div>
+        </aside>
+        <div class="fleet-map" id="fleetMap">
+          <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasCurrents"></canvas>
+          <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasMarkers"></canvas>
+          <canvas id="fleetCanvasWeather"></canvas>
+          <canvas id="fleetCanvasVessels"></canvas>
+          <canvas id="fleetCanvasAtmo"></canvas>
+          <div class="vessel-info" id="vesselInfo">
+            <h4 id="viName">—</h4>
+            <p id="viDetail">—</p>
+            <span class="vi-status" id="viStatus">—</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="fleet-legend" id="flLeg">
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
-    </div>
-    <div class="fleet-stats" id="flSt">
-      <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
+      <div class="fleet-legend" id="flLeg">
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Shipping Route</div>
+        <div class="fleet-legend-item"><div class="fleet-legend-dot dot-fishing"></div>Fishing Zone</div>
+      </div>
+      <div class="fleet-stats" id="flSt">
+        <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1714,21 +1768,29 @@ window.addEventListener('load', function() {
   Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
   Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
-  // Fleet Map — scroll-triggered entrance (replaces Heritage)
-  gsap.to(V.s, { scrollTrigger: { trigger: '#fleet', start: 'top 60%', end: 'top 20%', scrub: 1 }, hue: 210, int: 0.12, spd: 0.1, chaos: 0.02 });
-  gsap.fromTo('#flA', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#flA', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
-  gsap.fromTo('#flH', { opacity: 0, y: 30 }, { scrollTrigger: { trigger: '#flH', start: 'top 85%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' });
-  gsap.fromTo('#flP', { opacity: 0, y: 22 }, { scrollTrigger: { trigger: '#flP', start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 0.8, y: 0, duration: 0.6, delay: 0.1, ease: 'power3.out' });
-  gsap.fromTo('#fleetMap', { opacity: 0, scale: 0.98 }, { scrollTrigger: { trigger: '#fleetMap', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, scale: 1, duration: 0.8, ease: 'power3.out' });
-  gsap.fromTo('#fleetRoster', { opacity: 0, x: -20 }, { scrollTrigger: { trigger: '#fleetRoster', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, x: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' });
-  gsap.fromTo('#flLeg', { opacity: 0 }, { scrollTrigger: { trigger: '#flLeg', start: 'top 92%', toggleActions: 'play none none reverse' }, opacity: 1, duration: 0.6, delay: 0.2, ease: 'power3.out' });
-  gsap.fromTo('#flSt', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#flSt', start: 'top 92%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
-  ScrollTrigger.create({
-    trigger: '#fleet',
-    start: 'top 80%',
-    onEnter: function() { if (fleetMapInstance) fleetMapInstance.start(); },
+  // Fleet Map — pinned full viewport, starts map on enter
+  var Fl = gsap.timeline({ scrollTrigger: {
+    trigger: '#fleet', start: 'top top', end: '+=200%',
+    pin: '#fleetP', scrub: 1, anticipatePin: 1,
+    onEnter: function() {
+      if (fleetMapInstance) {
+        fleetMapInstance.start();
+        // Force resize after pin so canvases get correct dimensions
+        setTimeout(function() { if (fleetMapInstance.cm) fleetMapInstance.cm.resize(); }, 100);
+      }
+    },
     onLeaveBack: function() { if (fleetMapInstance) fleetMapInstance.stop(); }
-  });
+  }});
+  Fl.to(V.s, { hue: 210, int: 0.12, spd: 0.1, chaos: 0.02, duration: 0.06 }, 0);
+  Fl.fromTo('#flA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
+  Fl.fromTo('#flH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
+  Fl.fromTo('#flP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
+  Fl.fromTo('#fleetMap', { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.12 }, 0.08);
+  Fl.fromTo('#fleetRoster', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.08 }, 0.12);
+  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.16);
+  Fl.fromTo('#flSt', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0.18);
+  Fl.to({}, { duration: 0.4 });
+  Fl.to(V.s, { int: 0.06, duration: 0.06 });
 
   // How We Work
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
@@ -1780,7 +1842,7 @@ var response = await fetch('./fleet-map/vessels.json');
 var data = await response.json();
 
 // D'Ascola Seafood fleet configuration
-fleetMapInstance = new FleetMap('#fleetMap', {
+var fm = new FleetMap('#fleetMap', {
   title: "D'Ascola Seafood",
   subtitle: 'Est. 1893 · Santos, Brazil',
   bounds: { latN: -12, latS: -35, lonW: -55, lonE: -25 },
@@ -1808,6 +1870,20 @@ fleetMapInstance = new FleetMap('#fleetMap', {
   particleCountMobile: 120,
 });
 
+// Expose globally so GSAP scroll triggers can start/stop it
+window.fleetMapInstance = fm;
+
+// Force a resize after a brief delay to get correct dimensions
+// (the pinned container may not have final layout yet)
+setTimeout(function() {
+  fm.cm.resize();
+  // If the section is already in view (e.g. user scrolled fast), start immediately
+  var rect = document.getElementById('fleet').getBoundingClientRect();
+  if (rect.top < window.innerHeight && rect.bottom > 0) {
+    fm.start();
+  }
+}, 200);
+
 // Update fleet stats from actual data
 (function() {
   var vessels = data.vessels;
@@ -1827,6 +1903,16 @@ fleetMapInstance = new FleetMap('#fleetMap', {
     '<div class="fleet-stat"><div class="fleet-stat-n">' + counts.fishing + '</div><div class="fleet-stat-l">Fishing</div></div>' +
     '<div class="fleet-stat"><div class="fleet-stat-n">' + (data.routes ? data.routes.length : 0) + '</div><div class="fleet-stat-l">Routes</div></div>';
 })();
+
+// ResizeObserver to keep canvases sized correctly when layout changes (pin activation, etc.)
+if (typeof ResizeObserver !== 'undefined') {
+  var ro = new ResizeObserver(function() {
+    if (window.fleetMapInstance && window.fleetMapInstance.cm) {
+      window.fleetMapInstance.cm.resize();
+    }
+  });
+  ro.observe(document.getElementById('fleetMap'));
+}
 </script>
 </body>
 </html>
