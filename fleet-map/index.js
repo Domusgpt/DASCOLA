@@ -55,6 +55,7 @@ import { buildRoster } from './roster.js';
 import { setupInteraction } from './interaction.js';
 import { AISClient } from './ais.js';
 import { BRAZIL_COAST } from './data/brazil-coast.js';
+import { USA_OUTLINE } from './data/usa-coast.js';
 import { SA_CURRENTS } from './data/currents-sa.js';
 import { createDefaultRegistry } from './assets/registry.js';
 import { AssetRenderer } from './assets/renderer.js';
@@ -403,11 +404,11 @@ export class FleetMap {
     }
 
     var coastLayer = cm.getLayer('coast');
-    if (coastLayer.dirty) {
-      this.config._airRoutes = this.airRoutes;
-      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t, this.renderer);
-      coastLayer.dirty = false;
-    }
+    // Always redraw coast layer — air routes have animated dashes and airplane dots
+    this.config._airRoutes = this.airRoutes;
+    this.config._usaCoast = USA_OUTLINE;
+    drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t, this.renderer);
+    coastLayer.dirty = false;
 
     // Markers layer (semi-static, redraws when dirty or has animated elements)
     var markersLayer = cm.getLayer('markers');

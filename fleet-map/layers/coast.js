@@ -96,6 +96,9 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
     renderer = arguments[9];
   }
 
+  // Clear canvas before redraw (needed for animated air routes)
+  ctx.clearRect(0, 0, w, h);
+
   var colors = config.colors;
   var fonts  = config.fonts;
   var theme  = (renderer && renderer.theme) || null;
@@ -128,6 +131,49 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
 
   ctx.fillStyle = landGrad;
   ctx.fill();
+
+  // ------------------------------------------------------------------
+  // 1b. USA land mass — closed polygon fill
+  // ------------------------------------------------------------------
+  var usaCoast = config._usaCoast;
+  if (usaCoast && usaCoast.length) {
+    traceCoast(ctx, usaCoast, projFn);
+    ctx.closePath();
+
+    // Land gradient for USA — from center outward
+    var usaCenter = projFn(38, -96);
+    var usaGrad = ctx.createRadialGradient(
+      usaCenter.x, usaCenter.y, 0,
+      usaCenter.x, usaCenter.y, w * 0.6
+    );
+    usaGrad.addColorStop(0.0, landStops[1]);
+    usaGrad.addColorStop(0.6, landStops[0]);
+    usaGrad.addColorStop(1.0, landStops[2]);
+    ctx.fillStyle = usaGrad;
+    ctx.fill();
+
+    // Outer glow
+    traceCoast(ctx, usaCoast, projFn);
+    ctx.closePath();
+    ctx.strokeStyle = colors.coastGlow;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Crisp coastline
+    traceCoast(ctx, usaCoast, projFn);
+    ctx.closePath();
+    ctx.strokeStyle = colors.coastLine;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // USA label
+    var usaLabel = projFn(39, -98);
+    drawLabel(ctx, 'land-mass', 'UNITED STATES', usaLabel.x, usaLabel.y, {
+      w: w, fonts: fonts, colors: colors, theme: theme,
+      color: colors.coastLine,
+      rotation: 0,
+    });
+  }
 
   // ------------------------------------------------------------------
   // 2. Coast outline — double stroke (glow + crisp line)
@@ -276,16 +322,37 @@ export function drawCoast(ctx, cmOrW, coastDataOrH, portsOrProjFn, routesOrConfi
       ctx.lineDashOffset = -t * 50;
       ctx.stroke();
 
-      // Small airplane dot traveling along the arc
-      var tpos = ((t * 0.15 + ai * 0.18) % 1);
+      // Animated airplane traveling along the arc
+      var tpos = ((t * 0.12 + ai * 0.13) % 1);
       var inv = 1 - tpos;
       var px = inv * inv * afrom.x + 2 * inv * tpos * acpx + tpos * tpos * ato.x;
       var py = inv * inv * afrom.y + 2 * inv * tpos * acpy + tpos * tpos * ato.y;
+
+      // Glow behind the plane
       ctx.beginPath();
-      ctx.arc(px, py, 2, 0, Math.PI * 2);
+      ctx.arc(px, py, 6, 0, Math.PI * 2);
       ctx.fillStyle = colors.ouro;
-      ctx.globalAlpha = 0.7;
+      ctx.globalAlpha = 0.15;
       ctx.fill();
+
+      // Plane dot
+      ctx.beginPath();
+      ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = colors.ouro;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+
+      // Small trail behind the plane
+      for (var ti = 1; ti <= 4; ti++) {
+        var tback = ((t * 0.12 + ai * 0.13 - ti * 0.012) % 1 + 1) % 1;
+        var binv = 1 - tback;
+        var bx = binv * binv * afrom.x + 2 * binv * tback * acpx + tback * tback * ato.x;
+        var by = binv * binv * afrom.y + 2 * binv * tback * acpy + tback * tback * ato.y;
+        ctx.beginPath();
+        ctx.arc(bx, by, 1.5 - ti * 0.3, 0, Math.PI * 2);
+        ctx.globalAlpha = 0.4 - ti * 0.08;
+        ctx.fill();
+      }
 
       // Route label at midpoint of arc
       var lx = 0.25 * afrom.x + 0.5 * acpx + 0.25 * ato.x;
