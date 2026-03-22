@@ -82,7 +82,8 @@ export class VIB3 {
     this._started = true;
 
     var fm = this.fleetMap;
-    var container = fm.container;
+    var container = fm.container;  // .fleet-map div (for canvas insertion)
+    var wrapper = fm.wrapper || container;  // broader wrapper (for panels, interaction)
     var config = fm.config;
 
     // --- Panel Manager ---

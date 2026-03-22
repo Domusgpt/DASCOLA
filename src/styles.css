@@ -110,7 +110,6 @@
 .fleet-section {
   position: relative;
   z-index: 5;
-  min-height: 100vh;
   background: var(--fm-deep);
   overflow: hidden;
 }
@@ -277,7 +276,7 @@
   position: relative;
   flex: 1;
   aspect-ratio: var(--fm-map-ratio);
-  max-height: 65vh;
+  min-height: 400px;
   border: 1px solid rgba(201, 168, 76, 0.12); /* --fm-accent @ 0.12 */
   overflow: hidden;
   background:
@@ -555,7 +554,9 @@
      since the viewport is narrow. */
   .fleet-map {
     aspect-ratio: var(--fm-map-ratio-mobile);
-    max-height: 55vh;
+    max-height: none;
+    min-height: 50vh;
+    width: 100%;
   }
 
   /* Tighten legend spacing on small screens. */

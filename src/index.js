@@ -110,6 +110,14 @@ export class FleetMap {
       throw new Error('FleetMap: container not found — ' + selector);
     }
 
+    // The wrapper element that contains both roster and map
+    // (roster is a sibling of .fleet-map, so we need the parent)
+    this.wrapper = this.container.closest('.fleet-map-panel-wrap')
+      || this.container.closest('.fleet-map-wrap')
+      || this.container.closest('.fleet-section')
+      || this.container.parentElement
+      || this.container;
+
     // Deep copy vessel, port, and route data so we don't mutate originals
     this.vessels = prepareVessels(cloneArray(this.config.vessels));
     this.ports = cloneArray(this.config.ports);
@@ -146,11 +154,11 @@ export class FleetMap {
     // Init rain particles for weather layer
     this.rainParticles = initRainParticles();
 
-    // Build roster panel
-    this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    // Build roster panel (search wrapper since #rosterList is sibling of .fleet-map)
+    this.rosterEl = buildRoster(this.wrapper, this.vessels, this.config);
 
-    // Setup mouse/touch interaction
-    this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
+    // Setup mouse/touch interaction (uses .fleet-map container for hit detection)
+    this._interactionCleanup = setupInteraction(this.wrapper, this.vessels, this.config);
 
     // AIS live-tracking client
     this.aisClient = null;
@@ -294,6 +302,7 @@ export class FleetMap {
     this.rainParticles = null;
     this.rosterEl = null;
     this.container = null;
+    this.wrapper = null;
     this.config = null;
   }
 
@@ -307,8 +316,8 @@ export class FleetMap {
     this.vessels = prepareVessels(cloneArray(arr));
 
     // Rebuild the roster panel
-    if (this.container && this.config) {
-      this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    if (this.wrapper && this.config) {
+      this.rosterEl = buildRoster(this.wrapper, this.vessels, this.config);
     }
 
     // Update stats display
@@ -423,7 +432,7 @@ export class FleetMap {
    * @private
    */
   _updateStats() {
-    if (!this.vessels || !this.container) return;
+    if (!this.vessels || !this.wrapper) return;
 
     // Count vessels by status
     var counts = {
@@ -445,7 +454,7 @@ export class FleetMap {
     // Update stat elements if they exist
     var statKeys = ['total', 'fishing', 'transit', 'port', 'returning'];
     for (var j = 0; j < statKeys.length; j++) {
-      var el = this.container.querySelector('.fleet-stat-' + j);
+      var el = this.wrapper.querySelector('.fleet-stat-' + j);
       if (el) {
         el.textContent = counts[statKeys[j]];
       }
