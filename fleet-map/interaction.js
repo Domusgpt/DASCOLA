@@ -99,6 +99,7 @@ export function setupInteraction(container, vessels, config) {
       }
 
       highlightRosterItem(container, hit.index);
+      mapEl.style.cursor = 'pointer';
 
       if (typeof config.onVesselHover === 'function') {
         config.onVesselHover(hit.vessel, { x: mx, y: my });
@@ -107,6 +108,7 @@ export function setupInteraction(container, vessels, config) {
       // No hit — hide tooltip and clear roster highlight
       if (tooltip) tooltip.classList.remove('active');
       clearRosterHighlight(container);
+      mapEl.style.cursor = '';
     }
   }
 

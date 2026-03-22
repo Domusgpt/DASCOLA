@@ -1102,25 +1102,7 @@ body {
   overflow: hidden;
 }
 
-/* Full-viewport fleet map when pinned */
-#fleetP { overflow: hidden; }
-
-/* Fleet map — full-screen immersive layout with cinematic zoom */
-.fleet-section .fleet-map {
-  max-height: none !important;
-  aspect-ratio: unset !important;
-  border: none !important;
-  border-radius: 0 !important;
-  transform-origin: 78% 72%;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-}
-.fleet-section .fleet-map canvas {
-  position: absolute;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-}
+/* Fleet roster (shared style) */
 .fleet-section .fleet-roster {
   background: rgba(4,10,16,0.85);
   border: 1px solid rgba(201,168,76,0.15);
@@ -1159,6 +1141,284 @@ body {
     left: auto !important;
   }
 }
+
+/* ============================================
+   FLEET MAP — Fixed Background Layer
+   ============================================ */
+#fleetBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  overflow: hidden;
+  background: var(--deep);
+}
+#fleetBg.active { pointer-events: auto; }
+#fleetBg .fleet-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none !important;
+  aspect-ratio: unset !important;
+  border: none !important;
+  border-radius: 0 !important;
+  transform-origin: 78% 72%;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+#fleetBg .fleet-map canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Overlay sections — translucent backgrounds over the map */
+.map-overlay {
+  position: relative;
+  z-index: 2;
+}
+.map-overlay .sp {
+  background: rgba(4,10,16,0.82) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.map-overlay .sp::before {
+  opacity: 0.5;
+}
+
+/* Products overlay — lighter to let map peek through more */
+#prods.map-overlay .sp {
+  background: rgba(245,237,216,0.88) !important;
+}
+
+/* Meet Our Fleet — interactive focus section */
+#meetFleet {
+  position: relative;
+  z-index: 2;
+}
+#meetFleetP {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 2rem;
+}
+
+/* Fleet invite banner at bottom of screen */
+.fleet-invite {
+  text-align: center;
+  padding: 2rem 3rem;
+  background: rgba(4,10,16,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212,165,74,0.2);
+  border-radius: 12px;
+  max-width: 600px;
+  pointer-events: auto;
+}
+.fleet-invite h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--ouro);
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  margin-bottom: 0.5rem;
+}
+.fleet-invite p {
+  color: var(--creme-w);
+  font-size: clamp(0.82rem, 1vw, 0.92rem);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 1.2rem;
+}
+.fleet-invite .hint {
+  color: var(--ouro);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  animation: hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Vessel detail panel — click to expand */
+.vessel-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(3,8,16,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.vessel-detail-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.vessel-detail {
+  background: rgba(6,16,28,0.95);
+  border: 1px solid rgba(212,165,74,0.25);
+  border-radius: 12px;
+  max-width: 720px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 0;
+  transform: translateY(30px) scale(0.96);
+  transition: transform 0.4s ease;
+}
+.vessel-detail-overlay.open .vessel-detail {
+  transform: translateY(0) scale(1);
+}
+.vessel-detail-hero {
+  width: 100%;
+  height: 240px;
+  background: linear-gradient(135deg, rgba(10,126,110,0.3), rgba(27,58,92,0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+.vessel-detail-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.vessel-detail-hero .placeholder-icon {
+  opacity: 0.2;
+}
+.vessel-detail-body {
+  padding: 2rem;
+}
+.vessel-detail-body h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--ouro);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin-bottom: 0.3rem;
+}
+.vessel-detail-body .vd-type {
+  color: var(--blade);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.vessel-detail-body .vd-desc {
+  color: var(--creme-w);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+.vessel-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.vessel-detail-stat {
+  background: rgba(212,165,74,0.06);
+  border: 1px solid rgba(212,165,74,0.1);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  text-align: center;
+}
+.vessel-detail-stat .vds-val {
+  color: var(--ouro);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.vessel-detail-stat .vds-lbl {
+  color: var(--blade);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+.vessel-detail-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(4,10,16,0.7);
+  border: 1px solid rgba(212,165,74,0.3);
+  color: var(--ouro);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: background 0.2s;
+}
+.vessel-detail-close:hover { background: rgba(212,165,74,0.2); }
+
+/* Fleet overlay UI (roster, stats, legend) — repositioned for fixed layer */
+#fleetBg .fleet-roster {
+  background: rgba(4,10,16,0.85);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+#fleetBg .fleet-legend {
+  background: rgba(4,10,16,0.75);
+  border-radius: 20px;
+  padding: 0.4rem 1.2rem;
+  backdrop-filter: blur(6px);
+}
+#fleetBg .fleet-stats {
+  display: flex;
+  background: rgba(4,10,16,0.75);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(201,168,76,0.1);
+}
+
+/* Contact section — needs higher z-index and solid bg */
+#contact {
+  z-index: 3 !important;
+}
+@media (max-width: 768px) {
+  #fleetBg .fleet-roster {
+    bottom: 3.5rem !important;
+    left: 0.5rem !important;
+    max-width: 180px;
+    max-height: 30vh;
+    font-size: 0.8rem;
+  }
+  #fleetBg .fleet-stats {
+    flex-direction: column;
+    top: auto !important;
+    bottom: 3.5rem !important;
+    right: 0.5rem !important;
+    left: auto !important;
+  }
+  .fleet-invite {
+    padding: 1.5rem 1.5rem;
+  }
+  .vessel-detail-hero { height: 180px; }
+  .vessel-detail-body { padding: 1.2rem; }
+}
 </style>
 <link rel="stylesheet" href="fleet-map/styles.css">
 </head>
@@ -1178,7 +1438,61 @@ body {
   <svg viewBox="0 0 80 30" fill="none"><path d="M5 15 L15 14 Q20 8 30 6 Q40 3 50 5 Q58 8 64 14 Q66 15 64 16 Q58 22 50 25 Q40 27 30 24 Q20 22 15 16 L5 15Z" stroke="#C9A84C" stroke-width="0.4" fill="none"/><path d="M64 14 Q70 10 76 7 M64 16 Q70 20 76 23" stroke="#C9A84C" stroke-width="0.3" fill="none"/></svg>
 </div>
 
+<!-- ============================================
+     FLEET MAP — Fixed Background Layer
+     Persists as background for the second half of the site.
+     Controlled by GSAP ScrollTrigger across multiple sections.
+     ============================================ -->
+<div id="fleetBg" class="fleet-section">
+  <div class="fleet-map" id="fleetMap" style="position:absolute;inset:0;width:100%;height:100%">
+    <canvas id="fleetCanvasDepth"></canvas>
+    <canvas id="fleetCanvasCurrents"></canvas>
+    <canvas id="fleetCanvasCoast"></canvas>
+    <canvas id="fleetCanvasMarkers"></canvas>
+    <canvas id="fleetCanvasWeather"></canvas>
+    <canvas id="fleetCanvasVessels"></canvas>
+    <canvas id="fleetCanvasAtmo"></canvas>
+    <div class="vessel-info" id="vesselInfo">
+      <h4 id="viName">—</h4>
+      <p id="viDetail">—</p>
+      <span class="vi-status" id="viStatus">—</span>
+    </div>
+    <aside class="fleet-roster" id="fleetRoster" style="position:absolute;bottom:4.5rem;left:1rem;z-index:12;max-width:220px;opacity:0;pointer-events:auto">
+      <div class="fleet-roster-title">Vessel Roster</div>
+      <div id="rosterList"></div>
+    </aside>
+  </div>
+  <!-- Legend — bottom overlay (inside fixed layer so it's always over the map) -->
+  <div class="fleet-legend" id="flLeg" style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);z-index:12;opacity:0">
+    <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
+    <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
+    <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Fishing Grounds</div>
+    <div class="fleet-legend-item"><div class="fleet-legend-dot dot-air" style="border:1px dashed rgba(212,165,74,0.6);background:none"></div>Air Freight</div>
+  </div>
+  <!-- Stats — top-right overlay -->
+  <div class="fleet-stats" id="flSt" style="position:absolute;top:1rem;right:1.5rem;z-index:12;opacity:0;flex-direction:column;gap:0.8rem">
+    <div class="fleet-stat"><div class="fleet-stat-n">5</div><div class="fleet-stat-l">Active Vessels</div></div>
+    <div class="fleet-stat"><div class="fleet-stat-n">9</div><div class="fleet-stat-l">Ports Connected</div></div>
+    <div class="fleet-stat"><div class="fleet-stat-n">4</div><div class="fleet-stat-l">Ocean Routes</div></div>
+    <div class="fleet-stat"><div class="fleet-stat-n">12+</div><div class="fleet-stat-l">Species</div></div>
+  </div>
+</div>
 
+<!-- Vessel Detail Overlay — click a vessel to open -->
+<div class="vessel-detail-overlay" id="vesselDetailOverlay">
+  <div class="vessel-detail" id="vesselDetailPanel">
+    <div class="vessel-detail-hero" id="vdHero">
+      <button class="vessel-detail-close" id="vdClose">&times;</button>
+      <svg class="placeholder-icon" viewBox="0 0 120 50" width="120" fill="none"><path d="M10 25 L25 23 Q35 14 50 10 Q70 5 90 10 Q105 16 112 23 Q115 25 112 27 Q105 34 90 40 Q70 45 50 40 Q35 36 25 27 L10 25Z" stroke="#C9A84C" stroke-width="0.6" fill="none"/></svg>
+    </div>
+    <div class="vessel-detail-body">
+      <h2 id="vdName">Vessel Name</h2>
+      <div class="vd-type" id="vdType">Longliner</div>
+      <p class="vd-desc" id="vdDesc">Vessel details and story will appear here.</p>
+      <div class="vessel-detail-stats" id="vdStats"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Navigation -->
 <nav class="nav" id="nav">
@@ -1194,7 +1508,7 @@ body {
   <ul class="nav-links">
     <li><a href="#phil">Operation</a></li>
     <li><a href="#prods">Catch</a></li>
-    <li><a href="#fleet">Fleet</a></li>
+    <li><a href="#meetFleet">Fleet</a></li>
     <li><a href="#hww">Process</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -1314,7 +1628,7 @@ body {
 </div>
 
 <!-- Products Section -->
-<div class="ss" id="prods" style="height:280vh">
+<div class="ss map-overlay" id="prods" style="height:280vh">
   <div class="sp bg-c" id="prodP">
     <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2.5rem">
       <div class="sc-c">
@@ -1346,62 +1660,26 @@ body {
   </div>
 </div>
 
-<div class="wd wd-3">
-  <img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=1920&q=60&auto=format" alt="">
-</div>
-
-<!-- Fleet Map Section — full-screen locked immersive -->
-<div class="fleet-section ss" id="fleet" style="height:600vh">
-  <div id="fleetP" style="position:relative;width:100%;height:100vh;overflow:hidden;background:var(--deep)">
-    <!-- FULL-SCREEN MAP (fills entire viewport as background) -->
-    <div class="fleet-map" id="fleetMap" style="position:absolute;inset:0;width:100%;height:100%">
-      <canvas id="fleetCanvasDepth"></canvas>
-      <canvas id="fleetCanvasCurrents"></canvas>
-      <canvas id="fleetCanvasCoast"></canvas>
-      <canvas id="fleetCanvasMarkers"></canvas>
-      <canvas id="fleetCanvasWeather"></canvas>
-      <canvas id="fleetCanvasVessels"></canvas>
-      <canvas id="fleetCanvasAtmo"></canvas>
-      <div class="vessel-info" id="vesselInfo">
-        <h4 id="viName">—</h4>
-        <p id="viDetail">—</p>
-        <span class="vi-status" id="viStatus">—</span>
-      </div>
-      <!-- Roster lives inside fleetMap so buildRoster() can find #rosterList -->
-      <aside class="fleet-roster" id="fleetRoster" style="position:absolute;bottom:4.5rem;left:1rem;z-index:12;max-width:220px;opacity:0;pointer-events:auto">
-        <div class="fleet-roster-title">Vessel Roster</div>
-        <div id="rosterList"></div>
-      </aside>
-    </div>
-    <!-- Title overlay — fades in then out -->
+<!-- Meet Our Fleet — immersive map-only section where users explore vessels -->
+<div class="ss" id="meetFleet" style="height:600vh">
+  <div id="meetFleetP" style="position:relative;width:100%;height:100vh;overflow:hidden">
+    <!-- Fleet title — fades in over the map background -->
     <div id="fleetTitle" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;pointer-events:none;text-align:center;padding:2rem">
       <span class="acc" id="flA" style="opacity:0">Live Fleet Tracking</span>
       <h2 class="sh" id="flH" style="color:var(--ouro);opacity:0;font-size:clamp(2.2rem,6vw,4.5rem)">The Southern<br>Brazil Fleet</h2>
       <p class="stx stx-l" id="flP" style="opacity:0;max-width:600px">Real-time positions of our vessels operating off the coast of Santos.</p>
     </div>
-    <!-- Legend — bottom overlay -->
-    <div class="fleet-legend" id="flLeg" style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);z-index:12;opacity:0">
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-vessel"></div>Active Vessel</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-port"></div>Port</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-route"></div>Fishing Grounds</div>
-      <div class="fleet-legend-item"><div class="fleet-legend-dot dot-air" style="border:1px dashed rgba(212,165,74,0.6);background:none"></div>Air Freight</div>
-    </div>
-    <!-- Stats — top-right overlay -->
-    <div class="fleet-stats" id="flSt" style="position:absolute;top:1rem;right:1.5rem;z-index:12;opacity:0;flex-direction:column;gap:0.8rem">
-      <div class="fleet-stat"><div class="fleet-stat-n">5</div><div class="fleet-stat-l">Active Vessels</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">9</div><div class="fleet-stat-l">Ports Connected</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">4</div><div class="fleet-stat-l">Ocean Routes</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">12+</div><div class="fleet-stat-l">Species</div></div>
+    <!-- Invite banner — appears when zoomed into the fishing grounds -->
+    <div class="fleet-invite" id="fleetInvite" style="position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:12;opacity:0">
+      <h2>Meet Our Fleet</h2>
+      <p>Five vessels. Three oceans. One family operation. Click any vessel on the map to learn its story.</p>
+      <span class="hint">Click a vessel to explore</span>
     </div>
   </div>
 </div>
 
-<div class="wd wd-4">
-  <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=70&auto=format" alt="">
-</div>
-
-<!-- How We Work Section -->
-<div class="ss" id="hww" style="height:280vh">
+<!-- How We Work Section — overlays the fleet map background -->
+<div class="ss map-overlay" id="hww" style="height:280vh">
   <div class="sp bg-o" id="hwP">
     <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2rem">
       <div class="sc-c">
@@ -1436,7 +1714,7 @@ body {
 </div>
 
 <!-- Trust Section -->
-<div class="ss" id="trust" style="height:250vh">
+<div class="ss map-overlay" id="trust" style="height:250vh">
   <div class="sp bg-t" id="trustP">
     <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2rem">
       <div class="sc-c">
@@ -1764,7 +2042,7 @@ window.addEventListener('load', function() {
   var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + ((trk.scrollWidth - window.innerWidth) * 2.5); }, pin: '#valP', scrub: 2.5, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.6, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
   vcs.forEach(function(c) { gsap.to(c.querySelector('.vi'), { scrollTrigger: { trigger: c, containerAnimation: H, start: 'left 85%', end: 'left 40%', scrub: true }, opacity: 1, y: 0 }); });
 
-  // Products
+  // Products — content animation stays the same
   var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=180%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
   Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
   Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
@@ -1774,33 +2052,61 @@ window.addEventListener('load', function() {
   Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
   Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
 
-  // Fleet Map — full-screen immersive, cinematic orbital-to-surface zoom
-  var Fl = gsap.timeline({ scrollTrigger: {
-    trigger: '#fleet', start: 'top top', end: '+=500%',
-    pin: '#fleetP', scrub: 1, anticipatePin: 1,
+  // ============================================
+  // FLEET MAP — Fixed Background Layer Controller
+  // The map (#fleetBg) is position:fixed. We fade it in during Products
+  // exit and it persists as background through the rest of the site.
+  // ============================================
+
+  // Start the fleet map rendering when we approach Products exit
+  ScrollTrigger.create({
+    trigger: '#prods',
+    start: 'top 50%',
     onEnter: function() {
       if (window.fleetMapInstance) {
         window.fleetMapInstance.cm.resize();
         window.fleetMapInstance.start();
       }
+      document.getElementById('fleetBg').classList.add('active');
     },
-    onLeaveBack: function() { if (window.fleetMapInstance) window.fleetMapInstance.stop(); }
+    onLeaveBack: function() {
+      if (window.fleetMapInstance) window.fleetMapInstance.stop();
+      document.getElementById('fleetBg').classList.remove('active');
+    }
+  });
+
+  // Fade in the fleet map as Products content fades out (last 20% of products scroll)
+  gsap.fromTo('#fleetBg',
+    { opacity: 0 },
+    { opacity: 1, ease: 'power2.inOut',
+      scrollTrigger: {
+        trigger: '#prods',
+        start: 'bottom 120%',
+        end: 'bottom 80%',
+        scrub: 1
+      }
+    }
+  );
+  // Set initial map transform for the fade-in — orbital view
+  gsap.set('#fleetMap', { scale: 0.55, rotation: 2, transformOrigin: '78% 72%' });
+
+  // Dim the veil geometry as the map takes over
+  gsap.to(V.s, { scrollTrigger: { trigger: '#prods', start: 'bottom 120%', end: 'bottom 50%', scrub: 1 }, hue: 210, int: 0.03, spd: 0.04, chaos: 0.01 });
+
+  // ============================================
+  // MEET OUR FLEET — Cinematic camera journey
+  // 600vh pinned section with the map fully visible behind it.
+  // ============================================
+  var Fl = gsap.timeline({ scrollTrigger: {
+    trigger: '#meetFleet', start: 'top top', end: '+=500%',
+    pin: '#meetFleetP', scrub: 1, anticipatePin: 1
   }});
 
-  // === CINEMATIC CAMERA — CSS transforms on the map container ===
-  // The map renders the full Atlantic at 1x. CSS scale() zooms the pixels.
-  // transform-origin set in CSS to center on Santos fishing grounds.
-
-  // Phase 1 (0 → 0.12): Orbital arrival — zoomed out, slight rotation, fading in
-  Fl.fromTo('#fleetMap',
-    { opacity: 0, scale: 0.55, rotation: 2, transformOrigin: '78% 72%' },
-    { opacity: 1, scale: 0.65, rotation: 1.2, duration: 0.12, ease: 'power2.out' }, 0);
-
-  // Title fades in over the orbital view
+  // Phase 1 (0 → 0.12): Orbital arrival — zoomed out, fading in title
+  Fl.to('#fleetMap', { scale: 0.65, rotation: 1.2, duration: 0.12, ease: 'power2.out' }, 0);
   Fl.fromTo('#flA', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.06 }, 0.04);
   Fl.fromTo('#flH', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
   Fl.fromTo('#flP', { opacity: 0, y: 20 }, { opacity: 0.7, y: 0, duration: 0.06 }, 0.10);
-  Fl.to(V.s, { hue: 210, int: 0.08, spd: 0.06, chaos: 0.01, duration: 0.06 }, 0);
 
   // Phase 2 (0.12 → 0.28): Descend through atmosphere — zoom toward the Atlantic
   Fl.to('#fleetMap', { scale: 0.85, rotation: 0.5, duration: 0.16, ease: 'power1.inOut' }, 0.12);
@@ -1809,39 +2115,46 @@ window.addEventListener('load', function() {
   Fl.to('#fleetTitle', { opacity: 0, scale: 0.95, duration: 0.08 }, 0.28);
   Fl.to('#fleetMap', { scale: 1.15, rotation: 0, duration: 0.12, ease: 'power2.inOut' }, 0.28);
 
-  // Phase 4 (0.40 → 0.52): Deep zoom into Santos / vessel cluster — the "birds eye" moment
+  // Phase 4 (0.40 → 0.52): Deep zoom into Santos / vessel cluster
   Fl.to('#fleetMap', { scale: 2.0, x: '-15%', y: '-8%', duration: 0.12, ease: 'power2.inOut' }, 0.40);
   Fl.fromTo('#fleetRoster', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.08 }, 0.44);
   Fl.fromTo('#flSt', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.06 }, 0.46);
 
-  // Phase 5 (0.52 → 0.65): Hold on close-up with subtle drift — feeling of a satellite hovering
-  Fl.to('#fleetMap', { scale: 2.15, x: '-17%', y: '-6%', duration: 0.13, ease: 'none' }, 0.52);
+  // Phase 5 (0.52 → 0.68): Hold on close-up — "Meet Our Fleet" invite appears
+  Fl.to('#fleetMap', { scale: 2.15, x: '-17%', y: '-6%', duration: 0.16, ease: 'none' }, 0.52);
   Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.54);
+  Fl.fromTo('#fleetInvite', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08, ease: 'power2.out' }, 0.56);
 
-  // Phase 6 (0.65 → 0.78): Pull back to reveal the full network — air routes visible
-  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.13, ease: 'power2.inOut' }, 0.65);
+  // Phase 6 (0.68 → 0.80): Pull back to reveal full network — air routes visible
+  Fl.to('#fleetInvite', { opacity: 0, duration: 0.04 }, 0.68);
+  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.12, ease: 'power2.inOut' }, 0.68);
 
-  // Phase 7 (0.78 → 0.88): Hold on full network view
+  // Phase 7 (0.80 → 0.90): Hold on full network view
+  Fl.to('#fleetRoster', { opacity: 0, duration: 0.04 }, 0.82);
+  Fl.to('#flSt', { opacity: 0, duration: 0.04 }, 0.82);
+  Fl.to('#flLeg', { opacity: 0, duration: 0.04 }, 0.82);
   Fl.to({}, { duration: 0.10 });
 
-  // Phase 8 (0.88 → 1.0): Zoom back to orbital as we leave — the farewell shot
-  Fl.to('#fleetRoster', { opacity: 0, duration: 0.04 }, 0.88);
-  Fl.to('#flSt', { opacity: 0, duration: 0.04 }, 0.88);
-  Fl.to('#flLeg', { opacity: 0, duration: 0.04 }, 0.88);
-  Fl.to('#fleetMap', { scale: 0.6, opacity: 0, rotation: -1, duration: 0.10, ease: 'power2.in' }, 0.90);
-  Fl.to(V.s, { int: 0.06, duration: 0.06 });
+  // Phase 8 (0.90 → 1.0): Settle to a calm wide view — map stays visible as background
+  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.10, ease: 'power2.out' }, 0.90);
 
-  // How We Work
+  // ============================================
+  // HOW WE WORK — Overlays the fleet map background
+  // The map stays visible but dimmed behind the translucent overlay.
+  // ============================================
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
-  W.to(V.s, { hue: 175, int: 0.2, spd: 0.15, chaos: 0.03, duration: 0.08 }, 0);
+  // Subtle map camera drift during this section
+  gsap.to('#fleetMap', { scale: 1.05, x: '2%', y: '-1%', ease: 'none', scrollTrigger: { trigger: '#hww', start: 'top top', end: 'bottom top', scrub: 1 } });
+  W.to(V.s, { hue: 175, int: 0.04, spd: 0.06, chaos: 0.01, duration: 0.08 }, 0);
   W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
   W.fromTo('#hwPt', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
   gsap.utils.toArray('.hwc').forEach(function(c, i) { W.fromTo(c, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06 }, 0.12 + i * 0.04); });
   W.to({}, { duration: 0.18 });
 
-  // Trust section
+  // Trust section — map still visible, subtle drift continues
   var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
+  gsap.to('#fleetMap', { scale: 1.1, x: '-2%', y: '1%', ease: 'none', scrollTrigger: { trigger: '#trust', start: 'top top', end: 'bottom top', scrub: 1 } });
   Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
   Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
@@ -1856,6 +2169,9 @@ window.addEventListener('load', function() {
   gsap.fromTo('#ctBtn', { opacity: 0, y: 15 }, { scrollTrigger: { trigger: '#ctBtn', start: 'top 90%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.7, delay: 0.15, ease: 'power3.out' });
   gsap.utils.toArray('#ctG .cti').forEach(function(e, i) { gsap.fromTo(e, { opacity: 0, y: 15 }, { scrollTrigger: { trigger: e, start: 'top 88%', toggleActions: 'play none none reverse' }, opacity: 1, y: 0, duration: 0.6, delay: i * 0.08, ease: 'power3.out' }); });
   gsap.to(V.s, { scrollTrigger: { trigger: '#ctT', start: 'top 50%', end: 'bottom bottom', scrub: 1 }, int: 0.03, spd: 0.06 });
+
+  // Fade out the fleet map background as we reach contact
+  gsap.to('#fleetBg', { opacity: 0, scrollTrigger: { trigger: '#contact', start: 'top 80%', end: 'top 30%', scrub: 1 } });
 
   // Resize handler
   var rt;
@@ -1908,6 +2224,9 @@ var fm = new FleetMap('#fleetMap', {
   },
   particleCount: 300,
   particleCountMobile: 120,
+  onVesselClick: function(vessel) {
+    if (window.openVesselDetail) window.openVesselDetail(vessel.name);
+  },
 });
 
 // Expose globally so GSAP scroll triggers can start/stop it
@@ -1918,7 +2237,7 @@ window.fleetMapInstance = fm;
 setTimeout(function() {
   fm.cm.resize();
   // If the section is already in view (e.g. user scrolled fast), start immediately
-  var rect = document.getElementById('fleet').getBoundingClientRect();
+  var rect = document.getElementById('meetFleet').getBoundingClientRect();
   if (rect.top < window.innerHeight && rect.bottom > 0) {
     fm.start();
   }
@@ -1953,6 +2272,88 @@ if (typeof ResizeObserver !== 'undefined') {
   });
   ro.observe(document.getElementById('fleetMap'));
 }
+
+// ============================================
+// VESSEL DETAIL — Click-to-expand system
+// Click a vessel marker or roster item to open a detail panel.
+// ============================================
+(function() {
+  var overlay = document.getElementById('vesselDetailOverlay');
+  var panel = document.getElementById('vesselDetailPanel');
+  var closeBtn = document.getElementById('vdClose');
+  var heroEl = document.getElementById('vdHero');
+  var nameEl = document.getElementById('vdName');
+  var typeEl = document.getElementById('vdType');
+  var descEl = document.getElementById('vdDesc');
+  var statsEl = document.getElementById('vdStats');
+  if (!overlay) return;
+
+  // Vessel extended data — placeholder images and stories
+  // (You can replace these with real photos and descriptions later)
+  var vesselProfiles = {};
+  data.vessels.forEach(function(v) {
+    vesselProfiles[v.name] = {
+      type: v.type || 'Vessel',
+      catch: v.catch || '—',
+      status: v.status || '—',
+      captain: v.captain || null,
+      detail: v.detail || '',
+      speed: v.speed ? v.speed + ' kn' : '—',
+      heading: v.heading ? v.heading + '°' : '—',
+      lat: v.lat,
+      lon: v.lon
+    };
+  });
+
+  function openVesselDetail(vesselName) {
+    var p = vesselProfiles[vesselName];
+    if (!p) return;
+    nameEl.textContent = vesselName;
+    typeEl.textContent = p.type;
+    descEl.textContent = p.detail;
+
+    var statItems = [
+      { val: p.catch, lbl: 'Target Species' },
+      { val: p.status, lbl: 'Status' },
+      { val: p.speed, lbl: 'Speed' },
+      { val: p.heading, lbl: 'Heading' }
+    ];
+    if (p.captain) {
+      statItems.push({ val: p.captain, lbl: 'Captain' });
+    }
+    statItems.push({ val: p.lat.toFixed(1) + '°, ' + p.lon.toFixed(1) + '°', lbl: 'Position' });
+
+    statsEl.innerHTML = statItems.map(function(s) {
+      return '<div class="vessel-detail-stat"><div class="vds-val">' + s.val + '</div><div class="vds-lbl">' + s.lbl + '</div></div>';
+    }).join('');
+
+    overlay.classList.add('open');
+  }
+
+  function closeDetail() {
+    overlay.classList.remove('open');
+  }
+
+  closeBtn.addEventListener('click', closeDetail);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeDetail();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetail();
+  });
+
+  // Expose globally so the fleet map interaction system can use it
+  window.openVesselDetail = openVesselDetail;
+
+  // Hook into roster items — they get rebuilt dynamically, so use event delegation
+  document.getElementById('fleetBg').addEventListener('click', function(e) {
+    var rosterItem = e.target.closest('.roster-item');
+    if (rosterItem) {
+      var name = rosterItem.querySelector('.roster-item-name');
+      if (name) openVesselDetail(name.textContent.trim());
+    }
+  });
+})();
 </script>
 </body>
 </html>
