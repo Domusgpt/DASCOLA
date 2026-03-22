@@ -73,8 +73,8 @@ export function setupInteraction(container, vessels, config) {
       // Update tooltip content
       if (viName)   viName.textContent   = hit.vessel.name;
       if (viDetail) {
-        var parts = hit.vessel.type + ' \u00b7 ' + hit.vessel.speed + ' kts';
-        if (hit.vessel.catch && hit.vessel.catch !== '\u2014') {
+        var parts = hit.vessel.detail || (hit.vessel.type + ' \u00b7 ' + hit.vessel.speed + ' kts');
+        if (!hit.vessel.detail && hit.vessel.catch && hit.vessel.catch !== '\u2014') {
           parts += ' \u00b7 ' + hit.vessel.catch;
         }
         viDetail.textContent = parts;

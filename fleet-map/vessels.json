@@ -1,7 +1,7 @@
 {
   "_documentation": {
-    "description": "D'Ascola Seafood fleet vessel data. Edit this file to add, remove, or update vessels.",
-    "version": "1.0",
+    "description": "D'Ascola Seafood fleet vessel data — real vessels from company operations.",
+    "version": "2.0",
     "fields": {
       "name": "Display name of the vessel",
       "mmsi": "Maritime Mobile Service Identity number (for AIS tracking). Set to null if not tracked.",
@@ -11,105 +11,74 @@
       "speed": "Speed in knots. 0 = stationary.",
       "type": "Vessel type: 'Longliner', 'Trawler', 'Gillnetter', 'Seiner', etc.",
       "status": "Current status: 'Fishing', 'In Transit', 'In Port', 'Returning'",
-      "catch": "Current or last catch species. Use '\u2014' if none."
-    },
-    "portFields": {
-      "name": "Display name of the port",
-      "lat": "Port latitude in decimal degrees",
-      "lon": "Port longitude in decimal degrees",
-      "size": "'major' (home port, shown larger) or 'minor' (secondary port)"
-    },
-    "routeFields": {
-      "name": "Display name of the shipping route",
-      "points": "Array of [lat, lon] waypoints defining the route path"
-    },
-    "howToUpdate": [
-      "1. To ADD a vessel: Copy an existing vessel object and modify the values",
-      "2. To REMOVE a vessel: Delete the vessel object from the 'vessels' array",
-      "3. To CHANGE position: Update lat, lon, heading, speed values",
-      "4. To CHANGE status: Set status to one of: 'Fishing', 'In Transit', 'In Port', 'Returning'",
-      "5. After editing, save this file and refresh the page (or call map.updateVessels())",
-      "6. For live AIS tracking, set the mmsi field and configure aisEndpoint in the map config"
-    ]
+      "catch": "Current or last catch species. Use '\u2014' if none.",
+      "captain": "Captain name (optional)",
+      "detail": "Short description (optional)"
+    }
   },
 
   "vessels": [
     {
-      "name": "São Jorge",
+      "name": "Ana Amaral",
       "mmsi": null,
-      "lat": -24.2,
-      "lon": -44.8,
-      "heading": 135,
-      "speed": 7.2,
+      "lat": -25.4,
+      "lon": -44.2,
+      "heading": 155,
+      "speed": 6.8,
       "type": "Longliner",
       "status": "Fishing",
-      "catch": "Swordfish"
+      "catch": "Swordfish",
+      "captain": "Takeshi",
+      "detail": "Premium-grade swordfish longliner, Japanese captain"
     },
     {
-      "name": "Estrela do Mar",
+      "name": "Brisa C",
       "mmsi": null,
-      "lat": -25.1,
-      "lon": -45.5,
-      "heading": 200,
-      "speed": 5.8,
-      "type": "Trawler",
-      "status": "In Transit",
-      "catch": "Tuna"
-    },
-    {
-      "name": "Rei do Oceano",
-      "mmsi": null,
-      "lat": -23.5,
-      "lon": -43.2,
-      "heading": 45,
-      "speed": 0,
-      "type": "Longliner",
-      "status": "In Port",
-      "catch": "\u2014"
-    },
-    {
-      "name": "Brisa Dourada",
-      "mmsi": null,
-      "lat": -26.3,
-      "lon": -47.0,
-      "heading": 320,
-      "speed": 8.1,
-      "type": "Longliner",
-      "status": "Fishing",
-      "catch": "Yellowtail"
-    },
-    {
-      "name": "Maré Alta",
-      "mmsi": null,
-      "lat": -22.8,
-      "lon": -41.5,
-      "heading": 180,
-      "speed": 6.5,
-      "type": "Gillnetter",
-      "status": "Fishing",
-      "catch": "Snapper"
-    },
-    {
-      "name": "D'Ascola I",
-      "mmsi": null,
-      "lat": -24.0,
-      "lon": -46.2,
-      "heading": 90,
-      "speed": 3.2,
+      "lat": -24.6,
+      "lon": -45.9,
+      "heading": 210,
+      "speed": 7.5,
       "type": "Longliner",
       "status": "Returning",
-      "catch": "Swordfish"
+      "catch": "Swordfish",
+      "detail": "Regular supplier — bought every trip"
     },
     {
-      "name": "Esperança",
+      "name": "Blaze I",
       "mmsi": null,
-      "lat": -27.5,
-      "lon": -46.8,
-      "heading": 350,
-      "speed": 9.0,
+      "lat": -26.8,
+      "lon": -46.5,
+      "heading": 85,
+      "speed": 5.2,
       "type": "Trawler",
       "status": "Fishing",
-      "catch": "Tuna"
+      "catch": "Monkfish",
+      "detail": "30.5m freezer-at-sea vessel, built to European standards"
+    },
+    {
+      "name": "Cordeiro de Deus E",
+      "mmsi": null,
+      "lat": -23.8,
+      "lon": -43.6,
+      "heading": 140,
+      "speed": 4.1,
+      "type": "Trawler",
+      "status": "Fishing",
+      "catch": "Scarlet Prawn",
+      "detail": "Carabineros specialist — 20+ year relationship with owner"
+    },
+    {
+      "name": "Prudence",
+      "mmsi": null,
+      "lat": 11.8,
+      "lon": -61.4,
+      "heading": 275,
+      "speed": 8.3,
+      "type": "Longliner",
+      "status": "Fishing",
+      "catch": "Yellowfin Tuna",
+      "captain": "Gilbert",
+      "detail": "Caribbean yellowfin tuna vessel operating out of Grenada"
     }
   ],
 
@@ -145,16 +114,22 @@
       "size": "minor"
     },
     {
-      "name": "Salvador",
-      "lat": -12.97,
-      "lon": -38.51,
+      "name": "St. George's, Grenada",
+      "lat": 12.05,
+      "lon": -61.75,
+      "size": "minor"
+    },
+    {
+      "name": "New York",
+      "lat": 40.7,
+      "lon": -74.0,
       "size": "minor"
     }
   ],
 
   "routes": [
     {
-      "name": "Santos to NYC",
+      "name": "Santos → NYC",
       "points": [
         [-23.96, -46.33],
         [-22, -42],
@@ -166,6 +141,18 @@
         [25, -60],
         [35, -68],
         [40, -73],
+        [40.7, -74]
+      ]
+    },
+    {
+      "name": "Grenada → NYC",
+      "points": [
+        [12.05, -61.75],
+        [15, -63],
+        [20, -67],
+        [25, -70],
+        [30, -72],
+        [35, -73],
         [40.7, -74]
       ]
     }

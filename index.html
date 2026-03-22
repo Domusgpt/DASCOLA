@@ -1382,10 +1382,10 @@ body {
     </div>
     <!-- Stats — top-right overlay -->
     <div class="fleet-stats" id="flSt" style="position:absolute;top:1rem;right:1.5rem;z-index:12;opacity:0;flex-direction:column;gap:0.8rem">
-      <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Active Vessels</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">3</div><div class="fleet-stat-l">Ports Monitored</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">12</div><div class="fleet-stat-l">Tons This Week</div></div>
-      <div class="fleet-stat"><div class="fleet-stat-n">24hr</div><div class="fleet-stat-l">Santos to NYC</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">5</div><div class="fleet-stat-l">Active Vessels</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">7</div><div class="fleet-stat-l">Ports Monitored</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">2</div><div class="fleet-stat-l">Ocean Routes</div></div>
+      <div class="fleet-stat"><div class="fleet-stat-n">4</div><div class="fleet-stat-l">Species Tracked</div></div>
     </div>
   </div>
 </div>
@@ -1855,7 +1855,7 @@ var data = await response.json();
 var fm = new FleetMap('#fleetMap', {
   title: "D'Ascola Seafood",
   subtitle: 'Est. 1893 · Santos, Brazil',
-  bounds: { latN: -12, latS: -35, lonW: -55, lonE: -25 },
+  bounds: { latN: 45, latS: -35, lonW: -80, lonE: -25 },
   vessels: data.vessels,
   ports: data.ports,
   routes: data.routes,
