@@ -1189,9 +1189,10 @@ body {
   opacity: 0.5;
 }
 
-/* Products overlay — lighter to let map peek through more */
-#prods.map-overlay .sp {
-  background: rgba(245,237,216,0.88) !important;
+/* Products section — fully opaque, covers the map completely */
+#prods .sp {
+  position: relative;
+  z-index: 2;
 }
 
 /* Meet Our Fleet — interactive focus section */
@@ -1628,7 +1629,7 @@ body {
 </div>
 
 <!-- Products Section -->
-<div class="ss map-overlay" id="prods" style="height:280vh">
+<div class="ss" id="prods" style="height:280vh">
   <div class="sp bg-c" id="prodP">
     <div class="sc" style="display:flex;flex-direction:column;align-items:center;gap:2.5rem">
       <div class="sc-c">
@@ -2042,26 +2043,18 @@ window.addEventListener('load', function() {
   var H = gsap.to(trk, { x: function() { return -(trk.scrollWidth - window.innerWidth); }, ease: 'none', scrollTrigger: { trigger: '#vals', start: 'top top', end: function() { return '+=' + ((trk.scrollWidth - window.innerWidth) * 2.5); }, pin: '#valP', scrub: 2.5, snap: { snapTo: 1 / (vcs.length - 1), duration: 0.6, ease: 'power1.inOut' }, invalidateOnRefresh: true, anticipatePin: 1 } });
   vcs.forEach(function(c) { gsap.to(c.querySelector('.vi'), { scrollTrigger: { trigger: c, containerAnimation: H, start: 'left 85%', end: 'left 40%', scrub: true }, opacity: 1, y: 0 }); });
 
-  // Products — content animation stays the same
-  var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=180%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
-  Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
-  Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
-  Pr.fromTo('#prP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.03);
-  gsap.utils.toArray('.pc').forEach(function(c, i) { Pr.fromTo(c, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.08 }, 0.08 + i * 0.05); });
-  Pr.to({}, { duration: 0.22 });
-  Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
-  Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
-
   // ============================================
-  // FLEET MAP — Fixed Background Layer Controller
-  // The map (#fleetBg) is position:fixed. We fade it in during Products
-  // exit and it persists as background through the rest of the site.
+  // FLEET MAP — Fixed Background Layer
+  // Fades in during Values, visible behind everything from here on.
+  // The map starts showing the USA + air routes (wide North America view),
+  // gets hidden by the opaque Products section, then returns after Products
+  // with a cinematic zoom down to Santos and the fishing grounds.
   // ============================================
 
-  // Start the fleet map rendering when we approach Products exit
+  // Start rendering the fleet map as Values section begins
   ScrollTrigger.create({
-    trigger: '#prods',
-    start: 'top 50%',
+    trigger: '#vals',
+    start: 'top 80%',
     onEnter: function() {
       if (window.fleetMapInstance) {
         window.fleetMapInstance.cm.resize();
@@ -2075,76 +2068,114 @@ window.addEventListener('load', function() {
     }
   });
 
-  // Fade in the fleet map as Products content fades out (last 20% of products scroll)
+  // Initial map state — zoomed into USA, showing air routes fanning out
+  // transform-origin at the US center so we see the network of destinations
+  // US center roughly at: lat 38, lon -96 → in our bounds (48 to -36 lat, -125 to -25 lon)
+  // x% = (-96 - (-125)) / (-25 - (-125)) = 29/100 = 29%
+  // y% = (48 - 38) / (48 - (-36)) = 10/84 = 12%
+  gsap.set('#fleetMap', { scale: 2.2, transformOrigin: '29% 12%', rotation: 0, x: '0%', y: '0%' });
+
+  // Fade in the map during the first half of Values horizontal scroll
   gsap.fromTo('#fleetBg',
     { opacity: 0 },
-    { opacity: 1, ease: 'power2.inOut',
+    { opacity: 1, ease: 'power2.out',
       scrollTrigger: {
-        trigger: '#prods',
-        start: 'bottom 120%',
-        end: 'bottom 80%',
+        trigger: '#vals',
+        start: 'top 30%',
+        end: 'top -20%',
         scrub: 1
       }
     }
   );
-  // Set initial map transform for the fade-in — orbital view
-  gsap.set('#fleetMap', { scale: 0.55, rotation: 2, transformOrigin: '78% 72%' });
 
   // Dim the veil geometry as the map takes over
-  gsap.to(V.s, { scrollTrigger: { trigger: '#prods', start: 'bottom 120%', end: 'bottom 50%', scrub: 1 }, hue: 210, int: 0.03, spd: 0.04, chaos: 0.01 });
+  gsap.to(V.s, { scrollTrigger: { trigger: '#vals', start: 'top 30%', end: 'top -50%', scrub: 1 }, hue: 210, int: 0.03, spd: 0.04, chaos: 0.01 });
+
+  // During Values scroll, slowly zoom out from USA to show more of the Americas
+  gsap.to('#fleetMap', {
+    scale: 1.6, ease: 'none',
+    scrollTrigger: { trigger: '#vals', start: 'top top', end: 'bottom top', scrub: 1 }
+  });
+
+  // ============================================
+  // PRODUCTS — Opaque white section fully covers the map
+  // The map keeps rendering behind but is invisible.
+  // ============================================
+  var Pr = gsap.timeline({ scrollTrigger: { trigger: '#prods', start: 'top top', end: '+=180%', pin: '#prodP', scrub: 1, anticipatePin: 1 } });
+  Pr.to(V.s, { hue: 135, int: 0.06, spd: 0.08, sat: 0.3, duration: 0.08 }, 0);
+  Pr.fromTo('#prH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0);
+  Pr.fromTo('#prP', { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.08 }, 0.03);
+  gsap.utils.toArray('.pc').forEach(function(c, i) { Pr.fromTo(c, { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.08 }, 0.08 + i * 0.05); });
+  Pr.to({}, { duration: 0.22 });
+  Pr.to('#prG', { opacity: 0, scale: 0.97, y: -15, duration: 0.06 });
+  Pr.to(V.s, { sat: 0.6, duration: 0.04 }, '<');
+
+  // While Products is showing, reposition the map camera to a wide Atlantic view
+  // so when Products scrolls away, we see the full route from USA → Santos
+  gsap.to('#fleetMap', {
+    scale: 1.0, transformOrigin: '50% 50%', x: '0%', y: '0%', rotation: 0,
+    ease: 'none',
+    scrollTrigger: { trigger: '#prods', start: 'top top', end: 'bottom top', scrub: 1 }
+  });
 
   // ============================================
   // MEET OUR FLEET — Cinematic camera journey
-  // 600vh pinned section with the map fully visible behind it.
+  // Map returns from behind Products. Camera starts at full Atlantic view,
+  // zooms down to Santos, shows the fleet, invites vessel exploration,
+  // then settles as persistent background.
   // ============================================
   var Fl = gsap.timeline({ scrollTrigger: {
     trigger: '#meetFleet', start: 'top top', end: '+=500%',
     pin: '#meetFleetP', scrub: 1, anticipatePin: 1
   }});
 
-  // Phase 1 (0 → 0.12): Orbital arrival — zoomed out, fading in title
-  Fl.to('#fleetMap', { scale: 0.65, rotation: 1.2, duration: 0.12, ease: 'power2.out' }, 0);
-  Fl.fromTo('#flA', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.06 }, 0.04);
-  Fl.fromTo('#flH', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.08 }, 0.06);
-  Fl.fromTo('#flP', { opacity: 0, y: 20 }, { opacity: 0.7, y: 0, duration: 0.06 }, 0.10);
+  // Phase 1 (0 → 0.10): Full Atlantic view — title fades in, air routes visible
+  Fl.fromTo('#flA', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.05 }, 0.02);
+  Fl.fromTo('#flH', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.06 }, 0.04);
+  Fl.fromTo('#flP', { opacity: 0, y: 20 }, { opacity: 0.7, y: 0, duration: 0.05 }, 0.08);
 
-  // Phase 2 (0.12 → 0.28): Descend through atmosphere — zoom toward the Atlantic
-  Fl.to('#fleetMap', { scale: 0.85, rotation: 0.5, duration: 0.16, ease: 'power1.inOut' }, 0.12);
+  // Phase 2 (0.10 → 0.25): Camera sweeps south — from USA toward Santos
+  // Push transform-origin toward Santos: lat -24, lon -46
+  // x% = (-46 - (-125)) / 100 = 79/100 = 79%
+  // y% = (48 - (-24)) / 84 = 72/84 = 86%
+  Fl.to('#fleetMap', { scale: 1.3, transformOrigin: '79% 86%', duration: 0.15, ease: 'power2.inOut' }, 0.10);
 
-  // Phase 3 (0.28 → 0.40): Title fades, camera pushes into fishing grounds
-  Fl.to('#fleetTitle', { opacity: 0, scale: 0.95, duration: 0.08 }, 0.28);
-  Fl.to('#fleetMap', { scale: 1.15, rotation: 0, duration: 0.12, ease: 'power2.inOut' }, 0.28);
+  // Phase 3 (0.25 → 0.38): Title fades, camera zooms into Santos region
+  Fl.to('#fleetTitle', { opacity: 0, scale: 0.95, duration: 0.06 }, 0.25);
+  Fl.to('#fleetMap', { scale: 2.2, duration: 0.13, ease: 'power2.inOut' }, 0.25);
 
-  // Phase 4 (0.40 → 0.52): Deep zoom into Santos / vessel cluster
-  Fl.to('#fleetMap', { scale: 2.0, x: '-15%', y: '-8%', duration: 0.12, ease: 'power2.inOut' }, 0.40);
-  Fl.fromTo('#fleetRoster', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.08 }, 0.44);
-  Fl.fromTo('#flSt', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.06 }, 0.46);
+  // Phase 4 (0.38 → 0.50): Deep zoom — Santos close-up, vessels visible
+  Fl.to('#fleetMap', { scale: 3.0, duration: 0.12, ease: 'power2.inOut' }, 0.38);
+  Fl.fromTo('#fleetRoster', { opacity: 0, x: -15 }, { opacity: 1, x: 0, duration: 0.06 }, 0.42);
+  Fl.fromTo('#flSt', { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.05 }, 0.44);
 
-  // Phase 5 (0.52 → 0.68): Hold on close-up — "Meet Our Fleet" invite appears
-  Fl.to('#fleetMap', { scale: 2.15, x: '-17%', y: '-6%', duration: 0.16, ease: 'none' }, 0.52);
-  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.06 }, 0.54);
-  Fl.fromTo('#fleetInvite', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08, ease: 'power2.out' }, 0.56);
+  // Phase 5 (0.50 → 0.65): Hold on close-up — "Meet Our Fleet" invite
+  Fl.to('#fleetMap', { scale: 3.2, duration: 0.15, ease: 'none' }, 0.50);
+  Fl.fromTo('#flLeg', { opacity: 0 }, { opacity: 1, duration: 0.05 }, 0.52);
+  Fl.fromTo('#fleetInvite', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.06, ease: 'power2.out' }, 0.54);
 
-  // Phase 6 (0.68 → 0.80): Pull back to reveal full network — air routes visible
-  Fl.to('#fleetInvite', { opacity: 0, duration: 0.04 }, 0.68);
-  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.12, ease: 'power2.inOut' }, 0.68);
+  // Phase 6 (0.65 → 0.78): Pull back to show Santos + fishing waters on right side
+  Fl.to('#fleetInvite', { opacity: 0, duration: 0.03 }, 0.65);
+  Fl.to('#fleetMap', { scale: 1.8, transformOrigin: '72% 80%', duration: 0.13, ease: 'power2.inOut' }, 0.65);
 
-  // Phase 7 (0.80 → 0.90): Hold on full network view
-  Fl.to('#fleetRoster', { opacity: 0, duration: 0.04 }, 0.82);
-  Fl.to('#flSt', { opacity: 0, duration: 0.04 }, 0.82);
-  Fl.to('#flLeg', { opacity: 0, duration: 0.04 }, 0.82);
-  Fl.to({}, { duration: 0.10 });
+  // Phase 7 (0.78 → 0.88): Settle at the persistent background view
+  // Show Santos region on one side, fishing waters visible — this is the view
+  // that persists behind How We Work and Trust sections
+  Fl.to('#fleetRoster', { opacity: 0, duration: 0.03 }, 0.80);
+  Fl.to('#flSt', { opacity: 0, duration: 0.03 }, 0.80);
+  Fl.to('#flLeg', { opacity: 0, duration: 0.03 }, 0.80);
+  Fl.to('#fleetMap', { scale: 1.4, transformOrigin: '65% 75%', duration: 0.10, ease: 'power2.out' }, 0.80);
 
-  // Phase 8 (0.90 → 1.0): Settle to a calm wide view — map stays visible as background
-  Fl.to('#fleetMap', { scale: 1.0, x: '0%', y: '0%', rotation: 0, duration: 0.10, ease: 'power2.out' }, 0.90);
+  // Phase 8 (0.88 → 1.0): Hold — map stays as background
+  Fl.to({}, { duration: 0.12 });
 
   // ============================================
   // HOW WE WORK — Overlays the fleet map background
-  // The map stays visible but dimmed behind the translucent overlay.
+  // Map stays visible but dimmed behind the translucent overlay.
   // ============================================
   var W = gsap.timeline({ scrollTrigger: { trigger: '#hww', start: 'top top', end: '+=150%', pin: '#hwP', scrub: 1, anticipatePin: 1 } });
   // Subtle map camera drift during this section
-  gsap.to('#fleetMap', { scale: 1.05, x: '2%', y: '-1%', ease: 'none', scrollTrigger: { trigger: '#hww', start: 'top top', end: 'bottom top', scrub: 1 } });
+  gsap.to('#fleetMap', { scale: 1.5, transformOrigin: '60% 70%', ease: 'none', scrollTrigger: { trigger: '#hww', start: 'top top', end: 'bottom top', scrub: 1 } });
   W.to(V.s, { hue: 175, int: 0.04, spd: 0.06, chaos: 0.01, duration: 0.08 }, 0);
   W.fromTo('#hwA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   W.fromTo('#hwH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
@@ -2154,7 +2185,7 @@ window.addEventListener('load', function() {
 
   // Trust section — map still visible, subtle drift continues
   var Tr = gsap.timeline({ scrollTrigger: { trigger: '#trust', start: 'top top', end: '+=100%', pin: '#trustP', scrub: 1, anticipatePin: 1 } });
-  gsap.to('#fleetMap', { scale: 1.1, x: '-2%', y: '1%', ease: 'none', scrollTrigger: { trigger: '#trust', start: 'top top', end: 'bottom top', scrub: 1 } });
+  gsap.to('#fleetMap', { scale: 1.6, transformOrigin: '55% 65%', ease: 'none', scrollTrigger: { trigger: '#trust', start: 'top top', end: 'bottom top', scrub: 1 } });
   Tr.to(V.s, { hue: 90, int: 0.15, spd: 0.1, chaos: 0.02, duration: 0.08 }, 0);
   Tr.fromTo('#trA', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.06 }, 0);
   Tr.fromTo('#trH', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.08 }, 0.02);
@@ -2200,7 +2231,7 @@ var data = await response.json();
 var fm = new FleetMap('#fleetMap', {
   title: "D'Ascola Seafood",
   subtitle: 'Est. 1893 · Santos, Brazil',
-  bounds: { latN: 46, latS: -36, lonW: -122, lonE: -25 },
+  bounds: { latN: 48, latS: -36, lonW: -125, lonE: -25 },
   vessels: data.vessels,
   ports: data.ports,
   routes: data.routes,

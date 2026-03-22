@@ -116,7 +116,49 @@
       "name": "Houston",
       "lat": 29.76,
       "lon": -95.37,
+      "size": "major"
+    },
+    {
+      "name": "Miami",
+      "lat": 25.79,
+      "lon": -80.29,
+      "size": "major"
+    },
+    {
+      "name": "Newark",
+      "lat": 40.69,
+      "lon": -74.17,
+      "size": "major"
+    },
+    {
+      "name": "Washington DC",
+      "lat": 38.85,
+      "lon": -77.04,
       "size": "minor"
+    },
+    {
+      "name": "Jacksonville",
+      "lat": 30.49,
+      "lon": -81.69,
+      "size": "minor"
+    },
+    {
+      "name": "San Francisco",
+      "lat": 37.62,
+      "lon": -122.38,
+      "size": "major"
+    },
+    {
+      "name": "Los Angeles",
+      "lat": 33.94,
+      "lon": -118.41,
+      "size": "major"
+    },
+    {
+      "name": "Chicago",
+      "lat": 41.98,
+      "lon": -87.90,
+      "size": "major"
     },
     {
       "name": "Montauk",
@@ -145,14 +187,39 @@
       "to": [40.64, -73.78]
     },
     {
+      "name": "GRU → EWR",
+      "from": [-23.43, -46.47],
+      "to": [40.69, -74.17]
+    },
+    {
       "name": "GRU → BOS",
       "from": [-23.43, -46.47],
       "to": [42.36, -71.01]
     },
     {
+      "name": "GRU → MIA",
+      "from": [-23.43, -46.47],
+      "to": [25.79, -80.29]
+    },
+    {
+      "name": "GRU → IAD",
+      "from": [-23.43, -46.47],
+      "to": [38.95, -77.46]
+    },
+    {
+      "name": "GRU → JAX",
+      "from": [-23.43, -46.47],
+      "to": [30.49, -81.69]
+    },
+    {
       "name": "GRU → LAX",
       "from": [-23.43, -46.47],
       "to": [33.94, -118.41]
+    },
+    {
+      "name": "GRU → SFO",
+      "from": [-23.43, -46.47],
+      "to": [37.62, -122.38]
     },
     {
       "name": "GRU → ORD",
