@@ -3,3 +3,4 @@ screenshots/
 test-scroll.mjs
 package.json
 package-lock.json
+test-console.mjs
