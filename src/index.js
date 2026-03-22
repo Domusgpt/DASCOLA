@@ -49,11 +49,15 @@ import { drawCurrents, initParticles } from './layers/currents.js';
 import { drawCoast } from './layers/coast.js';
 import { drawVessels } from './layers/vessels.js';
 import { drawAtmosphere } from './layers/atmosphere.js';
+import { drawWeather, initRainParticles } from './layers/weather.js';
 import { buildRoster } from './roster.js';
 import { setupInteraction } from './interaction.js';
 import { AISClient } from './ais.js';
+import { VIB3 } from './vib3/index.js';
 import { BRAZIL_COAST } from './data/brazil-coast.js';
 import { SA_CURRENTS } from './data/currents-sa.js';
+import { LBI_COAST } from './data/lbi-coast.js';
+import { NJ_CURRENTS } from './data/currents-nj.js';
 
 /**
  * Deep-copy an array of plain objects (one level deep).
@@ -114,6 +118,8 @@ export class FleetMap {
     // Resolve coast data
     if (this.config.coastData === 'brazil') {
       this.coastData = BRAZIL_COAST;
+    } else if (this.config.coastData === 'lbi') {
+      this.coastData = LBI_COAST;
     } else if (Array.isArray(this.config.coastData)) {
       this.coastData = this.config.coastData;
     } else {
@@ -123,6 +129,8 @@ export class FleetMap {
     // Resolve current flow data
     if (this.config.currentData === 'south-atlantic') {
       this.currentData = SA_CURRENTS;
+    } else if (this.config.currentData === 'nj-atlantic') {
+      this.currentData = NJ_CURRENTS;
     } else if (Array.isArray(this.config.currentData)) {
       this.currentData = this.config.currentData;
     } else {
@@ -135,21 +143,68 @@ export class FleetMap {
     // Init current particles
     this.particles = initParticles(this.config);
 
+    // Init rain particles for weather layer
+    this.rainParticles = initRainParticles();
+
     // Build roster panel
     this.rosterEl = buildRoster(this.container, this.vessels, this.config);
 
     // Setup mouse/touch interaction
-    this._interactionCleanup = setupInteraction(this.cm, this.vessels, this.config);
+    this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
 
     // AIS live-tracking client
     this.aisClient = null;
     if (this.config.aisEndpoint) {
-      this.aisClient = new AISClient(this.config.aisEndpoint, this.config.aisRefreshMs);
+      this.aisClient = new AISClient(this.config, this.vessels, null);
+    }
+
+    // Weather canvas (added dynamically above atmosphere)
+    this._weatherCanvas = null;
+    this._weatherCtx = null;
+    this._initWeatherCanvas();
+
+    // VIB3 SDK integration
+    this.vib3 = null;
+    if (this.config.vib3 !== false) {
+      this.vib3 = new VIB3(this, this.config.vib3Options || {});
     }
 
     // State
     this.started = false;
     this._resizeBound = this.resize.bind(this);
+  }
+
+  /**
+   * Create the weather overlay canvas.
+   * @private
+   */
+  _initWeatherCanvas() {
+    var mapEl = this.container.querySelector('.fleet-map') || this.container;
+    this._weatherCanvas = document.createElement('canvas');
+    this._weatherCanvas.id = 'fleetCanvasWeather';
+    this._weatherCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;';
+
+    var atmoCanvas = mapEl.querySelector('#fleetCanvasAtmo');
+    if (atmoCanvas) {
+      mapEl.insertBefore(this._weatherCanvas, atmoCanvas);
+    } else {
+      mapEl.appendChild(this._weatherCanvas);
+    }
+
+    this._weatherCtx = this._weatherCanvas.getContext('2d');
+    this._resizeWeatherCanvas();
+  }
+
+  _resizeWeatherCanvas() {
+    if (!this._weatherCanvas || !this.cm) return;
+    var w = this.cm.w;
+    var h = this.cm.h;
+    var dpr = this.cm.dpr;
+    this._weatherCanvas.width = w * dpr;
+    this._weatherCanvas.height = h * dpr;
+    this._weatherCanvas.style.width = w + 'px';
+    this._weatherCanvas.style.height = h + 'px';
+    this._weatherCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   /**
@@ -170,14 +225,16 @@ export class FleetMap {
 
     // Start AIS polling if configured
     if (this.aisClient) {
-      var self2 = this;
-      this.aisClient.start(function (updatedVessels) {
-        self2.updateVessels(updatedVessels);
-      });
+      this.aisClient.start();
     }
 
     // Listen for window resize
     window.addEventListener('resize', this._resizeBound);
+
+    // Start VIB3 SDK
+    if (this.vib3) {
+      this.vib3.start();
+    }
   }
 
   /**
@@ -217,12 +274,24 @@ export class FleetMap {
       this.aisClient = null;
     }
 
+    if (this.vib3) {
+      this.vib3.destroy();
+      this.vib3 = null;
+    }
+
+    if (this._weatherCanvas && this._weatherCanvas.parentNode) {
+      this._weatherCanvas.parentNode.removeChild(this._weatherCanvas);
+    }
+    this._weatherCanvas = null;
+    this._weatherCtx = null;
+
     this.vessels = null;
     this.ports = null;
     this.routes = null;
     this.coastData = null;
     this.currentData = null;
     this.particles = null;
+    this.rainParticles = null;
     this.rosterEl = null;
     this.container = null;
     this.config = null;
@@ -266,6 +335,9 @@ export class FleetMap {
     this.cm.markDirty('vessels');
     this.cm.markDirty('atmosphere');
 
+    // Resize weather canvas
+    this._resizeWeatherCanvas();
+
     // Redraw static layers
     this._drawStatic();
   }
@@ -306,6 +378,16 @@ export class FleetMap {
 
     var vesselLayer = cm.getLayer('vessels');
     drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t);
+
+    // --- Weather overlay ---
+    if (this._weatherCtx && this.vib3 && this.vib3.weather) {
+      drawWeather(this._weatherCtx, cm.w, cm.h, this.config, this.vib3.weather.getState(), t, this.rainParticles);
+    }
+
+    // --- VIB3 per-frame tick ---
+    if (this.vib3) {
+      this.vib3.tick(t);
+    }
 
     // --- Simulated vessel drift (when no AIS endpoint) ---
 

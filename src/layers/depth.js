@@ -65,17 +65,19 @@ function lonLabel(deg) {
 /**
  * Draw the depth layer: ocean gradient, lat/lon grid, and fathom contours.
  *
- * @param {CanvasRenderingContext2D} ctx   — canvas context
- * @param {number}   w       — logical canvas width
- * @param {number}   h       — logical canvas height
- * @param {function} projFn  — projFn(lat, lon) => { x, y }
- * @param {object}   config  — merged FleetMap config
- * @param {number}   t       — animation time (radians-ish counter)
+ * @param {CanvasRenderingContext2D} ctx — canvas context
+ * @param {CanvasManager} cm — canvas manager (provides w, h, proj)
+ * @param {object} config — merged FleetMap config
  */
-export function drawDepth(ctx, w, h, projFn, config, t) {
+export function drawDepth(ctx, cm, config) {
+  var w = cm.w;
+  var h = cm.h;
   var colors = config.colors;
   var fonts  = config.fonts;
   var bounds = config.bounds;
+  var t = cm.t || 0;
+
+  function projFn(lat, lon) { return cm.proj(lat, lon); }
 
   // ------------------------------------------------------------------
   // 1. Clear canvas with the deepest ocean color

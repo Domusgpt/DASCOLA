@@ -66,6 +66,10 @@ export var DEFAULTS = {
   onVesselHover: null,   // function(vessel, screenPos) {}
   onVesselClick: null,   // function(vessel) {}
   onAISUpdate: null,     // function(vessels) {}
+
+  // VIB3 SDK — set to false to disable
+  vib3: true,
+  vib3Options: {},
 };
 
 /**

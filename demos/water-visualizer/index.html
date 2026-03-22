@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Water Visualizer — VIB3 SDK Integration Demo</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+
+  <!-- Fleet Map + VIB3 Styles -->
+  <link rel="stylesheet" href="../../src/styles.css">
+  <link rel="stylesheet" href="../../src/vib3/vib3.css">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #050B12;
+      color: #F0EBE0;
+      font-family: 'Josefin Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* === HERO === */
+    .wv-hero {
+      text-align: center;
+      padding: 2.5rem 2rem 0.5rem;
+      position: relative;
+    }
+
+    .wv-hero h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.8rem, 4.5vw, 3rem);
+      font-weight: 400;
+      color: #C9A84C;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+    }
+
+    .wv-hero .subtitle {
+      font-weight: 200;
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #8BAFC4;
+      opacity: 0.6;
+    }
+
+    .wv-hero .vib3-tag {
+      display: inline-block;
+      margin-top: 0.6rem;
+      padding: 0.15rem 0.6rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.4rem;
+      font-weight: 300;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      border: 1px solid rgba(59, 169, 156, 0.25);
+      color: #3BA99C;
+    }
+
+    .wv-divider {
+      width: 100px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #C9A84C40, transparent);
+      margin: 1.2rem auto;
+    }
+
+    /* === INTERACTION HINTS === */
+    .wv-hints {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 0 2rem 1.5rem;
+    }
+
+    .wv-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.5rem;
+      font-weight: 200;
+      letter-spacing: 0.15em;
+      color: rgba(240, 235, 224, 0.3);
+    }
+
+    .wv-hint-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      border: 1px solid;
+    }
+
+    .wv-hint-icon.vessel-hint {
+      border-color: rgba(201, 168, 76, 0.3);
+      color: #C9A84C;
+    }
+
+    .wv-hint-icon.port-hint {
+      border-color: rgba(0, 104, 71, 0.3);
+      color: #006847;
+    }
+
+    .wv-hint-icon.weather-hint {
+      border-color: rgba(139, 175, 196, 0.3);
+      color: #8BAFC4;
+    }
+
+    .wv-hint-icon.coord-hint {
+      border-color: rgba(59, 169, 156, 0.3);
+      color: #3BA99C;
+    }
+
+    /* === FEATURE CARDS === */
+    .wv-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    .wv-feature {
+      padding: 1.2rem;
+      border: 1px solid rgba(201, 168, 76, 0.06);
+      background: rgba(4, 10, 16, 0.5);
+    }
+
+    .wv-feature-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.75rem;
+      color: #C9A84C;
+      margin-bottom: 0.4rem;
+    }
+
+    .wv-feature-text {
+      font-weight: 200;
+      font-size: 0.5rem;
+      letter-spacing: 0.08em;
+      color: rgba(240, 235, 224, 0.35);
+      line-height: 1.6;
+    }
+
+    .wv-feature-tag {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.35rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 1px solid rgba(59, 169, 156, 0.2);
+      color: rgba(59, 169, 156, 0.5);
+    }
+
+    /* === FOOTER === */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-weight: 200;
+      font-size: 0.5rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #F0EBE0;
+      opacity: 0.15;
+    }
+
+    /* === EVENT LOG === */
+    .wv-event-log {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .wv-event-log-title {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.45rem;
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(59, 169, 156, 0.4);
+      margin-bottom: 0.5rem;
+    }
+
+    .wv-event-list {
+      max-height: 120px;
+      overflow-y: auto;
+      border: 1px solid rgba(59, 169, 156, 0.08);
+      padding: 0.5rem;
+      background: rgba(4, 10, 16, 0.4);
+    }
+
+    .wv-event-item {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.45rem;
+      font-weight: 200;
+      color: rgba(240, 235, 224, 0.3);
+      padding: 0.2rem 0;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.03);
+      letter-spacing: 0.05em;
+    }
+
+    .wv-event-item .event-type {
+      display: inline-block;
+      padding: 0 0.3rem;
+      font-size: 0.35rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border: 1px solid rgba(139, 175, 196, 0.15);
+      color: rgba(139, 175, 196, 0.5);
+      margin-right: 0.3rem;
+    }
+
+    .wv-event-item .event-type.et-alert {
+      border-color: rgba(201, 80, 60, 0.3);
+      color: rgba(201, 80, 60, 0.7);
+    }
+
+    .wv-event-item .event-time {
+      color: rgba(139, 175, 196, 0.25);
+      margin-right: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="wv-hero">
+    <h1>Water Visualizer</h1>
+    <div class="subtitle">Dynamic Maritime Intelligence Platform</div>
+    <div class="vib3-tag">Powered by VIB3 SDK</div>
+    <div class="wv-divider"></div>
+  </header>
+
+  <!-- Interaction Hints -->
+  <div class="wv-hints">
+    <div class="wv-hint">
+      <span class="wv-hint-icon vessel-hint">&#9650;</span>
+      Click vessels to expand live telemetry
+    </div>
+    <div class="wv-hint">
+      <span class="wv-hint-icon port-hint">&#8226;</span>
+      Click ports for harbor &amp; tide data
+    </div>
+    <div class="wv-hint">
+      <span class="wv-hint-icon weather-hint">&#9788;</span>
+      Live weather overlay with conditions
+    </div>
+    <div class="wv-hint">
+      <span class="wv-hint-icon coord-hint">&#8858;</span>
+      Fleet coordination &amp; messaging
+    </div>
+  </div>
+
+  <!-- Fleet Map Section -->
+  <section class="fleet-section" id="fleet">
+    <div class="fleet-map-wrap">
+
+      <!-- Map + Roster -->
+      <div class="fleet-map-panel-wrap">
+
+        <!-- Roster Panel -->
+        <aside class="fleet-roster" id="fleetRoster">
+          <div class="fleet-roster-title">FLEET ROSTER</div>
+          <div id="rosterList"></div>
+        </aside>
+
+        <!-- Map -->
+        <div class="fleet-map" id="fleetMap">
+          <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasCurrents"></canvas>
+          <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasVessels"></canvas>
+          <canvas id="fleetCanvasAtmo"></canvas>
+
+          <!-- Tooltip -->
+          <div class="vessel-info" id="vesselInfo">
+            <h4 id="viName"></h4>
+            <p id="viDetail"></p>
+            <span class="vi-status" id="viStatus"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="fleet-legend">
+        <div class="fleet-legend-item"><span class="fleet-legend-dot dot-vessel"></span> Vessel</div>
+        <div class="fleet-legend-item"><span class="fleet-legend-dot dot-port"></span> Port</div>
+        <div class="fleet-legend-item"><span class="fleet-legend-dot dot-route"></span> Shipping Route</div>
+        <div class="fleet-legend-item"><span class="fleet-legend-dot dot-fishing"></span> Active Fishing Zone</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="fleet-stats">
+        <div class="fleet-stat"><div class="fleet-stat-n fleet-stat-0">7</div><div class="fleet-stat-l">Vessels</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n fleet-stat-1">4</div><div class="fleet-stat-l">Fishing</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n fleet-stat-2">1</div><div class="fleet-stat-l">In Transit</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n fleet-stat-3">1</div><div class="fleet-stat-l">In Port</div></div>
+        <div class="fleet-stat"><div class="fleet-stat-n fleet-stat-4">1</div><div class="fleet-stat-l">Returning</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Event Log -->
+  <section class="wv-event-log" id="eventLog">
+    <div class="wv-event-log-title">VIB3 Event Stream</div>
+    <div class="wv-event-list" id="eventList"></div>
+  </section>
+
+  <!-- Feature Cards -->
+  <section class="wv-features">
+    <div class="wv-feature">
+      <div class="wv-feature-title">Water Surface Engine</div>
+      <div class="wv-feature-text">Dynamic caustic light patterns, wave lines, and shimmer effects that simulate realistic ocean surface behavior with depth-responsive intensity.</div>
+      <span class="wv-feature-tag">Canvas Layer</span>
+    </div>
+    <div class="wv-feature">
+      <div class="wv-feature-title">Weather System</div>
+      <div class="wv-feature-text">Live-evolving atmospheric simulation with wind field visualization, precipitation, fog zones, and a real-time weather HUD overlay.</div>
+      <span class="wv-feature-tag">Weather Engine</span>
+    </div>
+    <div class="wv-feature">
+      <div class="wv-feature-title">Expandable Panels</div>
+      <div class="wv-feature-text">Click any vessel or port to open a rich detail panel with live telemetry, weather conditions at position, tide data, and operational status.</div>
+      <span class="wv-feature-tag">Panel Manager</span>
+    </div>
+    <div class="wv-feature">
+      <div class="wv-feature-title">Fleet Coordination</div>
+      <div class="wv-feature-text">Cross-vessel messaging backbone with operational zones, status broadcasts, and alert propagation for real-time fleet management.</div>
+      <span class="wv-feature-tag">Coordination Layer</span>
+    </div>
+    <div class="wv-feature">
+      <div class="wv-feature-title">Event Architecture</div>
+      <div class="wv-feature-text">Pub/sub event bus enabling all subsystems to communicate without direct dependencies. Plugin-ready for future extensions.</div>
+      <span class="wv-feature-tag">Event Bus</span>
+    </div>
+    <div class="wv-feature">
+      <div class="wv-feature-title">Layered Evolution</div>
+      <div class="wv-feature-text">Every feature is an independent plugin layer that can be enabled, disabled, or replaced. Designed for progressive enhancement and adaptation.</div>
+      <span class="wv-feature-tag">VIB3 SDK</span>
+    </div>
+  </section>
+
+  <footer>Water Visualizer &middot; VIB3 SDK &middot; DASCOLA Fleet Intelligence</footer>
+
+  <!-- Fleet Map + VIB3 Module -->
+  <script type="module">
+    import { FleetMap } from '../../src/index.js';
+
+    var map = new FleetMap('#fleetMap', {
+      title: 'Water Visualizer',
+      subtitle: 'VIB3 SDK \u00b7 Dynamic Maritime Intelligence',
+      bounds: { latN: -15, latS: -35, lonW: -55, lonE: -25 },
+
+      // VIB3 SDK enabled with full feature set
+      vib3Options: {
+        weather: true,
+        waterSurface: true,
+        coordination: true,
+        panels: true,
+        swellIntensity: 0.7,
+        waveDetail: 'high',
+        weatherRefreshMs: 20000,
+      },
+
+      vessels: [
+        { name: 'S\u00e3o Jorge',      mmsi: '710012345', lat: -24.2, lon: -44.8, heading: 135, speed: 7.2, type: 'Longliner',  status: 'Fishing',    catch: 'Swordfish' },
+        { name: 'Estrela do Mar',  mmsi: '710012346', lat: -25.1, lon: -45.5, heading: 200, speed: 5.8, type: 'Trawler',    status: 'In Transit', catch: 'Tuna' },
+        { name: 'Rei do Oceano',   mmsi: '710012347', lat: -23.5, lon: -43.2, heading: 45,  speed: 0,   type: 'Longliner',  status: 'In Port',    catch: '\u2014' },
+        { name: 'Brisa Dourada',   mmsi: '710012348', lat: -26.3, lon: -47.0, heading: 320, speed: 8.1, type: 'Longliner',  status: 'Fishing',    catch: 'Yellowtail' },
+        { name: 'Mar\u00e9 Alta',       mmsi: '710012349', lat: -22.8, lon: -41.5, heading: 180, speed: 6.5, type: 'Gillnetter', status: 'Fishing',    catch: 'Snapper' },
+        { name: "D'Ascola I",      mmsi: '710012350', lat: -24.0, lon: -46.2, heading: 90,  speed: 3.2, type: 'Longliner',  status: 'Returning',  catch: 'Swordfish' },
+        { name: 'Esperan\u00e7a',       mmsi: '710012351', lat: -27.5, lon: -46.8, heading: 350, speed: 9.0, type: 'Trawler',    status: 'Fishing',    catch: 'Tuna' },
+      ],
+
+      ports: [
+        { name: 'Santos',          lat: -23.96, lon: -46.33, size: 'major' },
+        { name: 'Rio de Janeiro',  lat: -22.91, lon: -43.17, size: 'minor' },
+        { name: 'Florian\u00f3polis',   lat: -27.59, lon: -48.55, size: 'minor' },
+        { name: 'Vit\u00f3ria',         lat: -20.32, lon: -40.34, size: 'minor' },
+        { name: 'Paranagu\u00e1',       lat: -25.52, lon: -48.51, size: 'minor' },
+        { name: 'Salvador',        lat: -12.97, lon: -38.51, size: 'minor' },
+      ],
+
+      routes: [
+        { name: 'U.S. East Coast', points: [[-23.96,-46.33],[-22,-42],[-18,-38],[-12,-35],[-5,-32],[5,-40],[15,-50],[25,-60],[35,-68],[40,-73],[40.7,-74]] }
+      ],
+    });
+
+    map.start();
+
+    // === Wire up VIB3 event stream to the live log ===
+    if (map.vib3 && map.vib3.events) {
+      var eventList = document.getElementById('eventList');
+      var maxEvents = 30;
+
+      function logEvent(eventName, data) {
+        if (!eventList) return;
+
+        var item = document.createElement('div');
+        item.className = 'wv-event-item';
+
+        var now = new Date();
+        var timeStr = now.getHours().toString().padStart(2, '0') + ':' +
+                      now.getMinutes().toString().padStart(2, '0') + ':' +
+                      now.getSeconds().toString().padStart(2, '0');
+
+        var isAlert = eventName.indexOf('alert') !== -1;
+        var typeClass = isAlert ? 'event-type et-alert' : 'event-type';
+
+        var detail = '';
+        if (data) {
+          if (data.name) detail = data.name;
+          else if (data.text) detail = data.text;
+          else if (data.type) detail = data.type;
+          else if (typeof data === 'string') detail = data;
+        }
+
+        item.innerHTML = '<span class="event-time">' + timeStr + '</span>' +
+                         '<span class="' + typeClass + '">' + eventName + '</span> ' +
+                         (detail ? detail : '');
+
+        eventList.insertBefore(item, eventList.firstChild);
+
+        // Limit log length
+        while (eventList.children.length > maxEvents) {
+          eventList.removeChild(eventList.lastChild);
+        }
+      }
+
+      // Subscribe to all key VIB3 events
+      map.vib3.events.on('vib3:ready', function (d) { logEvent('ready', d); });
+      map.vib3.events.on('vessel:click', function (d) { logEvent('vessel:click', d); });
+      map.vib3.events.on('port:click', function (d) { logEvent('port:click', d); });
+      map.vib3.events.on('panel:open', function (d) { logEvent('panel:open', d); });
+      map.vib3.events.on('panel:close', function (d) { logEvent('panel:close', d); });
+      map.vib3.events.on('weather:update', function (d) { logEvent('weather:update', d.globalCondition); });
+      map.vib3.events.on('weather:alert', function (d) {
+        for (var i = 0; i < d.length; i++) {
+          logEvent('weather:alert', d[i]);
+        }
+      });
+      map.vib3.events.on('coordination:msg', function (d) { logEvent('coord:msg', d); });
+      map.vib3.events.on('coordination:alert', function (d) { logEvent('coord:alert', d); });
+      map.vib3.events.on('map:click:empty', function () { logEvent('map:click', 'empty area'); });
+    }
+  </script>
+
+</body>
+</html>
