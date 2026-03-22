@@ -95,7 +95,22 @@ export function drawAtmosphere(ctx, cmOrW, configOrH, configArg, themeArg) {
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, w, h);
 
-    // Second pass — atmospheric blue tint at horizon edges
+    // Second pass — elliptical Earth-curvature overlay
+    // Squashed vertically to create the curved horizon illusion
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(1.0, 0.75);
+    var ellipR = Math.max(w, h) * 0.55;
+    var curvature = ctx.createRadialGradient(0, 0, ellipR * 0.6, 0, 0, ellipR);
+    curvature.addColorStop(0.0, rgba(r, g, b, 0));
+    curvature.addColorStop(0.5, rgba(r, g, b, 0.05 * vs));
+    curvature.addColorStop(0.8, rgba(r, g, b, 0.2 * vs));
+    curvature.addColorStop(1.0, rgba(r, g, b, 0.45 * vs));
+    ctx.fillStyle = curvature;
+    ctx.fillRect(-w, -h, w * 2, h * 2);
+    ctx.restore();
+
+    // Third pass — atmospheric blue tint at horizon edges
     var atmoGrad = ctx.createRadialGradient(cx, cy, cornerR * 0.5, cx, cy, cornerR);
     atmoGrad.addColorStop(0.0, 'rgba(20,40,80,0)');
     atmoGrad.addColorStop(0.6, 'rgba(15,30,60,0.03)');
