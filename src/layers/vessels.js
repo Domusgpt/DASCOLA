@@ -38,16 +38,45 @@ function statusColor(colors, status, alpha) {
  * Draw the vessels layer.
  *
  * @param {CanvasRenderingContext2D} ctx     — canvas context
- * @param {number}   w       — logical canvas width
- * @param {number}   h       — logical canvas height
- * @param {function} projFn  — projFn(lat, lon) => { x, y }
+ * @param {CanvasManager|number} cmOrW      — canvas manager or width
+ * @param {Array|number}  vesselsOrH        — vessels array or height
  * @param {object}   config  — merged FleetMap config
  * @param {number}   t       — animation time counter
- * @param {Array}    vessels — array of vessel objects
+ * @param {object}   [renderer] — AssetRenderer instance (optional)
+ *
+ * Supports two call signatures:
+ *   drawVessels(ctx, cm, vessels, config, t, renderer)      — CanvasManager style
+ *   drawVessels(ctx, w, h, projFn, config, t, vessels, renderer) — explicit style
  */
-export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
+export function drawVessels(ctx, cmOrW, vesselsOrH, config, t, renderer) {
+  var w, h, projFn, vessels;
+
+  // Detect call signature
+  if (typeof cmOrW === 'object' && cmOrW.w !== undefined) {
+    // CanvasManager style: (ctx, cm, vessels, config, t, renderer)
+    w = cmOrW.w;
+    h = cmOrW.h;
+    projFn = cmOrW.proj.bind(cmOrW);
+    vessels = vesselsOrH;
+  } else {
+    // Explicit style: (ctx, w, h, projFn, config, t, vessels, renderer)
+    w = cmOrW;
+    h = vesselsOrH;
+    projFn = config;
+    config = t;
+    t = renderer;
+    vessels = arguments[6];
+    renderer = arguments[7];
+  }
+
   var colors = config.colors;
   var fonts  = config.fonts;
+
+  // Theme-aware properties
+  var theme = (renderer && renderer.theme) || null;
+  var vesselSymbols = (theme && theme.symbols && theme.symbols.vessel) || {};
+  var glowRadius = vesselSymbols.glowRadius !== undefined ? vesselSymbols.glowRadius : 32;
+  var trailStyle = vesselSymbols.trailStyle || 'line';
 
   // ------------------------------------------------------------------
   // 1. Clear canvas (transparent)
@@ -64,15 +93,17 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
   // ------------------------------------------------------------------
   // 2. Fishing zone halos
   // ------------------------------------------------------------------
+  if (glowRadius > 0) {
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
     if (v.status !== 'Fishing') continue;
 
     sp = projFn(v.lat, v.lon);
-    var haloRadius = 32 + Math.sin(t * 1.5 + i) * 6;
+    var haloRadius = glowRadius + Math.sin(t * 1.5 + i) * 6;
 
     var haloGrad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, haloRadius);
-    haloGrad.addColorStop(0, colors.ouro.replace(/[\d.]+\)$/, '0.08)'));
+    haloGrad.addColorStop(0, colors.ouro.replace(/[\d.]+\)$/, '0.18)'));
+    haloGrad.addColorStop(0.5, colors.ouro.replace(/[\d.]+\)$/, '0.06)'));
     haloGrad.addColorStop(1, colors.ouro.replace(/[\d.]+\)$/, '0)'));
 
     ctx.fillStyle = haloGrad;
@@ -80,29 +111,39 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     ctx.arc(sp.x, sp.y, haloRadius, 0, TAU);
     ctx.fill();
   }
+  } // end glowRadius > 0
 
   // ------------------------------------------------------------------
   // 3. Wake trails
   // ------------------------------------------------------------------
+  if (trailStyle !== 'none') {
   for (i = 0; i < vessels.length; i++) {
     v = vessels[i];
     if (!v.trail || v.trail.length < 2) continue;
 
-    ctx.beginPath();
-    var tp0 = v.trail[0];
-    ctx.moveTo(tp0.x, tp0.y);
-
-    for (var ti = 1; ti < v.trail.length; ti++) {
-      ctx.lineTo(v.trail[ti].x, v.trail[ti].y);
+    if (trailStyle === 'dotted') {
+      ctx.setLineDash([2, 4]);
     }
 
-    ctx.strokeStyle = colors.ouro.replace(/[\d.]+\)$/, '0.15)');
-    ctx.lineWidth   = 1.5;
-    ctx.globalAlpha = 1;
+    // Draw trail segments with fading opacity (newest = bright, oldest = dim)
+    var trailLen = v.trail.length;
+    for (var ti = 1; ti < trailLen; ti++) {
+      var segAlpha = 0.35 * (ti / trailLen);
+      var segWidth = 0.5 + 1.5 * (ti / trailLen);
 
-    // Create fading effect along the trail
-    ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(v.trail[ti - 1].x, v.trail[ti - 1].y);
+      ctx.lineTo(v.trail[ti].x, v.trail[ti].y);
+      ctx.strokeStyle = statusColor(colors, v.status, segAlpha);
+      ctx.lineWidth   = segWidth;
+      ctx.stroke();
+    }
+
+    if (trailStyle === 'dotted') {
+      ctx.setLineDash([]);
+    }
   }
+  } // end trailStyle !== 'none'
 
   // ------------------------------------------------------------------
   // 4. Vessel triangles
@@ -118,17 +159,6 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     var heading = v.heading || 0;
     var rad     = heading * Math.PI / 180;
 
-    ctx.save();
-    ctx.translate(sp.x, sp.y);
-    ctx.rotate(rad);
-
-    // Triangle: tip at top, base at bottom
-    ctx.beginPath();
-    ctx.moveTo(0, -5);
-    ctx.lineTo(-3, 4);
-    ctx.lineTo(3, 4);
-    ctx.closePath();
-
     // Fill based on status
     var fillAlpha;
     switch (v.status) {
@@ -136,23 +166,47 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
       case 'In Port':   fillAlpha = 0.7; break;
       default:          fillAlpha = 0.7; break;
     }
-    ctx.fillStyle = statusColor(colors, v.status, fillAlpha);
-    ctx.fill();
+    var vesselColor = statusColor(colors, v.status, fillAlpha);
 
-    // Thin white stroke
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth   = 0.5;
-    ctx.stroke();
+    // Use asset renderer if available, otherwise fall back to triangle
+    if (renderer) {
+      renderer.drawVessel(ctx, v, sp, {
+        t: t,
+        colors: colors,
+        fonts: fonts,
+        w: w,
+        index: i,
+      });
+    } else {
+      ctx.save();
+      ctx.translate(sp.x, sp.y);
+      ctx.rotate(rad);
 
-    ctx.restore();
+      // Triangle: tip at top, base at bottom
+      ctx.beginPath();
+      ctx.moveTo(0, -8);
+      ctx.lineTo(-5, 6);
+      ctx.lineTo(5, 6);
+      ctx.closePath();
+
+      ctx.fillStyle = vesselColor;
+      ctx.fill();
+
+      // Thin white stroke
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth   = 0.5;
+      ctx.stroke();
+
+      ctx.restore();
+    }
 
     // ------------------------------------------------------------------
     // 5. Ping rings
     // ------------------------------------------------------------------
     var phase = (t * 0.8 + i * 0.5) % 2;
     if (phase < 1) {
-      var pingR     = 4 + phase * 12;
-      var pingAlpha = (1 - phase) * 0.5;
+      var pingR     = 6 + phase * 16;
+      var pingAlpha = (1 - phase) * 0.7;
 
       ctx.beginPath();
       ctx.arc(sp.x, sp.y, pingR, 0, TAU);
@@ -164,12 +218,12 @@ export function drawVessels(ctx, w, h, projFn, config, t, vessels) {
     // ------------------------------------------------------------------
     // 6. Name labels
     // ------------------------------------------------------------------
-    var nameFontSize = Math.max(8, Math.round(w * 0.007));
+    var nameFontSize = Math.max(9, Math.round(w * 0.009));
     ctx.font         = nameFontSize + 'px ' + fonts.sans;
-    ctx.fillStyle    = colors.creme.replace(/[\d.]+\)$/, '0.3)');
+    ctx.fillStyle    = colors.creme.replace(/[\d.]+\)$/, '0.55)');
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(v.name, sp.x, sp.y + 8);
+    ctx.fillText(v.name, sp.x, sp.y + 11);
   }
 
   // ------------------------------------------------------------------
@@ -187,8 +241,8 @@ function drawCompassRose(ctx, w, h, config, t) {
 
   var cx     = w - 60;
   var cy     = h - 60;
-  var outerR = 35;
-  var innerR = 14;
+  var outerR = 42;
+  var innerR = 16;
   var tickR  = outerR + 6;
 
   var wobble = Math.sin(t * 0.3) * 0.05;
@@ -196,7 +250,7 @@ function drawCompassRose(ctx, w, h, config, t) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(wobble);
-  ctx.globalAlpha = 0.2;
+  ctx.globalAlpha = 0.5;
 
   // Outer circle
   ctx.beginPath();
@@ -222,7 +276,7 @@ function drawCompassRose(ctx, w, h, config, t) {
   }
 
   // 8-point star
-  ctx.globalAlpha = 0.25;
+  ctx.globalAlpha = 0.4;
   for (var pt = 0; pt < 8; pt++) {
     var angle   = pt * (TAU / 8) - Math.PI / 2; // start from north
     var isMain  = (pt % 2 === 0);
@@ -248,12 +302,12 @@ function drawCompassRose(ctx, w, h, config, t) {
     ctx.closePath();
 
     ctx.fillStyle = isMain ? colors.ouro : colors.creme;
-    ctx.globalAlpha = isMain ? 0.2 : 0.1;
+    ctx.globalAlpha = isMain ? 0.45 : 0.25;
     ctx.fill();
   }
 
   // Cardinal letters N, S, E, W
-  ctx.globalAlpha = 0.25;
+  ctx.globalAlpha = 0.6;
   var letterR     = tickR + 8;
   var letterSize  = Math.max(8, Math.round(w * 0.008));
   ctx.font         = letterSize + 'px ' + fonts.sans;

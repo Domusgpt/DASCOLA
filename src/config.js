@@ -30,10 +30,10 @@ export var DEFAULTS = {
     creme:     'rgba(240,235,224,1)',
     land:      ['rgba(0,42,31,0.6)', 'rgba(0,59,46,0.5)', 'rgba(0,42,31,0.4)'],
     ocean:     ['rgba(13,34,64,0.35)', 'rgba(10,28,50,0.2)', 'rgba(4,10,16,0.05)'],
-    fathom:    'rgba(27,58,92,0.12)',
-    grid:      'rgba(201,168,76,0.04)',
-    coastGlow: 'rgba(201,168,76,0.08)',
-    coastLine: 'rgba(201,168,76,0.35)',
+    fathom:    'rgba(27,58,92,0.25)',
+    grid:      'rgba(201,168,76,0.08)',
+    coastGlow: 'rgba(201,168,76,0.15)',
+    coastLine: 'rgba(201,168,76,0.45)',
   },
 
   // Fonts (must be loaded by the host page)
@@ -62,10 +62,45 @@ export var DEFAULTS = {
   // Built-in: 'south-atlantic'. Or provide custom array.
   currentData: 'south-atlantic',
 
+  // Theme — which visual theme pack to use
+  // Built-in: 'classic-nautical', 'treasure-map', 'tactical', 'minimal', 'tropical'
+  theme: 'classic-nautical',
+
+  // Asset rendering options
+  assets: {
+    vesselStyle: 'auto',       // 'auto' (theme default), 'topDown', 'profile', 'icon', 'triangle'
+    showFacilities: true,      // show port facility icons
+    showStatusBadges: false,   // show status pills on vessels
+    showETA: false,            // show ETA to port
+  },
+
+  // Weather overlay (NOAA integration)
+  weather: {
+    enabled: false,            // set true to activate weather layer
+    refreshMs: 900000,         // 15 minutes
+    points: [],                // [{ lat, lon, name? }] — forecast grid points
+    alertZone: null,           // NOAA marine zone code (e.g. 'ANZ335')
+    showWind: true,
+    showWaves: true,
+    showTemp: false,
+    showWarnings: true,
+  },
+
+  // Channel markers and navigation aids
+  // Each marker: { type, lat, lon, name?, light? }
+  markers: [],
+
+  // Vessel communications (future)
+  comms: {
+    endpoint: null,            // REST API for captain's log / messaging
+    refreshMs: 30000,
+  },
+
   // Callbacks
   onVesselHover: null,   // function(vessel, screenPos) {}
   onVesselClick: null,   // function(vessel) {}
   onAISUpdate: null,     // function(vessels) {}
+  onWeatherUpdate: null, // function(weatherData) {}
 };
 
 /**
@@ -82,7 +117,7 @@ export function mergeConfig(userConfig) {
   if (!userConfig) return cfg;
   for (key in userConfig) {
     if (!userConfig.hasOwnProperty(key)) continue;
-    if (key === 'colors' || key === 'fonts') {
+    if (key === 'colors' || key === 'fonts' || key === 'assets' || key === 'weather' || key === 'comms') {
       cfg[key] = {};
       var def = DEFAULTS[key];
       var usr = userConfig[key] || {};

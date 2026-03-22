@@ -1,255 +1,306 @@
 /* =============================================================================
-
-   VIKING VILLAGE FLEET MAP — Barnegat Light, NJ
+   VIKING VILLAGE FLEET MAP — Full-Viewport App Shell
    =============================================================================
-
-   Color palette inspired by:
-     - Barnegat Lighthouse ("Old Barney"): red & white horizontal bands
-     - Turquoise green Atlantic waters off the Jersey Shore
-     - Sandy LBI beach dunes and golden hour light
-     - Night indigo deep ocean
-     - Pine Barrens evergreen forest (NJ state tree: Red Oak, but pines rule)
-
-   ─────────────────────────────────────────────────────────────────────────────
-   QUICK REBRAND GUIDE — Change these 5 variables:
-
-     --fm-accent        → Lighthouse red (#C41E3A)
-     --fm-deep          → Night indigo ocean (#0F1B3D)
-     --fm-land          → Pine Barrens green (#3A6B35)
-     --fm-text          → Beach sand cream (#D4B896)
-     --fm-font-display  → Headline font (Playfair Display)
-
+   Designed to fill the entire browser window on any device.
+   Embeddable: drop into an iframe or div and it fills its container.
    ============================================================================= */
 
-
-/* =============================================
-   Section 1: CUSTOM PROPERTIES
-   ============================================= */
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
+  /* Palette */
+  --c-bg:       #091420;
+  --c-surface:  rgba(12, 24, 42, 0.85);
+  --c-border:   rgba(196, 30, 58, 0.08);
+  --c-accent:   #C41E3A;
+  --c-teal:     #3BA99C;
+  --c-green:    #3A6B35;
+  --c-sand:     #D4B896;
+  --c-sand-dim: #B8A07A;
 
-  /* --- Barnegat Lighthouse Red — accent ----------------------------------- */
-  --fm-accent:       #C41E3A;
-  --fm-accent-lt:    #E8364F;
-  --fm-accent-dim:   rgba(196, 30, 58, 0.08);
+  /* Fonts */
+  --f-display: 'Playfair Display', Georgia, serif;
+  --f-sans:    'Josefin Sans', sans-serif;
 
-  /* --- Night Indigo Ocean — deep background -------------------------------- */
-  --fm-deep:         #0F1B3D;
-  --fm-ocean-mid:    rgba(20, 40, 80, 0.4);
-  --fm-ocean-shelf:  #1B3A5C;
-
-  /* --- Pine Barrens Green — land, ports, in-port status -------------------- */
-  --fm-land:         #3A6B35;
-  --fm-land-dark:    #264723;
-  --fm-land-deep:    rgba(42, 71, 38, 0.95);
-
-  /* --- Beach Sand — text tones --------------------------------------------- */
-  --fm-text:         #D4B896;
-  --fm-text-warm:    #C8A882;
-  --fm-text-muted:   #3BA99C;  /* Turquoise — ocean accent for secondary info */
-
-  /* --- Status colors ------------------------------------------------------- */
-  --fm-status-fishing:   var(--fm-accent);
-  --fm-status-transit:   var(--fm-text-muted);
-  --fm-status-returning: var(--fm-text-muted);
-  --fm-status-port:      var(--fm-land);
-
-  /* --- Typography ---------------------------------------------------------- */
-  --fm-font-display: 'Playfair Display', Georgia, serif;
-  --fm-font-sans:    'Josefin Sans', sans-serif;
-
-  /* --- Layout -------------------------------------------------------------- */
-  --fm-max-width:          1400px;
-  --fm-roster-width:       220px;
-  --fm-map-ratio:          16 / 10;
-  --fm-map-ratio-mobile:   4 / 5;
-  --fm-gap:                1.5rem;
-  --fm-mobile-break:       900px;
+  /* Sizing */
+  --topbar-h: 44px;
+  --roster-w: 220px;
 }
 
 
-/* =============================================
-   Section 2: LAYOUT
-   ============================================= */
+/* ── App shell: fills viewport ── */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-sand);
+  font-family: var(--f-sans);
+  -webkit-font-smoothing: antialiased;
+}
 
-.fleet-section {
-  position: relative;
-  z-index: 5;
-  min-height: 100vh;
-  background: var(--fm-deep);
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+
+/* ── Top bar ── */
+.topbar {
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1rem;
+  background: linear-gradient(180deg, rgba(16,28,48,0.92), rgba(10,20,36,0.85));
+  border-bottom: 1px solid var(--c-border);
+  box-shadow: 0 1px 12px rgba(196,30,58,0.06);
+  z-index: 10;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-right: auto;
+}
+
+.topbar-title {
+  font-family: var(--f-display);
+  font-size: 1.15rem;
+  border-bottom: 2px solid var(--c-accent);
+  padding-bottom: 2px;
+  font-weight: 400;
+  color: var(--c-sand);
+  letter-spacing: 0.03em;
+}
+
+.topbar-sub {
+  font-size: 0.55rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-teal);
+  opacity: 0.6;
+}
+
+/* Stats pills in topbar */
+.topbar-stats {
+  display: flex;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.ts {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
+}
+
+.ts-n {
+  font-size: 0.85rem;
+  font-weight: 200;
+  color: var(--c-accent);
+  line-height: 1;
+}
+
+.ts-l {
+  font-size: 0.45rem;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-sand-dim);
+  opacity: 0.5;
+}
+
+/* Legend dots in topbar */
+.topbar-legend {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.48rem;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-sand-dim);
+  opacity: 0.55;
+}
+
+.leg-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid;
+}
+
+.leg-vessel { background: rgba(196,30,58,0.6); border-color: var(--c-accent); }
+.leg-port   { background: rgba(58,107,53,0.6); border-color: var(--c-green); }
+.leg-fishing {
+  background: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 4px rgba(196,30,58,0.3);
+}
+
+
+/* ── Main area: roster + map ── */
+.main {
+  flex: 1;
+  display: flex;
+  min-height: 0; /* critical for flex children to shrink */
   overflow: hidden;
 }
 
-.fleet-section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 60%, rgba(27, 58, 92, 0.12), transparent 55%),
-    radial-gradient(ellipse at 70% 40%, rgba(58, 107, 53, 0.06), transparent 50%); /* Pine green */
-}
 
-.fleet-map-wrap {
-  position: relative;
-  max-width: var(--fm-max-width);
-  margin: 0 auto;
-  padding: 3rem 2rem;
-}
-
-.fleet-map-panel-wrap {
-  display: flex;
-  gap: var(--fm-gap);
-  align-items: stretch;
-}
-
-
-/* =============================================
-   Section 3: HEADER
-   ============================================= */
-
-.fleet-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  position: relative;
-  z-index: 2;
-}
-
-
-/* =============================================
-   Section 4: ROSTER PANEL
-   ============================================= */
-
-.fleet-roster {
-  width: var(--fm-roster-width);
+/* ── Roster sidebar ── */
+.roster {
+  width: var(--roster-w);
   flex-shrink: 0;
-  background: rgba(15, 27, 61, 0.85);           /* --fm-deep @ 0.85 */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(196, 30, 58, 0.08);    /* --fm-accent @ 0.08 */
-  overflow-y: auto;
-  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 16, 32, 0.5);
+  border-right: 1px solid var(--c-border);
 }
 
-.fleet-roster-title {
-  font-family: var(--fm-font-sans);
-  font-weight: 300;
+.roster-head {
   font-size: 0.55rem;
+  font-weight: 300;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--fm-accent);
+  color: var(--c-accent);
   text-align: center;
-  padding: 1rem 0.8rem 0.8rem;
-  border-bottom: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
 }
 
+.roster-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196,30,58,0.12) transparent;
+}
+
+.roster-scroll::-webkit-scrollbar { width: 3px; }
+.roster-scroll::-webkit-scrollbar-track { background: transparent; }
+.roster-scroll::-webkit-scrollbar-thumb { background: rgba(196,30,58,0.18); border-radius: 2px; }
+
+/* Roster items */
 .roster-item {
-  padding: 0.7rem 0.8rem;
-  border-bottom: 1px solid rgba(196, 30, 58, 0.04); /* --fm-accent @ 0.04 */
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(196,30,58,0.03);
   cursor: default;
-  transition: background 0.3s;
+  transition: background 0.2s;
 }
 
 .roster-item:hover,
 .roster-item.active {
-  background: rgba(196, 30, 58, 0.04); /* --fm-accent @ 0.04 */
+  background: rgba(196,30,58,0.06);
+  box-shadow: inset 2px 0 0 var(--c-accent);
 }
 
 .roster-item-name {
-  font-family: var(--fm-font-display);
-  font-size: 0.75rem;
-  color: var(--fm-accent);
-  margin-bottom: 0.2rem;
+  font-family: var(--f-display);
+  font-size: 0.85rem;
+  color: var(--c-sand);
+  line-height: 1.25;
+  margin-bottom: 0.15rem;
 }
 
 .roster-item-status {
   display: inline-block;
-  padding: 0.1rem 0.4rem;
-  font-family: var(--fm-font-sans);
-  font-size: 0.42rem;
-  letter-spacing: 0.15em;
+  padding: 0.08rem 0.4rem;
+  font-size: 0.44rem;
+  font-weight: 300;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  border: 1px solid rgba(58, 107, 53, 0.3); /* --fm-land @ 0.3 */
-  color: var(--fm-land);
-  margin-bottom: 0.25rem;
+  border: 1px solid rgba(58,107,53,0.25);
+  color: var(--c-green);
+  margin-bottom: 0.15rem;
 }
 
 .roster-item-status.status-fishing,
 .roster-item-status.status-scalloping {
-  border-color: rgba(196, 30, 58, 0.3); /* --fm-accent @ 0.3 */
-  color: var(--fm-accent);
+  border-color: rgba(196,30,58,0.25);
+  color: var(--c-accent);
 }
 
-.roster-item-status.status-in-transit {
-  border-color: rgba(59, 169, 156, 0.3); /* Turquoise @ 0.3 */
-  color: var(--fm-text-muted);
-}
-
+.roster-item-status.status-in-transit,
 .roster-item-status.status-returning {
-  border-color: rgba(59, 169, 156, 0.3); /* Turquoise @ 0.3 */
-  color: var(--fm-text-muted);
+  border-color: rgba(59,169,156,0.2);
+  color: var(--c-teal);
 }
 
 .roster-item-detail {
-  font-family: var(--fm-font-sans);
-  font-weight: 200;
   font-size: 0.5rem;
-  letter-spacing: 0.1em;
-  color: var(--fm-text-warm);
-  opacity: 0.6;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: var(--c-sand-dim);
+  opacity: 0.5;
 }
 
 .roster-item-catch {
-  font-family: var(--fm-font-sans);
-  font-weight: 200;
-  font-size: 0.45rem;
-  letter-spacing: 0.1em;
-  color: var(--fm-text-warm);
-  opacity: 0.4;
-  margin-top: 0.1rem;
+  font-size: 0.46rem;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: var(--c-sand-dim);
+  opacity: 0.3;
+  margin-top: 0.05rem;
 }
 
 
-/* =============================================
-   Section 5: MAP CONTAINER & CANVASES
-   ============================================= */
-
-.fleet-map {
-  position: relative;
+/* ── Map viewport: fills remaining space ── */
+.map {
   flex: 1;
-  aspect-ratio: var(--fm-map-ratio);
-  max-height: 65vh;
-  border: 1px solid rgba(196, 30, 58, 0.12); /* --fm-accent @ 0.12 */
+  position: relative;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse at center, var(--fm-ocean-mid), rgba(15, 27, 61, 0.95)),
-    var(--fm-deep);
+    radial-gradient(ellipse at 40% 50%, rgba(16,32,64,0.4), rgba(9,20,32,0.95)),
+    var(--c-bg);
 }
 
-.fleet-map::before {
+/* Subtle inner border */
+.map::before {
   content: '';
   position: absolute;
-  inset: 0;
-  border: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
-  margin: 8px;
+  inset: 4px;
+  border: 1px solid rgba(196,30,58,0.06);
   z-index: 6;
   pointer-events: none;
 }
 
-.fleet-map::after {
+/* Film grain */
+.map::after {
   content: '';
   position: absolute;
   inset: 0;
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: 0.03;
+  opacity: 0.035;
   z-index: 7;
   pointer-events: none;
 }
 
-.fleet-map canvas {
+.map canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  touch-action: manipulation;
 }
 
 #fleetCanvasDepth    { z-index: 1; }
@@ -266,23 +317,20 @@
 }
 
 
-/* =============================================
-   Section 6: VESSEL TOOLTIP
-   ============================================= */
-
+/* ── Vessel tooltip ── */
 .vessel-info {
   position: absolute;
   z-index: 10;
-  background: rgba(15, 27, 61, 0.92);            /* --fm-deep @ 0.92 */
+  background: rgba(9,20,32,0.94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(196, 30, 58, 0.15);     /* --fm-accent @ 0.15 */
-  padding: 1rem 1.2rem;
-  min-width: 200px;
+  border: 1px solid rgba(196,30,58,0.15);
+  padding: 0.75rem 1rem;
+  min-width: 170px;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.3s, transform 0.3s;
+  transform: translateY(5px);
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .vessel-info.active {
@@ -291,169 +339,257 @@
 }
 
 .vessel-info h4 {
-  font-family: var(--fm-font-display);
-  font-size: 0.95rem;
-  color: var(--fm-accent);
-  margin-bottom: 0.3rem;
+  font-family: var(--f-display);
+  font-size: 0.85rem;
+  color: var(--c-sand);
+  margin-bottom: 0.2rem;
 }
 
 .vessel-info p {
-  font-family: var(--fm-font-sans);
-  font-weight: 200;
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
-  color: var(--fm-text-warm);
-  line-height: 1.8;
+  font-size: 0.58rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--c-sand-dim);
+  line-height: 1.6;
 }
 
 .vessel-info .vi-status {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.5rem;
-  letter-spacing: 0.2em;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.46rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  border: 1px solid rgba(58, 107, 53, 0.3); /* --fm-land @ 0.3 */
-  color: var(--fm-land);
-  margin-top: 0.4rem;
+  border: 1px solid rgba(58,107,53,0.25);
+  color: var(--c-green);
+  margin-top: 0.3rem;
 }
 
 
-/* =============================================
-   Section 7: LEGEND & STATS
-   ============================================= */
-
-.fleet-legend {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-  flex-wrap: wrap;
+/* ── Vessel Detail Card (zoom view) ── */
+.vessel-detail-card {
+  position: absolute;
+  z-index: 20;
+  bottom: -320px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(380px, 92%);
+  background: rgba(9, 20, 32, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(196, 30, 58, 0.2);
+  border-top: 2px solid rgba(196, 30, 58, 0.5);
+  transition: bottom 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
-
-.fleet-legend-item {
+.vessel-detail-card.active {
+  bottom: 16px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.vdc-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 1.4rem;
+  color: var(--c-sand-dim);
+  opacity: 0.5;
+  cursor: pointer;
+  z-index: 2;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.vdc-close:hover { opacity: 1; }
+.vdc-photo {
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(135deg, rgba(16,32,64,0.6), rgba(9,20,32,0.8));
+  position: relative;
+  overflow: hidden;
+}
+.vdc-photo::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(transparent, rgba(9,20,32,0.96));
+}
+.vdc-photo-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-family: var(--fm-font-sans);
-  font-weight: 200;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--fm-text-warm);
-}
-
-.fleet-legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid;
-}
-
-.dot-vessel {
-  background: rgba(196, 30, 58, 0.8); /* Lighthouse red @ 0.8 */
-  border-color: var(--fm-accent);
-}
-
-.dot-port {
-  background: rgba(58, 107, 53, 0.8); /* Pine green @ 0.8 */
-  border-color: var(--fm-land);
-}
-
-.dot-route {
-  background: none;
-  border-color: var(--fm-text-muted);
-  border-style: dashed;
-  width: 20px;
-  height: 0;
-  border-radius: 0;
-}
-
-.dot-fishing {
-  background: none;
-  border-color: var(--fm-accent);
-  box-shadow: 0 0 6px rgba(196, 30, 58, 0.3); /* Lighthouse red glow */
-}
-
-.fleet-stats {
-  display: flex;
-  gap: 2.5rem;
   justify-content: center;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(196, 30, 58, 0.06); /* --fm-accent @ 0.06 */
+  font-family: var(--f-display);
+  font-size: 3.5rem;
+  color: var(--c-accent);
+  opacity: 0.2;
+  background: linear-gradient(135deg, rgba(16,32,64,0.4), rgba(9,20,32,0.6)),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
+  background-size: cover;
 }
-
-.fleet-stat {
-  text-align: center;
+.vdc-content {
+  padding: 1rem 1.2rem 1.2rem;
 }
-
-.fleet-stat-n {
-  font-family: var(--fm-font-sans);
-  font-weight: 200;
-  font-size: 1.8rem;
-  color: var(--fm-accent);
+.vdc-name {
+  font-family: var(--f-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--c-sand);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.02em;
 }
-
-.fleet-stat-l {
-  font-family: var(--fm-font-sans);
+.vdc-type {
+  font-size: 0.65rem;
   font-weight: 300;
-  font-size: 0.55rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fm-text-warm);
-  margin-top: 0.2rem;
+  color: var(--c-teal);
+  opacity: 0.7;
+  margin-bottom: 0.8rem;
+}
+.vdc-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(196,30,58,0.08);
+  border-bottom: 1px solid rgba(196,30,58,0.08);
+}
+.vdc-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.vdc-stat-label {
+  font-size: 0.45rem;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-sand-dim);
+  opacity: 0.4;
+}
+.vdc-stat-value {
+  font-size: 0.85rem;
+  font-weight: 200;
+  color: var(--c-sand);
+  letter-spacing: 0.02em;
+}
+.vdc-status {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.5rem;
+  font-weight: 300;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: 1px solid rgba(196,30,58,0.3);
+  color: var(--c-accent);
+  margin-bottom: 0.6rem;
+}
+.vdc-status-in-port { border-color: rgba(58,107,53,0.3); color: var(--c-green); }
+.vdc-status-in-transit, .vdc-status-returning { border-color: rgba(59,169,156,0.25); color: var(--c-teal); }
+.vdc-coords {
+  font-size: 0.55rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--c-sand-dim);
+  opacity: 0.35;
+  font-family: var(--f-sans);
 }
 
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
 
-/* =============================================
-   Section 8: MOBILE RESPONSIVE
-   ============================================= */
+/* ── Tablet: collapse roster width ── */
+@media (max-width: 1024px) {
+  :root { --roster-w: 180px; }
+}
 
-@media (max-width: 900px) {
+/* ── Mobile: roster becomes top strip, topbar simplifies ── */
+@media (max-width: 768px) {
+  :root {
+    --topbar-h: 38px;
+    --roster-w: 100%;
+  }
 
-  .fleet-map-panel-wrap {
+  .topbar {
+    padding: 0 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .topbar-title { font-size: 0.9rem; }
+  .topbar-sub { display: none; }
+  .topbar-legend { display: none; }
+
+  .ts { padding: 0.15rem 0.35rem; }
+  .ts-n { font-size: 0.75rem; }
+  .ts-l { font-size: 0.38rem; }
+
+  .main {
     flex-direction: column;
   }
 
-  .fleet-roster {
+  .roster {
     width: 100%;
-    max-height: 25vh;
+    flex-shrink: 0;
+    max-height: 72px;
+    overflow: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .roster-head {
+    display: none;
+  }
+
+  .roster-scroll {
     display: flex;
-    flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
+    flex: none;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(196,30,58,0.1) transparent;
   }
 
-  .fleet-roster-title {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    padding: 0.8rem 0.4rem;
-    border-bottom: none;
-    border-right: 1px solid rgba(196, 30, 58, 0.06);
-    min-width: 28px;
-  }
+  .roster-scroll::-webkit-scrollbar { height: 2px; }
 
   .roster-item {
-    min-width: 140px;
+    min-width: 125px;
+    max-width: 150px;
+    flex-shrink: 0;
     border-bottom: none;
-    border-right: 1px solid rgba(196, 30, 58, 0.04);
+    border-right: 1px solid rgba(196,30,58,0.03);
+    padding: 0.35rem 0.5rem;
   }
 
-  .fleet-map {
-    aspect-ratio: var(--fm-map-ratio-mobile);
-    max-height: 55vh;
-  }
+  .roster-item-name { font-size: 0.72rem; }
+  .roster-item-status { font-size: 0.38rem; padding: 0.05rem 0.3rem; }
+  .roster-item-detail { font-size: 0.42rem; }
+  .roster-item-catch { display: none; }
 
-  .fleet-legend {
-    gap: 1rem;
+  .map {
+    flex: 1;
+    min-height: 200px;
   }
+}
 
-  .fleet-stats {
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
+/* ── Small phones: tighter topbar ── */
+@media (max-width: 420px) {
+  .topbar-stats .ts:nth-child(n+4) { display: none; } /* hide port + return */
+  .topbar-title { font-size: 0.8rem; }
+}
 
-  .fleet-stat-n {
-    font-size: 1.4rem;
-  }
+/* ── Ultrawide ── */
+@media (min-width: 1800px) {
+  :root { --roster-w: 260px; }
+
+  .roster-item-name { font-size: 0.85rem; }
+  .roster-item-status { font-size: 0.5rem; }
+  .roster-item-detail { font-size: 0.55rem; }
+  .topbar-title { font-size: 1.2rem; }
 }

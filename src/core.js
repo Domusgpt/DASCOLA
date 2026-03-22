@@ -17,11 +17,16 @@ var LAYER_IDS = {
   depth:      'fleetCanvasDepth',
   currents:   'fleetCanvasCurrents',
   coast:      'fleetCanvasCoast',
+  markers:    'fleetCanvasMarkers',
+  weather:    'fleetCanvasWeather',
   vessels:    'fleetCanvasVessels',
   atmosphere: 'fleetCanvasAtmo',
 };
 
-var LAYER_NAMES = ['depth', 'currents', 'coast', 'vessels', 'atmosphere'];
+var LAYER_NAMES = ['depth', 'currents', 'coast', 'markers', 'weather', 'vessels', 'atmosphere'];
+
+// Layers that are optional — don't throw if canvas is missing
+var OPTIONAL_LAYERS = { markers: true, weather: true };
 
 export class CanvasManager {
   /**
@@ -51,7 +56,26 @@ export class CanvasManager {
         canvas = container.querySelector('[data-layer="' + name + '"]');
       }
       if (!canvas) {
-        throw new Error('FleetMap: missing canvas #' + canvasId);
+        if (OPTIONAL_LAYERS[name]) {
+          // Optional layers: create canvas dynamically if not in DOM
+          canvas = document.createElement('canvas');
+          canvas.id = canvasId;
+          canvas.style.position = 'absolute';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.pointerEvents = 'none';
+          // Insert before the vessels canvas to maintain correct z-order
+          // (markers and weather should be between coast and vessels)
+          var mapArea = container.querySelector('.fleet-map-area') || container;
+          var vesselCanvas = mapArea.querySelector('#fleetCanvasVessels');
+          if (vesselCanvas) {
+            mapArea.insertBefore(canvas, vesselCanvas);
+          } else {
+            mapArea.appendChild(canvas);
+          }
+        } else {
+          throw new Error('FleetMap: missing canvas #' + canvasId);
+        }
       }
       this.layers[name] = {
         canvas: canvas,
@@ -71,6 +95,13 @@ export class CanvasManager {
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     var w = rect.width;
     var h = rect.height;
+
+    // If container has no dimensions yet (layout pending), retry shortly
+    if (w < 1 || h < 1) {
+      var self = this;
+      setTimeout(function () { self.resize(); }, 50);
+      return;
+    }
 
     this.w = w;
     this.h = h;
