@@ -205,6 +205,84 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
 }
 #tourStatus.visible{opacity:1}
 
+/* ─── Loading Overlay ─── */
+#loadingOverlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--deep);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .8s ease;
+}
+#loadingOverlay.fade-out{opacity:0;pointer-events:none}
+#loadingOverlay h2{font:600 1.4rem var(--font-display);color:var(--ouro);letter-spacing:.06em;margin-bottom:20px}
+#loadingOverlay .load-bar{width:180px;height:2px;background:rgba(212,165,74,.15);border-radius:2px;overflow:hidden;position:relative}
+#loadingOverlay .load-bar::after{
+  content:'';position:absolute;left:0;top:0;height:100%;width:40%;
+  background:linear-gradient(90deg,transparent,var(--ouro),transparent);
+  animation:load-sweep 1.2s ease-in-out infinite;
+}
+@keyframes load-sweep{0%{left:-40%}100%{left:100%}}
+
+/* ─── Top Bar Title Underline ─── */
+#topBar h1{position:relative;display:inline-block}
+#topBar h1::after{
+  content:'';position:absolute;left:0;bottom:-3px;height:1.5px;width:100%;
+  background:linear-gradient(90deg,transparent,var(--ouro),transparent);
+  animation:title-glow 3s ease-in-out infinite;
+}
+@keyframes title-glow{0%,100%{opacity:.3;transform:scaleX(.7)}50%{opacity:.8;transform:scaleX(1)}}
+.last-update{font:300 .5rem var(--font-mono);color:rgba(156,197,201,.5);margin-top:3px}
+
+/* ─── Port Nav Separators & Labels ─── */
+.port-nav-label{
+  flex:0 0 auto;padding:4px 8px;
+  font:500 .5rem var(--font-sans);color:rgba(212,165,74,.5);
+  text-transform:uppercase;letter-spacing:.15em;white-space:nowrap;
+}
+.port-nav-sep{
+  flex:0 0 auto;width:1px;height:20px;margin:0 6px;
+  background:linear-gradient(180deg,transparent,rgba(212,165,74,.25),transparent);
+}
+
+/* ─── Vessel Card Status Dot & Detail ─── */
+.vessel-card .v-name-row{display:flex;align-items:center;gap:6px}
+.vessel-card .v-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.vessel-card .v-status-dot.fishing{background:#4ECDC4;box-shadow:0 0 4px rgba(78,205,196,.5)}
+.vessel-card .v-status-dot.returning{background:var(--ouro);box-shadow:0 0 4px rgba(212,165,74,.5)}
+.vessel-card .v-detail{font:300 .55rem var(--font-sans);color:rgba(156,197,201,.45);line-height:1.4;margin-top:4px}
+
+/* ─── Nearby Vessels Section ─── */
+.nearby-vessels{margin-top:14px;padding-top:12px;border-top:1px solid rgba(212,165,74,.1)}
+.nearby-vessels h3{font:500 .6rem var(--font-sans);color:var(--ouro);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.nearby-vessel-item{display:flex;align-items:center;gap:6px;padding:4px 0;font:300 .65rem var(--font-sans);color:var(--blade)}
+.nearby-vessel-item .nv-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.nearby-vessel-item .nv-dot.fishing{background:#4ECDC4}
+.nearby-vessel-item .nv-dot.returning{background:var(--ouro)}
+.nearby-vessel-item .nv-status{font:300 .5rem var(--font-mono);color:rgba(156,197,201,.4);margin-left:auto}
+
+/* ─── Port Marker Hover Scale ─── */
+.port-marker{transition:transform .3s ease}
+.port-marker:hover{transform:scale(1.5);z-index:5}
+
+/* ─── Vessel Label Fade on Hover ─── */
+.vessel-label{opacity:0;transition:opacity .3s ease}
+.vessel-marker:hover .vessel-label{opacity:1}
+
+/* ─── Map Attribution Dark Theme ─── */
+.maplibregl-ctrl-attrib{
+  background:rgba(3,8,16,.7)!important;color:rgba(156,197,201,.4)!important;
+  font-size:.55rem!important;border-radius:4px 0 0 0!important;
+  backdrop-filter:blur(4px)!important;
+}
+.maplibregl-ctrl-attrib a{color:rgba(212,165,74,.5)!important}
+
+/* ─── Smooth Panel Transitions ─── */
+#sidebar{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+#portInfo{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+#sidebar:not(.open){opacity:0}
+#portInfo:not(.open){opacity:0}
+#sidebar.open{opacity:1}
+#portInfo.open{opacity:1}
+
 /* ─── Responsive ─── */
 @media(max-width:600px){
   #sidebar{width:200px}
@@ -212,10 +290,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   .top-stats{gap:12px}
   .port-btn{padding:5px 10px;font-size:.6rem}
 }
+@media(max-width:768px){
+  #portNav{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  #portNav::-webkit-scrollbar{display:none}
+  #sidebar{transform:translateX(-260px)}
+  #sidebar.open{transform:translateX(0)}
+  #portInfo{
+    position:absolute;top:auto;bottom:50px;right:0;left:0;width:100%;
+    border-radius:12px 12px 0 0;max-height:50vh;overflow-y:auto;
+    transform:translateY(100%);
+  }
+  #portInfo.open{transform:translateY(0)}
+}
 </style>
 </head>
 
 <body>
+
+<!-- ─── Loading Overlay ─── -->
+<div id="loadingOverlay">
+  <h2>D'Ascola Fleet Console</h2>
+  <div class="load-bar"></div>
+</div>
 
 <!-- ─── Map Container ─── -->
 <div id="map"></div>
@@ -229,6 +328,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   <div>
     <h1>D'Ascola Fleet Console</h1>
     <div class="subtitle">Est. 1893 &middot; Santos, Brazil</div>
+    <div class="last-update" id="lastUpdate">AIS: Simulated</div>
   </div>
   <div class="top-stats">
     <div class="top-stat"><div class="val" id="statVessels">5</div><div class="lbl">Vessels</div></div>
@@ -254,6 +354,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   <div class="port-region" id="piRegion"></div>
   <p class="port-desc" id="piDesc"></p>
   <div class="port-stat-grid" id="piStats"></div>
+  <div class="nearby-vessels" id="piNearby"></div>
 </div>
 
 <!-- ─── Tour Controls ─── -->
@@ -476,6 +577,13 @@ map.on('load', () => {
   buildPortNav();
   buildVesselRoster();
 
+  // ── Dismiss loading overlay ──
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.classList.add('fade-out');
+    setTimeout(() => loadingOverlay.remove(), 900);
+  }
+
   // ── Opening animation ──
   setTimeout(() => {
     map.flyTo({ center:[-44,-15], zoom:3.8, pitch:20, bearing:5, duration:3000 });
@@ -494,7 +602,13 @@ function buildPortNav() {
     { label:'Caribbean', ports: PORTS.filter(p=>p.region&&p.region.includes('Caribbean')), dotClass:'cb' },
     { label:'USA', ports: PORTS.filter(p=>p.region&&p.region.includes('USA')), dotClass:'us' },
   ];
-  groups.forEach(g => {
+  groups.forEach((g, gi) => {
+    // Region label
+    const label = document.createElement('span');
+    label.className = 'port-nav-label';
+    label.textContent = g.label;
+    nav.appendChild(label);
+
     g.ports.forEach(p => {
       const btn = document.createElement('button');
       btn.className = `port-btn ${p.size}`;
@@ -506,6 +620,13 @@ function buildPortNav() {
       });
       nav.appendChild(btn);
     });
+
+    // Separator between groups (not after last)
+    if (gi < groups.length - 1) {
+      const sep = document.createElement('div');
+      sep.className = 'port-nav-sep';
+      nav.appendChild(sep);
+    }
   });
 }
 
@@ -515,10 +636,11 @@ function buildVesselRoster() {
     const card = document.createElement('div');
     card.className = 'vessel-card';
     card.innerHTML = `
-      <div class="v-name">${v.name}</div>
+      <div class="v-name-row"><span class="v-status-dot ${v.status.toLowerCase()}"></span><div class="v-name">${v.name}</div></div>
       <div class="v-type">${v.type}</div>
       <span class="v-status ${v.status.toLowerCase()}">${v.status}</span>
       <div class="v-catch">${v.catch}${v.captain ? ' · Capt. '+v.captain : ''}</div>
+      ${v.detail ? `<div class="v-detail">${v.detail}</div>` : ''}
       <div class="v-speed">${v.speed} kn · ${v.heading}°</div>
     `;
     card.addEventListener('click', () => flyToVessel(v));
@@ -572,6 +694,18 @@ function flyToPort(port) {
       d.innerHTML = `<div class="ps-val">${v}</div><div class="ps-lbl">${k}</div>`;
       statsEl.appendChild(d);
     });
+  }
+
+  // Nearby vessels (within ~5 degrees lat/lon)
+  const nearbyEl = document.getElementById('piNearby');
+  const nearby = VESSELS.filter(v => Math.abs(v.lat - port.lat) < 5 && Math.abs(v.lon - port.lon) < 5);
+  if (nearby.length > 0) {
+    nearbyEl.innerHTML = '<h3>Nearby Vessels</h3>' + nearby.map(v =>
+      `<div class="nearby-vessel-item"><span class="nv-dot ${v.status.toLowerCase()}"></span>${v.name}<span class="nv-status">${v.status}</span></div>`
+    ).join('');
+    nearbyEl.style.display = '';
+  } else {
+    nearbyEl.style.display = 'none';
   }
 
   // Show panel after camera starts moving
@@ -995,10 +1129,13 @@ function updateAISStatus(ok, count, updated) {
     el.style.cssText = 'font:300 .55rem var(--font-mono);color:var(--blade);text-align:right';
     document.querySelector('.top-stats').appendChild(el);
   }
+  const tsEl = document.getElementById('lastUpdate');
   if (ok) {
     el.innerHTML = `<span style="color:#4ECDC4">● LIVE</span> ${updated}v · #${count}`;
+    if (tsEl) tsEl.textContent = 'AIS: ' + new Date().toLocaleTimeString();
   } else {
     el.innerHTML = `<span style="color:#E74C3C">● ERR</span> retry...`;
+    if (tsEl) tsEl.textContent = 'AIS: Error';
   }
 }
 
@@ -1017,6 +1154,7 @@ map.on('load', () => {
     updateAISStatus(true, 0, 0);
     let statusEl = document.getElementById('aisStatus');
     if (statusEl) statusEl.innerHTML = '<span style="color:var(--ouro)">● SIM</span> drift';
+    document.getElementById('lastUpdate').textContent = 'AIS: Simulated';
     setInterval(simulateVesselDrift, 2000);
   }
 });
