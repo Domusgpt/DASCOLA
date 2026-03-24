@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viking Village Fleet Map — Barnegat Light, NJ</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
+
+  <!-- Fleet Map Styles -->
+  <link rel="stylesheet" href="viking-village-map/styles.css">
+
+  <style>
+    /* Reset */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0F1B3D;
+      color: #D4B896;
+      font-family: 'Josefin Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Hero header */
+    .vv-hero {
+      text-align: center;
+      padding: 3rem 2rem 1rem;
+      position: relative;
+    }
+
+    .vv-hero h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 400;
+      color: #C41E3A;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.5rem;
+    }
+
+    .vv-hero .subtitle {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 200;
+      font-size: 0.8rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #3BA99C;
+      opacity: 0.7;
+    }
+
+    .vv-hero .est {
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.6rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: #D4B896;
+      opacity: 0.4;
+      margin-top: 0.4rem;
+    }
+
+    /* Decorative line */
+    .vv-divider {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #C41E3A, transparent);
+      margin: 1.5rem auto;
+      opacity: 0.3;
+    }
+
+    /* Footer */
+    .vv-footer {
+      text-align: center;
+      padding: 2rem;
+      font-weight: 200;
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #D4B896;
+      opacity: 0.25;
+    }
+
+    .vv-footer a {
+      color: #3BA99C;
+      text-decoration: none;
+    }
+
+    /* Framed screen mode — for the home decor product */
+    @media (min-aspect-ratio: 16/9) and (min-width: 1200px) {
+      .vv-hero { padding-top: 1.5rem; }
+      .fleet-map-wrap { padding: 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="vv-hero">
+    <h1>Viking Village</h1>
+    <div class="subtitle">Commercial Fishing Fleet &middot; Barnegat Light</div>
+    <div class="est">Est. 1927 &middot; Long Beach Island, New Jersey</div>
+    <div class="vv-divider"></div>
+  </header>
+
+  <!-- Fleet Map Section -->
+  <section class="fleet-section" id="fleet">
+    <div class="fleet-map-wrap">
+
+      <!-- Map + Roster -->
+      <div class="fleet-map-panel-wrap">
+
+        <!-- Roster Panel -->
+        <aside class="fleet-roster" id="fleetRoster">
+          <div class="fleet-roster-title">FLEET ROSTER</div>
+          <div id="rosterList"></div>
+        </aside>
+
+        <!-- Map -->
+        <div class="fleet-map" id="fleetMap">
+          <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasCurrents"></canvas>
+          <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasVessels"></canvas>
+          <canvas id="fleetCanvasAtmo"></canvas>
+
+          <!-- Tooltip -->
+          <div class="vessel-info" id="vesselInfo">
+            <h4 id="viName"></h4>
+            <p id="viDetail"></p>
+            <span class="vi-status" id="viStatus"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="fleet-legend">
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-vessel"></span> Vessel
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-port"></span> Port
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-route"></span> Shipping Route
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-fishing"></span> Active Fishing Zone
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="fleet-stats">
+        <div class="fleet-stat">
+          <div class="fleet-stat-n fleet-stat-0">22</div>
+          <div class="fleet-stat-l">Vessels</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n fleet-stat-1">17</div>
+          <div class="fleet-stat-l">Fishing</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n fleet-stat-2">1</div>
+          <div class="fleet-stat-l">In Transit</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n fleet-stat-3">2</div>
+          <div class="fleet-stat-l">In Port</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n fleet-stat-4">3</div>
+          <div class="fleet-stat-l">Returning</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="vv-footer">
+    Viking Village &middot; 19th St. & Bayview Ave. &middot; Barnegat Light, NJ 08006
+    <br>
+    <a href="https://www.vikingvillage.net" target="_blank" rel="noopener">vikingvillage.net</a>
+  </footer>
+
+  <!-- Fleet Map Module -->
+  <script type="module">
+    import { FleetMap } from './viking-village-map/index.js';
+
+    // Viking Village fleet configuration
+    var map = new FleetMap('#fleetMap', {
+      title: 'Viking Village',
+      subtitle: 'Est. 1927 · Barnegat Light, NJ',
+      bounds: { latN: 40.8, latS: 38.8, lonW: -74.35, lonE: -71.2 },
+
+      // Barnegat Lighthouse position (used for compass rose)
+      lighthouse: { lat: 39.7644, lon: -74.1061 },
+
+      vessels: [
+        { name: 'F/V Karen L',          mmsi: null, lat: 39.85, lon: -73.65, heading: 135, speed: 4.2, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Lucky Thirteen',    mmsi: null, lat: 39.72, lon: -73.80, heading: 220, speed: 3.8, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V C.B. Keane',        mmsi: null, lat: 39.90, lon: -73.45, heading: 45,  speed: 6.5, type: 'Scalloper',          status: 'In Transit', catch: '\u2014' },
+        { name: 'F/V Madelyn',           mmsi: null, lat: 39.65, lon: -73.50, heading: 190, speed: 3.5, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Ms Manya',          mmsi: null, lat: 39.80, lon: -73.90, heading: 310, speed: 4.0, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Elizabeth',          mmsi: null, lat: 39.76, lon: -74.10, heading: 0,   speed: 0,   type: 'Scalloper',          status: 'In Port',    catch: '\u2014' },
+        { name: 'F/V F. Nelson Blount',   mmsi: null, lat: 39.70, lon: -73.95, heading: 165, speed: 3.2, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Relentless',         mmsi: null, lat: 39.95, lon: -72.40, heading: 80,  speed: 7.8, type: 'Scalloper/Dragger',  status: 'Fishing',    catch: 'Sea Scallops' },
+        { name: 'F/V Alexandria Dawn',    mmsi: null, lat: 39.88, lon: -72.60, heading: 30,  speed: 8.5, type: 'Longliner',          status: 'Fishing',    catch: 'Tuna' },
+        { name: 'F/V Bear',              mmsi: null, lat: 39.78, lon: -73.70, heading: 275, speed: 5.5, type: 'Scalloper/Longliner', status: 'Returning',  catch: 'Sea Scallops' },
+        { name: 'F/V Provider III',       mmsi: null, lat: 39.60, lon: -73.60, heading: 150, speed: 3.0, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Julianne',           mmsi: null, lat: 39.76, lon: -74.11, heading: 0,   speed: 0,   type: 'Scalloper',          status: 'In Port',    catch: '\u2014' },
+        { name: 'F/V Eliza',             mmsi: null, lat: 39.55, lon: -73.75, heading: 340, speed: 6.0, type: 'Gillnetter',         status: 'Fishing',    catch: 'Spiny Dogfish' },
+        { name: 'F/V Dana Christine II',  mmsi: null, lat: 39.40, lon: -73.40, heading: 115, speed: 7.2, type: 'Longliner',          status: 'Fishing',    catch: 'Golden Tilefish' },
+        { name: 'F/V Lindsay L',          mmsi: null, lat: 39.82, lon: -73.20, heading: 250, speed: 5.0, type: 'Scalloper',          status: 'Returning',  catch: 'Sea Scallops' },
+        { name: 'F/V Gipper',            mmsi: null, lat: 39.68, lon: -73.85, heading: 195, speed: 3.6, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Sea Dog',           mmsi: null, lat: 39.92, lon: -73.30, heading: 60,  speed: 5.8, type: 'Scalloper',          status: 'Scalloping', catch: 'Sea Scallops' },
+        { name: 'F/V Sea Farmer',        mmsi: null, lat: 39.50, lon: -73.10, heading: 140, speed: 7.0, type: 'Longliner',          status: 'Fishing',    catch: 'Golden Tilefish' },
+        { name: 'F/V Frances Anne',      mmsi: null, lat: 39.75, lon: -72.30, heading: 95,  speed: 8.2, type: 'Longliner',          status: 'Fishing',    catch: 'Swordfish' },
+        { name: 'F/V Eaglet II',         mmsi: null, lat: 39.45, lon: -72.80, heading: 210, speed: 6.8, type: 'Longliner',          status: 'Fishing',    catch: 'Tuna' },
+        { name: 'F/V Monica',            mmsi: null, lat: 39.58, lon: -72.50, heading: 170, speed: 7.5, type: 'Longliner',          status: 'Fishing',    catch: 'Swordfish' },
+      ],
+
+      ports: [
+        { name: 'Viking Village',  lat: 39.758, lon: -74.108, size: 'major' },
+        { name: 'Barnegat Light',  lat: 39.764, lon: -74.106, size: 'minor' },
+        { name: 'Point Pleasant',  lat: 40.08,  lon: -74.05,  size: 'minor' },
+        { name: 'Atlantic City',   lat: 39.36,  lon: -74.42,  size: 'minor' },
+        { name: 'Sandy Hook',      lat: 40.46,  lon: -73.99,  size: 'minor' },
+        { name: 'Cape May',        lat: 38.95,  lon: -74.90,  size: 'minor' },
+      ],
+
+      routes: [
+        { name: 'Hudson Canyon Run', points: [
+          [39.758,-74.108],[39.78,-73.80],[39.82,-73.50],[39.88,-73.00],[39.92,-72.50],[39.95,-72.20]
+        ]},
+        { name: 'Fulton Fish Market (NYC)', points: [
+          [39.758,-74.108],[39.90,-74.00],[40.10,-73.90],[40.30,-73.85],[40.50,-74.00],[40.70,-74.00]
+        ]},
+      ],
+    });
+
+    // Auto-start the map
+    map.start();
+  </script>
+
+</body>
+</html>

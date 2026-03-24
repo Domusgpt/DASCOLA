@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D'Ascola Seafood — Fleet Operations</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Fleet Map CSS -->
+  <link rel="stylesheet" href="fleet-map/styles.css">
+
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       D'ASCOLA SEAFOOD — PREMIUM SITE STYLES
+       ═══════════════════════════════════════════════════════ */
+
+    /* Override fleet-map CSS vars for DASCOLA brand */
+    :root {
+      --fm-accent:       #D4A54A;
+      --fm-accent-lt:    #E8C06A;
+      --fm-accent-dim:   rgba(212, 165, 74, 0.08);
+      --fm-deep:         #030810;
+      --fm-ocean-mid:    rgba(8, 28, 58, 0.4);
+      --fm-ocean-shelf:  #14375A;
+      --fm-land:         #0A7E6E;
+      --fm-land-dark:    #06342D;
+      --fm-land-deep:    rgba(10, 75, 62, 0.95);
+      --fm-text:         #F5EDD8;
+      --fm-text-warm:    #DDD4C0;
+      --fm-text-muted:   #9CC5C9;
+      --fm-status-fishing:   var(--fm-accent);
+      --fm-status-transit:   var(--fm-text-muted);
+      --fm-status-returning: var(--fm-text-muted);
+      --fm-status-port:      var(--fm-land);
+      --fm-font-display: 'Cormorant Garamond', Georgia, serif;
+      --fm-font-sans:    'Josefin Sans', sans-serif;
+      --fm-max-width:    1500px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #020508;
+      color: var(--fm-text);
+      font-family: var(--fm-font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── Hero Section ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(8,28,58,0.5), transparent 70%),
+        radial-gradient(ellipse at 70% 60%, rgba(10,126,110,0.08), transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(212,165,74,0.04), transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Animated wave SVG background */
+    .hero-waves {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0.15;
+    }
+
+    .hero-waves svg {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 100%;
+      animation: wave-drift 18s linear infinite;
+    }
+
+    @keyframes wave-drift {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 2rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-family: var(--fm-font-sans);
+      font-weight: 300;
+      font-size: 0.6rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--fm-accent);
+      border: 1px solid rgba(212,165,74,0.2);
+      padding: 0.4rem 1.5rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .hero h1 {
+      font-family: var(--fm-font-display);
+      font-weight: 300;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      color: var(--fm-text);
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--fm-accent);
+    }
+
+    .hero-sub {
+      font-family: var(--fm-font-sans);
+      font-weight: 200;
+      font-size: clamp(0.75rem, 1.2vw, 1rem);
+      letter-spacing: 0.2em;
+      color: var(--fm-text-muted);
+      margin-bottom: 3rem;
+    }
+
+    .hero-divider {
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--fm-accent), transparent);
+      margin: 0 auto 2rem;
+    }
+
+    .hero-scroll {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--fm-font-sans);
+      font-size: 0.5rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(212,165,74,0.4);
+      text-decoration: none;
+      animation: scroll-pulse 2.5s ease-in-out infinite;
+    }
+
+    .hero-scroll .arrow {
+      width: 1px;
+      height: 30px;
+      background: linear-gradient(180deg, rgba(212,165,74,0.3), transparent);
+    }
+
+    @keyframes scroll-pulse {
+      0%, 100% { opacity: 0.4; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(5px); }
+    }
+
+    /* ── About Strip ── */
+    .about-strip {
+      position: relative;
+      padding: 5rem 2rem;
+      text-align: center;
+      background: linear-gradient(180deg, #020508 0%, #030810 50%, #020508 100%);
+      border-top: 1px solid rgba(212,165,74,0.04);
+      border-bottom: 1px solid rgba(212,165,74,0.04);
+    }
+
+    .about-strip .inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: block;
+      font-family: var(--fm-font-sans);
+      font-weight: 300;
+      font-size: 0.55rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: var(--fm-accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .about-strip h2 {
+      font-family: var(--fm-font-display);
+      font-weight: 300;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: var(--fm-text);
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+    }
+
+    .about-strip p {
+      font-weight: 200;
+      font-size: 0.85rem;
+      line-height: 2;
+      letter-spacing: 0.05em;
+      color: var(--fm-text-warm);
+      opacity: 0.7;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      margin-top: 3rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-item .num {
+      font-family: var(--fm-font-display);
+      font-weight: 300;
+      font-size: 2.4rem;
+      color: var(--fm-accent);
+    }
+
+    .stat-item .label {
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--fm-text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Fleet Map Section (overrides) ── */
+    .fleet-section {
+      background: linear-gradient(180deg, #020508, var(--fm-deep), #020508);
+    }
+
+    .fleet-header h2 {
+      font-family: var(--fm-font-display);
+      font-weight: 300;
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      color: var(--fm-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .fleet-header p {
+      font-weight: 200;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fm-text-muted);
+    }
+
+    /* Theme switcher bar */
+    .theme-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .theme-btn {
+      font-family: var(--fm-font-sans);
+      font-weight: 300;
+      font-size: 0.5rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fm-text-muted);
+      background: rgba(4,10,16,0.6);
+      border: 1px solid rgba(212,165,74,0.08);
+      padding: 0.35rem 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .theme-btn:hover {
+      border-color: rgba(212,165,74,0.25);
+      color: var(--fm-accent);
+    }
+
+    .theme-btn.active {
+      background: rgba(212,165,74,0.08);
+      border-color: rgba(212,165,74,0.35);
+      color: var(--fm-accent);
+    }
+
+    /* Enhance roster for DASCOLA */
+    .fleet-roster {
+      border-color: rgba(212,165,74,0.06);
+    }
+
+    .roster-item-name {
+      font-family: var(--fm-font-display);
+      font-weight: 400;
+      font-size: 0.8rem;
+    }
+
+    /* ── Contact / Footer ── */
+    .site-footer {
+      position: relative;
+      padding: 4rem 2rem 2rem;
+      text-align: center;
+      background: #020508;
+      border-top: 1px solid rgba(212,165,74,0.04);
+    }
+
+    .footer-brand {
+      font-family: var(--fm-font-display);
+      font-weight: 300;
+      font-size: 1.4rem;
+      color: var(--fm-accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-tagline {
+      font-weight: 200;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--fm-text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-weight: 200;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fm-text-warm);
+      text-decoration: none;
+      opacity: 0.5;
+      transition: opacity 0.3s, color 0.3s;
+    }
+
+    .footer-links a:hover {
+      opacity: 1;
+      color: var(--fm-accent);
+    }
+
+    .footer-copy {
+      font-weight: 200;
+      font-size: 0.5rem;
+      letter-spacing: 0.1em;
+      color: var(--fm-text-warm);
+      opacity: 0.25;
+    }
+
+    /* ── Smooth entry animations ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Custom scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #030810; }
+    ::-webkit-scrollbar-thumb { background: rgba(212,165,74,0.15); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(212,165,74,0.3); }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .stat-row { gap: 2rem; }
+      .theme-bar { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════════ -->
+  <section class="hero">
+    <div class="hero-waves">
+      <svg viewBox="0 0 2400 200" preserveAspectRatio="none">
+        <path d="M0,120 C200,80 400,160 600,120 C800,80 1000,160 1200,120 C1400,80 1600,160 1800,120 C2000,80 2200,160 2400,120 L2400,200 L0,200 Z" fill="rgba(212,165,74,0.15)"/>
+        <path d="M0,140 C150,100 350,180 550,140 C750,100 950,180 1150,140 C1350,100 1550,180 1750,140 C1950,100 2150,180 2400,140 L2400,200 L0,200 Z" fill="rgba(10,126,110,0.1)"/>
+      </svg>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">Est. Santos, Brazil</div>
+      <h1>D'Ascola <em>Seafood</em></h1>
+      <div class="hero-divider"></div>
+      <p class="hero-sub">Premium Brazilian Fleet Operations</p>
+    </div>
+    <a href="#about" class="hero-scroll">
+      Explore
+      <span class="arrow"></span>
+    </a>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       ABOUT STRIP
+       ═══════════════════════════════════════════════ -->
+  <section class="about-strip" id="about">
+    <div class="inner fade-in">
+      <span class="section-label">About</span>
+      <h2>D'Ascola Seafood</h2>
+      <p>
+        <!-- Placeholder — replace with real company copy -->
+        Premium seafood sourced from the South Atlantic. Our fleet operates
+        across the Brazilian coast, from Santos to Salvador, bringing the
+        finest catch to market every day.
+      </p>
+      <div class="stat-row" id="aboutStats">
+        <!-- Stats populated dynamically from vessel data -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       FLEET MAP
+       ═══════════════════════════════════════════════ -->
+  <section class="fleet-section" id="fleet">
+    <div class="fleet-map-wrap">
+
+      <div class="fleet-header fade-in">
+        <span class="section-label">Live Operations</span>
+        <h2>Fleet Tracking</h2>
+        <p>Real-time vessel positions across the South Atlantic</p>
+      </div>
+
+      <!-- Theme switcher -->
+      <div class="theme-bar fade-in">
+        <button class="theme-btn active" data-theme="dascola">D'Ascola</button>
+        <button class="theme-btn" data-theme="classic-nautical">Classic</button>
+        <button class="theme-btn" data-theme="treasure-map">Treasure</button>
+        <button class="theme-btn" data-theme="tactical">Tactical</button>
+        <button class="theme-btn" data-theme="tropical">Tropical</button>
+        <button class="theme-btn" data-theme="minimal">Minimal</button>
+      </div>
+
+      <div class="fleet-map-panel-wrap">
+        <!-- Roster panel -->
+        <div class="fleet-roster" id="fleetRoster">
+          <div class="fleet-roster-title">Fleet Vessels</div>
+        </div>
+
+        <!-- Map canvases -->
+        <div class="fleet-map" id="fleetMap">
+          <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasCurrents"></canvas>
+          <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasMarkers"></canvas>
+          <canvas id="fleetCanvasWeather"></canvas>
+          <canvas id="fleetCanvasVessels"></canvas>
+          <canvas id="fleetCanvasAtmo"></canvas>
+          <div class="vessel-info" id="vesselTooltip">
+            <h4 id="viName"></h4>
+            <p id="viDetails"></p>
+            <span class="vi-status" id="viStatus"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="fleet-legend fade-in">
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-vessel"></span>
+          Active Vessel
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-port"></span>
+          Port
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-route"></span>
+          Shipping Route
+        </div>
+        <div class="fleet-legend-item">
+          <span class="fleet-legend-dot dot-fishing"></span>
+          Fishing Zone
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="fleet-stats fade-in">
+        <div class="fleet-stat">
+          <div class="fleet-stat-n" id="statTotal">7</div>
+          <div class="fleet-stat-l">Total Fleet</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n" id="statFishing">4</div>
+          <div class="fleet-stat-l">Fishing</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n" id="statTransit">1</div>
+          <div class="fleet-stat-l">In Transit</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n" id="statPort">1</div>
+          <div class="fleet-stat-l">In Port</div>
+        </div>
+        <div class="fleet-stat">
+          <div class="fleet-stat-n" id="statReturning">1</div>
+          <div class="fleet-stat-l">Returning</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="footer-brand">D'Ascola Seafood</div>
+    <div class="footer-tagline">Fleet Operations</div>
+    <div class="footer-links">
+      <a href="#fleet">Fleet Map</a>
+      <a href="#about">About</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 D'Ascola Seafood. All rights reserved.</div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════
+       INITIALIZATION
+       ═══════════════════════════════════════════════ -->
+  <script type="module">
+    import { FleetMap } from './fleet-map/index.js';
+
+    // Load vessel data
+    var response = await fetch('./fleet-map/vessels.json');
+    var data = await response.json();
+
+    // Initialize the fleet map with DASCOLA theme
+    var map = new FleetMap('#fleetMap', {
+      title: "D'Ascola Seafood",
+      subtitle: 'South Atlantic Fleet Operations',
+      bounds: { latN: -12, latS: -35, lonW: -55, lonE: -25 },
+      vessels: data.vessels,
+      ports: data.ports,
+      routes: data.routes,
+      theme: 'dascola',
+      colors: {
+        deep:      'rgba(3,8,16,1)',
+        ouro:      'rgba(212,165,74,1)',
+        verde:     'rgba(10,126,110,1)',
+        blade:     'rgba(156,197,201,1)',
+        creme:     'rgba(245,237,216,1)',
+        land:      ['rgba(6,52,45,0.7)', 'rgba(10,75,62,0.55)', 'rgba(6,52,45,0.4)'],
+        ocean:     ['rgba(8,28,58,0.4)', 'rgba(6,22,45,0.25)', 'rgba(3,8,16,0.05)'],
+        fathom:    'rgba(20,55,88,0.14)',
+        grid:      'rgba(212,165,74,0.035)',
+        coastGlow: 'rgba(212,165,74,0.12)',
+        coastLine: 'rgba(212,165,74,0.45)',
+      },
+      fonts: {
+        display: '"Cormorant Garamond", Georgia, serif',
+        sans:    '"Josefin Sans", sans-serif',
+      },
+      particleCount: 300,
+      particleCountMobile: 120,
+    });
+
+    map.start();
+
+    // ── Theme Switcher ──
+    document.querySelectorAll('.theme-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.theme-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var themeId = btn.getAttribute('data-theme');
+        map.setTheme(themeId);
+      });
+    });
+
+    // ── Fade-in on scroll ──
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in').forEach(function(el) {
+      observer.observe(el);
+    });
+
+    // ── Build stats dynamically from actual data ──
+    function updateStats() {
+      var vessels = data.vessels;
+      var ports = data.ports;
+      var counts = { total: vessels.length, fishing: 0, transit: 0, port: 0, returning: 0 };
+      vessels.forEach(function(v) {
+        var s = (v.status || '').toLowerCase();
+        if (s === 'fishing') counts.fishing++;
+        else if (s === 'in transit') counts.transit++;
+        else if (s === 'in port') counts.port++;
+        else if (s === 'returning') counts.returning++;
+      });
+
+      // Fleet stats bar (below map)
+      document.getElementById('statTotal').textContent = counts.total;
+      document.getElementById('statFishing').textContent = counts.fishing;
+      document.getElementById('statTransit').textContent = counts.transit;
+      document.getElementById('statPort').textContent = counts.port;
+      document.getElementById('statReturning').textContent = counts.returning;
+
+      // About section stats (derived from actual data)
+      var aboutEl = document.getElementById('aboutStats');
+      if (aboutEl) {
+        aboutEl.innerHTML =
+          '<div class="stat-item"><div class="num">' + vessels.length + '</div><div class="label">Active Vessels</div></div>' +
+          '<div class="stat-item"><div class="num">' + ports.length + '</div><div class="label">Ports</div></div>' +
+          '<div class="stat-item"><div class="num">' + (data.routes ? data.routes.length : 0) + '</div><div class="label">Routes</div></div>' +
+          '<div class="stat-item"><div class="num">24/7</div><div class="label">Fleet Tracking</div></div>';
+      }
+    }
+    updateStats();
+  </script>
+
+</body>
+</html>

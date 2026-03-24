@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D'Ascola Fleet Console</title>
+
+<!-- MapLibre GL JS -->
+<link rel="stylesheet" href="lib/maplibre-gl.css">
+<script src="lib/maplibre-gl.js"></script>
+
+<!-- Three.js -->
+<script src="lib/three.min.js"></script>
+
+<!-- GSAP -->
+<script src="lib/gsap.min.js"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Josefin+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+/* ─── Reset & Base ─── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --deep:#030810;  --ouro:#D4A54A;  --ouro-lt:rgba(212,165,74,.35);
+  --verde:#0A7E6E; --blade:#9CC5C9; --creme:#F5EDD8;
+  --glass:rgba(3,8,16,.72); --glass-border:rgba(212,165,74,.18);
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-sans:'Josefin Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:var(--creme);font-family:var(--font-sans)}
+
+/* ─── Map ─── */
+#map{position:absolute;inset:0;z-index:1}
+
+/* ─── Holographic Overlay Canvas ─── */
+#holoCanvas{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:screen;opacity:.12}
+
+/* ─── Scanline Overlay ─── */
+.scanlines{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(212,165,74,.015) 2px,rgba(212,165,74,.015) 4px);
+}
+
+/* ─── Glass Panel Base ─── */
+.glass{
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+  border-radius:8px;
+  box-shadow:0 0 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(212,165,74,.08);
+}
+
+/* ─── Top Bar ─── */
+#topBar{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;
+  background:linear-gradient(180deg,rgba(3,8,16,.92) 0%,rgba(3,8,16,.6) 70%,transparent 100%);
+  border-bottom:1px solid rgba(212,165,74,.1);
+}
+#topBar h1{font:600 1.1rem var(--font-display);color:var(--ouro);letter-spacing:.04em}
+#topBar .subtitle{font:300 .65rem var(--font-sans);color:var(--blade);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+.top-stats{display:flex;gap:20px}
+.top-stat{text-align:center}
+.top-stat .val{font:500 1.1rem var(--font-mono);color:var(--ouro)}
+.top-stat .lbl{font:300 .55rem var(--font-sans);color:var(--blade);text-transform:uppercase;letter-spacing:.12em;margin-top:1px}
+
+/* ─── Port Navigation Bar ─── */
+#portNav{
+  position:absolute;bottom:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;gap:2px;
+  padding:8px 12px;
+  background:linear-gradient(0deg,rgba(3,8,16,.92) 0%,rgba(3,8,16,.6) 70%,transparent 100%);
+  border-top:1px solid rgba(212,165,74,.1);
+  overflow-x:auto;
+}
+.port-btn{
+  flex:0 0 auto;padding:6px 14px;border:1px solid rgba(212,165,74,.15);
+  border-radius:20px;background:rgba(3,8,16,.6);
+  font:400 .7rem var(--font-sans);color:var(--blade);cursor:pointer;
+  transition:all .3s ease;white-space:nowrap;
+}
+.port-btn:hover,.port-btn.active{
+  background:rgba(212,165,74,.15);border-color:var(--ouro);color:var(--ouro);
+  box-shadow:0 0 12px rgba(212,165,74,.2);
+}
+.port-btn.br-major:hover,.port-btn.br-major.active{
+  background:linear-gradient(135deg,rgba(10,126,110,.2),rgba(212,165,74,.2));
+  border-color:var(--verde);color:var(--ouro);
+  box-shadow:0 0 12px rgba(10,126,110,.25),0 0 20px rgba(212,165,74,.15);
+}
+.port-btn.major{font-weight:500}
+.port-btn .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.port-btn .dot.br{background:var(--verde);box-shadow:0 0 4px rgba(10,126,110,.5)}
+.port-btn .dot.us{background:var(--ouro)}
+.port-btn .dot.cb{background:var(--blade)}
+.port-btn.br-major .dot.br{background:linear-gradient(135deg,var(--ouro),var(--verde));box-shadow:0 0 6px rgba(212,165,74,.4)}
+
+/* ─── Sidebar: Vessel Roster ─── */
+#sidebar{
+  position:absolute;top:70px;left:14px;bottom:60px;width:240px;z-index:10;
+  padding:14px;overflow-y:auto;
+  transform:translateX(-260px);transition:transform .5s cubic-bezier(.4,0,.2,1);
+}
+#sidebar.open{transform:translateX(0)}
+#sidebar h2{font:600 .75rem var(--font-sans);color:var(--ouro);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px}
+.vessel-card{
+  padding:10px;margin-bottom:8px;border-radius:6px;cursor:pointer;
+  border:1px solid rgba(212,165,74,.08);background:rgba(3,8,16,.4);
+  transition:all .3s ease;
+}
+.vessel-card:hover{border-color:rgba(212,165,74,.3);background:rgba(212,165,74,.06)}
+.vessel-card .v-name{font:500 .8rem var(--font-sans);color:var(--creme)}
+.vessel-card .v-type{font:300 .6rem var(--font-sans);color:var(--blade);margin-top:2px}
+.vessel-card .v-status{
+  display:inline-block;padding:2px 8px;border-radius:10px;margin-top:5px;
+  font:400 .55rem var(--font-mono);text-transform:uppercase;letter-spacing:.08em;
+}
+.v-status.fishing{background:rgba(10,126,110,.25);color:#4ECDC4}
+.v-status.returning{background:rgba(212,165,74,.2);color:var(--ouro)}
+.vessel-card .v-catch{font:300 .6rem var(--font-sans);color:var(--blade);margin-top:4px}
+.vessel-card .v-speed{font:300 .55rem var(--font-mono);color:rgba(156,197,201,.6);margin-top:2px}
+
+/* ─── Port Info Panel ─── */
+#portInfo{
+  position:absolute;top:70px;right:14px;width:280px;z-index:10;
+  padding:18px;
+  transform:translateX(300px);transition:transform .5s cubic-bezier(.4,0,.2,1);
+}
+#portInfo.open{transform:translateX(0)}
+#portInfo.br-port{border-left:2px solid var(--verde);box-shadow:0 0 30px rgba(10,126,110,.08),inset 0 1px 0 rgba(212,165,74,.08)}
+#portInfo h2{font:600 1.1rem var(--font-display);color:var(--creme);margin-bottom:4px}
+#portInfo .port-region{font:300 .65rem var(--font-sans);color:var(--ouro);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px}
+#portInfo .port-desc{font:300 .75rem var(--font-sans);color:var(--blade);line-height:1.5;margin-bottom:14px}
+.port-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.port-stat{padding:8px;border-radius:4px;background:rgba(3,8,16,.5);border:1px solid rgba(212,165,74,.08)}
+.port-stat .ps-val{font:500 1rem var(--font-mono);color:var(--ouro)}
+.port-stat .ps-lbl{font:300 .55rem var(--font-sans);color:var(--blade);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+#portInfo .close-btn{
+  position:absolute;top:10px;right:10px;width:24px;height:24px;
+  border:none;background:none;color:var(--blade);font-size:1rem;cursor:pointer;
+  opacity:.6;transition:opacity .2s;
+}
+#portInfo .close-btn:hover{opacity:1}
+
+/* ─── Toggle Buttons ─── */
+.toggle-btn{
+  position:absolute;z-index:11;width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--glass-border);background:var(--glass);
+  color:var(--ouro);font-size:.9rem;cursor:pointer;
+  backdrop-filter:blur(8px);transition:all .3s;
+  display:flex;align-items:center;justify-content:center;
+}
+.toggle-btn:hover{background:rgba(212,165,74,.15);box-shadow:0 0 15px rgba(212,165,74,.2)}
+#toggleSidebar{top:76px;left:14px}
+#sidebar.open ~ #toggleSidebar{left:262px}
+#toggleTour{top:76px;right:14px}
+
+/* ─── Map Markers ─── */
+.port-marker{
+  width:12px;height:12px;border-radius:50%;cursor:pointer;
+  transition:all .3s;position:relative;
+}
+.port-marker.major{width:14px;height:14px;background:var(--ouro);box-shadow:0 0 10px rgba(212,165,74,.5),0 0 25px rgba(212,165,74,.2)}
+.port-marker.minor{width:10px;height:10px;background:var(--verde);box-shadow:0 0 8px rgba(10,126,110,.4)}
+.port-marker::after{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:1px solid rgba(212,165,74,.2);
+  animation:pulse-ring 2s ease-out infinite;
+}
+.port-marker.major::after{border-color:rgba(212,165,74,.25)}
+.port-marker.minor::after{border-color:rgba(10,126,110,.2)}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+
+/* ─── Brazilian Port Markers — Special Glory ─── */
+.port-marker.brazil-major{
+  width:18px;height:18px;
+  background:radial-gradient(circle,#D4A54A 35%,#0A7E6E 100%);
+  box-shadow:0 0 12px rgba(212,165,74,.6),0 0 30px rgba(10,126,110,.35),0 0 60px rgba(212,165,74,.15);
+  animation:br-glow-breathe 4s ease-in-out infinite;
+}
+.port-marker.brazil-major::after{
+  inset:-6px;
+  border:2px solid rgba(10,126,110,.35);
+  animation:br-pulse 2.5s ease-out infinite;
+}
+.port-marker.brazil-major::before{
+  content:'';position:absolute;inset:-12px;border-radius:50%;
+  border:1px solid rgba(212,165,74,.12);
+  animation:br-pulse 2.5s ease-out infinite .6s;
+}
+.port-marker.brazil-minor{
+  width:12px;height:12px;
+  background:radial-gradient(circle,#4ECDC4 30%,#0A7E6E 100%);
+  box-shadow:0 0 10px rgba(10,126,110,.5),0 0 25px rgba(78,205,196,.2);
+  animation:br-glow-breathe-minor 4s ease-in-out infinite;
+}
+.port-marker.brazil-minor::after{
+  inset:-5px;
+  border:1.5px solid rgba(10,126,110,.3);
+  animation:br-pulse 2.5s ease-out infinite;
+}
+@keyframes br-pulse{
+  0%{transform:scale(1);opacity:.8}
+  50%{transform:scale(1.8);opacity:.3}
+  100%{transform:scale(2.8);opacity:0}
+}
+@keyframes br-glow-breathe{
+  0%,100%{box-shadow:0 0 12px rgba(212,165,74,.5),0 0 30px rgba(10,126,110,.3),0 0 60px rgba(212,165,74,.1)}
+  50%{box-shadow:0 0 18px rgba(212,165,74,.7),0 0 40px rgba(10,126,110,.45),0 0 80px rgba(212,165,74,.2)}
+}
+@keyframes br-glow-breathe-minor{
+  0%,100%{box-shadow:0 0 8px rgba(10,126,110,.4),0 0 20px rgba(78,205,196,.15)}
+  50%{box-shadow:0 0 14px rgba(10,126,110,.6),0 0 30px rgba(78,205,196,.25)}
+}
+
+/* Brazilian port labels — golden accent */
+.port-marker.brazil-major .port-label{
+  font:600 .65rem var(--font-sans);color:var(--ouro);
+  text-shadow:0 0 10px rgba(212,165,74,.5),0 0 20px rgba(0,0,0,.9);
+  letter-spacing:.12em;
+}
+.port-marker.brazil-minor .port-label{
+  font:500 .58rem var(--font-sans);color:#4ECDC4;
+  text-shadow:0 0 8px rgba(10,126,110,.4),0 0 16px rgba(0,0,0,.9);
+  letter-spacing:.08em;
+}
+
+/* Brazilian flag diamond accent on major BR ports */
+.port-marker.brazil-major .br-diamond{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:6px;height:6px;background:var(--verde);border:1px solid rgba(212,165,74,.5);
+  box-shadow:0 0 6px rgba(10,126,110,.5);
+  animation:diamond-spin 8s linear infinite;
+}
+@keyframes diamond-spin{
+  0%{transform:translateX(-50%) rotate(45deg)}
+  100%{transform:translateX(-50%) rotate(405deg)}
+}
+
+.port-label{
+  font:500 .6rem var(--font-sans);color:var(--creme);text-transform:uppercase;
+  letter-spacing:.1em;white-space:nowrap;text-shadow:0 0 8px rgba(0,0,0,.8);
+  pointer-events:none;position:absolute;left:18px;top:-3px;
+}
+
+.vessel-marker{
+  width:20px;height:20px;cursor:pointer;position:relative;
+}
+.vessel-marker .v-dot{
+  width:8px;height:8px;border-radius:50%;background:#4ECDC4;
+  box-shadow:0 0 8px rgba(78,205,196,.5);position:absolute;top:6px;left:6px;
+  animation:vessel-pulse 1.5s ease-in-out infinite;
+}
+.vessel-marker .v-heading{
+  width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;
+  border-bottom:8px solid #4ECDC4;position:absolute;top:0;left:7px;
+  transform-origin:center 10px;filter:drop-shadow(0 0 3px rgba(78,205,196,.4));
+}
+.vessel-marker.returning .v-dot{background:var(--ouro);box-shadow:0 0 8px rgba(212,165,74,.5)}
+.vessel-marker.returning .v-heading{border-bottom-color:var(--ouro)}
+@keyframes vessel-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.8)}}
+
+.vessel-label{
+  font:400 .55rem var(--font-mono);color:rgba(78,205,196,.8);
+  white-space:nowrap;text-shadow:0 0 6px rgba(0,0,0,.9);
+  pointer-events:none;position:absolute;left:22px;top:2px;
+}
+
+/* ─── Tour Button ─── */
+#tourStatus{
+  position:absolute;bottom:52px;left:50%;transform:translateX(-50%);z-index:10;
+  padding:6px 18px;border-radius:20px;
+  font:400 .65rem var(--font-sans);color:var(--ouro);
+  background:var(--glass);border:1px solid var(--glass-border);
+  backdrop-filter:blur(12px);opacity:0;transition:opacity .4s;pointer-events:none;
+}
+#tourStatus.visible{opacity:1}
+
+/* ─── Loading Overlay ─── */
+#loadingOverlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--deep);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .8s ease;
+}
+#loadingOverlay.fade-out{opacity:0;pointer-events:none}
+#loadingOverlay h2{font:600 1.4rem var(--font-display);color:var(--ouro);letter-spacing:.06em;margin-bottom:20px}
+#loadingOverlay .load-bar{width:180px;height:2px;background:rgba(212,165,74,.15);border-radius:2px;overflow:hidden;position:relative}
+#loadingOverlay .load-bar::after{
+  content:'';position:absolute;left:0;top:0;height:100%;width:40%;
+  background:linear-gradient(90deg,transparent,var(--ouro),transparent);
+  animation:load-sweep 1.2s ease-in-out infinite;
+}
+@keyframes load-sweep{0%{left:-40%}100%{left:100%}}
+
+/* ─── Top Bar Title Underline ─── */
+#topBar h1{position:relative;display:inline-block}
+#topBar h1::after{
+  content:'';position:absolute;left:0;bottom:-3px;height:1.5px;width:100%;
+  background:linear-gradient(90deg,transparent,var(--ouro),transparent);
+  animation:title-glow 3s ease-in-out infinite;
+}
+@keyframes title-glow{0%,100%{opacity:.3;transform:scaleX(.7)}50%{opacity:.8;transform:scaleX(1)}}
+.last-update{font:300 .5rem var(--font-mono);color:rgba(156,197,201,.5);margin-top:3px}
+
+/* ─── Port Nav Separators & Labels ─── */
+.port-nav-label{
+  flex:0 0 auto;padding:4px 8px;
+  font:500 .5rem var(--font-sans);color:rgba(212,165,74,.5);
+  text-transform:uppercase;letter-spacing:.15em;white-space:nowrap;
+}
+.port-nav-sep{
+  flex:0 0 auto;width:1px;height:20px;margin:0 6px;
+  background:linear-gradient(180deg,transparent,rgba(212,165,74,.25),transparent);
+}
+
+/* ─── Vessel Card Status Dot & Detail ─── */
+.vessel-card .v-name-row{display:flex;align-items:center;gap:6px}
+.vessel-card .v-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.vessel-card .v-status-dot.fishing{background:#4ECDC4;box-shadow:0 0 4px rgba(78,205,196,.5)}
+.vessel-card .v-status-dot.returning{background:var(--ouro);box-shadow:0 0 4px rgba(212,165,74,.5)}
+.vessel-card .v-detail{font:300 .55rem var(--font-sans);color:rgba(156,197,201,.45);line-height:1.4;margin-top:4px}
+
+/* ─── Nearby Vessels Section ─── */
+.nearby-vessels{margin-top:14px;padding-top:12px;border-top:1px solid rgba(212,165,74,.1)}
+.nearby-vessels h3{font:500 .6rem var(--font-sans);color:var(--ouro);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.nearby-vessel-item{display:flex;align-items:center;gap:6px;padding:4px 0;font:300 .65rem var(--font-sans);color:var(--blade)}
+.nearby-vessel-item .nv-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.nearby-vessel-item .nv-dot.fishing{background:#4ECDC4}
+.nearby-vessel-item .nv-dot.returning{background:var(--ouro)}
+.nearby-vessel-item .nv-status{font:300 .5rem var(--font-mono);color:rgba(156,197,201,.4);margin-left:auto}
+
+/* ─── Port Marker Hover Scale ─── */
+.port-marker{transition:transform .3s cubic-bezier(.2,0,.2,1)}
+.port-marker:hover{transform:scale(1.5);z-index:5}
+.port-marker.brazil-major:hover{transform:scale(1.6);z-index:6;filter:brightness(1.2)}
+.port-marker.brazil-minor:hover{transform:scale(1.5);z-index:6;filter:brightness(1.15)}
+
+/* ─── Vessel Label Fade on Hover ─── */
+.vessel-label{opacity:0;transition:opacity .3s ease}
+.vessel-marker:hover .vessel-label{opacity:1}
+.vessel-marker{transition:transform .2s ease}
+.vessel-marker:hover{transform:scale(1.2);z-index:5}
+
+/* ─── Map Attribution Dark Theme ─── */
+.maplibregl-ctrl-attrib{
+  background:rgba(3,8,16,.7)!important;color:rgba(156,197,201,.4)!important;
+  font-size:.55rem!important;border-radius:4px 0 0 0!important;
+  backdrop-filter:blur(4px)!important;
+}
+.maplibregl-ctrl-attrib a{color:rgba(212,165,74,.5)!important}
+
+/* ─── Smooth Panel Transitions ─── */
+#sidebar{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+#portInfo{transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+#sidebar:not(.open){opacity:0}
+#portInfo:not(.open){opacity:0}
+#sidebar.open{opacity:1}
+#portInfo.open{opacity:1}
+
+/* ─── Responsive ─── */
+@media(max-width:600px){
+  #sidebar{width:200px}
+  #portInfo{width:240px;right:8px}
+  .top-stats{gap:12px}
+  .port-btn{padding:5px 10px;font-size:.6rem}
+}
+@media(max-width:768px){
+  #portNav{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  #portNav::-webkit-scrollbar{display:none}
+  #sidebar{transform:translateX(-260px)}
+  #sidebar.open{transform:translateX(0)}
+  #portInfo{
+    position:absolute;top:auto;bottom:50px;right:0;left:0;width:100%;
+    border-radius:12px 12px 0 0;max-height:50vh;overflow-y:auto;
+    transform:translateY(100%);
+  }
+  #portInfo.open{transform:translateY(0)}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ─── Loading Overlay ─── -->
+<div id="loadingOverlay">
+  <h2>D'Ascola Fleet Console</h2>
+  <div style="font:300 .6rem var(--font-sans);color:var(--blade);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px">Santos &middot; Itajaí &middot; South Atlantic</div>
+  <div class="load-bar"></div>
+</div>
+
+<!-- ─── Map Container ─── -->
+<div id="map"></div>
+
+<!-- ─── Holographic Overlay ─── -->
+<canvas id="holoCanvas"></canvas>
+<div class="scanlines"></div>
+
+<!-- ─── Top Bar ─── -->
+<header id="topBar">
+  <div>
+    <h1>D'Ascola Fleet Console</h1>
+    <div class="subtitle">Est. 1893 &middot; Santos, Brazil</div>
+    <div class="last-update" id="lastUpdate">AIS: Simulated</div>
+  </div>
+  <div class="top-stats">
+    <div class="top-stat"><div class="val" id="statVessels">5</div><div class="lbl">Vessels</div></div>
+    <div class="top-stat"><div class="val" id="statPorts">22</div><div class="lbl">Ports</div></div>
+    <div class="top-stat"><div class="val" id="statRoutes">10</div><div class="lbl">Air Routes</div></div>
+    <div class="top-stat"><div class="val" id="statActive">4</div><div class="lbl">Fishing</div></div>
+  </div>
+</header>
+
+<!-- ─── Sidebar Toggle ─── -->
+<button class="toggle-btn" id="toggleSidebar" title="Vessel Roster">&#9776;</button>
+
+<!-- ─── Sidebar: Vessel Roster ─── -->
+<aside id="sidebar" class="glass">
+  <h2>Vessel Roster</h2>
+  <div id="vesselList"></div>
+</aside>
+
+<!-- ─── Port Info Panel ─── -->
+<div id="portInfo" class="glass">
+  <button class="close-btn" id="closePortInfo">&times;</button>
+  <h2 id="piName"></h2>
+  <div class="port-region" id="piRegion"></div>
+  <p class="port-desc" id="piDesc"></p>
+  <div class="port-stat-grid" id="piStats"></div>
+  <div class="nearby-vessels" id="piNearby"></div>
+</div>
+
+<!-- ─── Tour Controls ─── -->
+<button class="toggle-btn" id="toggleTour" title="Auto Tour">&#9654;</button>
+<div id="tourStatus"></div>
+
+<!-- ─── Port Navigation Bar ─── -->
+<nav id="portNav"></nav>
+
+<script>
+/* ═══════════════════════════════════════════
+   PART 2 — DATA
+   ═══════════════════════════════════════════ */
+
+const VESSELS = [
+  { name:'Ana Amaral',       lat:-25.4, lon:-44.2, heading:155, speed:6.8, type:'Longliner',       status:'Fishing',   catch:'Swordfish',     captain:'Takeshi', detail:'Premium-grade swordfish · Japanese captain · Starlink equipped' },
+  { name:'Brisa C',          lat:-24.1, lon:-45.4, heading:320, speed:7.5, type:'Longliner',       status:'Returning', catch:'Swordfish',     detail:'Regular supplier — bought every trip' },
+  { name:'Blaze I',          lat:-33.2, lon:-49.8, heading:85,  speed:5.2, type:'Trawler',         status:'Fishing',   catch:'Monkfish',      detail:'30.5m freezer-at-sea · Built to European standards' },
+  { name:'Cordeiro de Deus E', lat:-20.5, lon:-29.3, heading:190, speed:4.1, type:'Factory Vessel', status:'Fishing',   catch:'Carabineros',   detail:'Scarlet prawn specialist · Owner invested 20+ years · $22/lb at boat' },
+  { name:'Prudence',         lat:12.4,  lon:-62.1, heading:275, speed:8.3, type:'Longliner',       status:'Fishing',   catch:'Yellowfin Tuna', captain:'Gilbert', detail:'Caribbean yellowfin · Operating out of Grenada · NOAA SIMP verified' },
+];
+
+const PORTS = [
+  // Brazilian ports (south → north) — featured with cinematic zooms
+  { name:'Rio Grande', lat:-32.05, lon:-52.10, size:'minor', region:'Rio Grande do Sul, Brazil', br:true,
+    desc:'Southernmost D\'Ascola staging port. Gateway to the cold Falkland Current fisheries. Major sardine and anchovy landings.',
+    stats:{ depth:'18m', vessels:0, species:'Sardine, Anchovy', established:'2021' },
+    zoom:13, pitch:50, bearing:15 },
+  { name:'Itajaí',       lat:-26.91, lon:-48.67, size:'major', region:'Santa Catarina, Brazil', br:true,
+    desc:'Brazil\'s premier fishing port — largest tonnage landings in the nation. Home to the D\'Ascola tuna & swordfish cold-storage facility. Fleet fueling and ice production on-site.',
+    stats:{ depth:'14m', vessels:2, species:'Tuna, Swordfish, Grouper', established:'2008', capacity:'4,200t' },
+    zoom:14, pitch:60, bearing:-20 },
+  { name:'Navegantes',   lat:-26.88, lon:-48.65, size:'minor', region:'Santa Catarina, Brazil', br:true,
+    desc:'Sister port to Itajaí across the river. Vessel maintenance and dry-dock facility. Net repair and gear fabrication workshops.',
+    stats:{ depth:'10m', vessels:0, species:'Maintenance', established:'2015' },
+    zoom:14.5, pitch:55, bearing:10 },
+  { name:'Florianópolis', lat:-27.59, lon:-48.55, size:'minor', region:'Southern Brazil', br:true,
+    desc:'Southern fleet staging area. Deep-water access for trawlers working the continental shelf. Home port for cold-water species operations.',
+    stats:{ depth:'28m', vessels:1, species:'Monkfish, Grouper', established:'2019' },
+    zoom:13, pitch:55, bearing:-30 },
+  { name:'Paranaguá',    lat:-25.52, lon:-48.51, size:'minor', region:'Paraná, Brazil', br:true,
+    desc:'Paraná state port. Protected bay access for storm shelter. Secondary cold-storage overflow from Itajaí operations.',
+    stats:{ depth:'12m', vessels:0, species:'Transit, Storage', established:'2018' },
+    zoom:13, pitch:50, bearing:-10 },
+  { name:'Santos',        lat:-23.96, lon:-46.33, size:'major', region:'São Paulo, Brazil', br:true,
+    desc:'Company headquarters since 1893. Primary fish packing facility and air freight hub. All catch is graded, packed, and shipped from here within hours of landing.',
+    stats:{ depth:'16m', vessels:3, species:'All species', established:'1893' },
+    zoom:14, pitch:60, bearing:-15 },
+  { name:'Rio de Janeiro', lat:-22.91, lon:-43.17, size:'minor', region:'Rio de Janeiro, Brazil', br:true,
+    desc:'Secondary inspection port. Quality control checkpoint for northbound catch. Emergency diversion harbor.',
+    stats:{ depth:'22m', vessels:0, species:'Transit only', established:'2005' },
+    zoom:13, pitch:50, bearing:20 },
+  { name:'Vitória',       lat:-20.32, lon:-40.34, size:'minor', region:'Espírito Santo, Brazil', br:true,
+    desc:'Northern operations base. Deep-water access for the Trindade grounds route. Key staging point for carabineros and deep-sea species.',
+    stats:{ depth:'32m', vessels:1, species:'Carabineros, Deep-sea', established:'2012' },
+    zoom:13, pitch:55, bearing:-40 },
+  { name:'Salvador',      lat:-12.97, lon:-38.51, size:'minor', region:'Bahia, Brazil', br:true,
+    desc:'Bahia operations base. All Saints Bay — one of the world\'s largest natural harbors. Lobster and red snapper distribution for the Northeast.',
+    stats:{ depth:'25m', vessels:0, species:'Lobster, Red Snapper', established:'2020' },
+    zoom:13, pitch:50, bearing:30 },
+  { name:'Recife',        lat:-8.05, lon:-34.87, size:'minor', region:'Pernambuco, Brazil', br:true,
+    desc:'Northeast Brazil distribution hub. Strategic refueling stop for northbound fleet operations. Reef fish and lobster market.',
+    stats:{ depth:'11m', vessels:0, species:'Reef Fish, Lobster', established:'2022' },
+    zoom:13, pitch:45, bearing:0 },
+  // Caribbean
+  { name:"St. George's",  lat:12.05, lon:-61.75, size:'minor', region:'Grenada, Caribbean',
+    desc:'Caribbean yellowfin tuna base. Prudence operates from here year-round. NOAA SIMP verified supply chain.',
+    stats:{ depth:'14m', vessels:1, species:'Yellowfin Tuna', established:'2017' },
+    zoom:13, pitch:50, bearing:10 },
+  // USA destinations
+  { name:'Boston',         lat:42.36, lon:-71.05, size:'major', region:'Massachusetts, USA', desc:'Premium market. Direct air freight from GRU. Next-day swordfish delivery to top restaurants.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'New York',       lat:40.7,  lon:-74.0,  size:'major', region:'New York, USA', desc:'Largest market. Daily JFK arrivals. Fulton Fish Market and direct restaurant supply.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Newark',         lat:40.69, lon:-74.17, size:'major', region:'New Jersey, USA', desc:'EWR freight hub. Serves greater NYC metropolitan distribution network.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Montauk',        lat:41.04, lon:-71.95, size:'minor', region:'Long Island, USA', desc:'East end distribution point. Premium Hamptons restaurant clientele.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Washington DC',  lat:38.85, lon:-77.04, size:'minor', region:'District of Columbia, USA', desc:'Capital market. IAD freight via Dulles. High-end restaurant and hotel supply.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Jacksonville',   lat:30.49, lon:-81.69, size:'minor', region:'Florida, USA', desc:'Southeast distribution hub. Direct GRU-JAX freight.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Miami',          lat:25.79, lon:-80.29, size:'major', region:'Florida, USA', desc:'Latin American gateway. Largest Brazilian fish import market in the US. Same-day connections.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Houston',        lat:29.76, lon:-95.37, size:'major', region:'Texas, USA', desc:'Gulf Coast hub. IAH freight terminal. Texas and Southwest distribution.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Chicago',        lat:41.98, lon:-87.9,  size:'major', region:'Illinois, USA', desc:"Midwest hub. O'Hare freight. Serves Chicago's world-class restaurant scene.", stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'San Francisco',  lat:37.62, lon:-122.38, size:'major', region:'California, USA', desc:'West Coast premium market. SFO freight. Farm-to-table restaurant supply chain.', stats:{}, zoom:12, pitch:45, bearing:0 },
+  { name:'Los Angeles',    lat:33.94, lon:-118.41, size:'major', region:'California, USA', desc:'Largest West Coast market. LAX freight terminal. Japanese restaurant and sushi bar supply.', stats:{}, zoom:12, pitch:45, bearing:0 },
+];
+
+const AIR_ROUTES = [
+  { from:[-46.47,-23.43], to:[-73.78,40.64], code:'GRU→JFK' },
+  { from:[-46.47,-23.43], to:[-74.17,40.69], code:'GRU→EWR' },
+  { from:[-46.47,-23.43], to:[-71.01,42.36], code:'GRU→BOS' },
+  { from:[-46.47,-23.43], to:[-80.29,25.79], code:'GRU→MIA' },
+  { from:[-46.47,-23.43], to:[-77.46,38.95], code:'GRU→IAD' },
+  { from:[-46.47,-23.43], to:[-81.69,30.49], code:'GRU→JAX' },
+  { from:[-46.47,-23.43], to:[-118.41,33.94], code:'GRU→LAX' },
+  { from:[-46.47,-23.43], to:[-122.38,37.62], code:'GRU→SFO' },
+  { from:[-46.47,-23.43], to:[-87.90,41.98], code:'GRU→ORD' },
+  { from:[-46.47,-23.43], to:[-95.34,29.98], code:'GRU→IAH' },
+];
+
+const OCEAN_ROUTE = [[-46.33,-23.96],[-42,-22],[-35,-20.5],[-29.3,-20.5]];
+
+// Brazilian coastline path (south → north, simplified key waypoints)
+const BR_COAST = [
+  [-52.10,-32.05],[-51.20,-30.00],[-49.70,-29.30],[-48.67,-26.91],[-48.55,-27.59],
+  [-48.51,-25.52],[-46.33,-23.96],[-44.30,-23.00],[-43.17,-22.91],[-40.34,-20.32],
+  [-39.00,-17.00],[-38.51,-12.97],[-35.20,-9.00],[-34.87,-8.05],[-34.85,-7.12],
+];
+
+/* ═══════════════════════════════════════════
+   PART 3 — MAP INITIALIZATION
+   ═══════════════════════════════════════════ */
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: {
+    version: 8,
+    sources: {
+      carto: {
+        type: 'raster',
+        tiles: [
+          'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+          'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+          'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
+        ],
+        tileSize: 256,
+        attribution: '© CartoDB © OpenStreetMap'
+      }
+    },
+    layers: [{ id:'carto', type:'raster', source:'carto' }],
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  },
+  center: [-46.33, -23.96], // Santos
+  zoom: 4,
+  pitch: 0,
+  bearing: 0,
+  maxZoom: 18,
+  minZoom: 2,
+});
+
+map.addControl(new maplibregl.NavigationControl({ showCompass:true, showZoom:true }), 'bottom-right');
+
+/* ═══════════════════════════════════════════
+   PART 4 — GREAT CIRCLE ARC COMPUTATION
+   ═══════════════════════════════════════════ */
+
+function greatCircleArc(from, to, n=80) {
+  const toR = d => d * Math.PI / 180, toD = r => r * 180 / Math.PI;
+  const [lon1,lat1] = [toR(from[0]), toR(from[1])];
+  const [lon2,lat2] = [toR(to[0]), toR(to[1])];
+  const d = 2 * Math.asin(Math.sqrt(
+    Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin((lon2-lon1)/2)**2
+  ));
+  if (d < 1e-10) return [from, to];
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const f = i / n;
+    const A = Math.sin((1-f)*d) / Math.sin(d);
+    const B = Math.sin(f*d) / Math.sin(d);
+    const x = A*Math.cos(lat1)*Math.cos(lon1) + B*Math.cos(lat2)*Math.cos(lon2);
+    const y = A*Math.cos(lat1)*Math.sin(lon1) + B*Math.cos(lat2)*Math.sin(lon2);
+    const z = A*Math.sin(lat1) + B*Math.sin(lat2);
+    pts.push([toD(Math.atan2(y,x)), toD(Math.atan2(z, Math.sqrt(x*x+y*y)))]);
+  }
+  return pts;
+}
+
+/* ═══════════════════════════════════════════
+   PART 5 — ADD LAYERS & MARKERS ON MAP LOAD
+   ═══════════════════════════════════════════ */
+
+const portMarkers = [];
+const vesselMarkers = [];
+
+map.on('load', () => {
+  // ── Air Routes (GeoJSON lines) ──
+  const routeFeatures = AIR_ROUTES.map(r => ({
+    type: 'Feature',
+    properties: { code: r.code },
+    geometry: { type: 'LineString', coordinates: greatCircleArc(r.from, r.to) }
+  }));
+
+  map.addSource('airRoutes', {
+    type: 'geojson',
+    data: { type:'FeatureCollection', features: routeFeatures }
+  });
+  map.addLayer({
+    id: 'air-routes-glow', type: 'line', source: 'airRoutes',
+    paint: { 'line-color':'rgba(212,165,74,0.08)', 'line-width':6, 'line-blur':4 }
+  });
+  map.addLayer({
+    id: 'air-routes', type: 'line', source: 'airRoutes',
+    paint: {
+      'line-color':'rgba(212,165,74,0.35)',
+      'line-width':1.5,
+      'line-dasharray':[4,4],
+    }
+  });
+
+  // ── Ocean Route (Trindade Grounds) ──
+  map.addSource('oceanRoute', {
+    type: 'geojson',
+    data: { type:'Feature', geometry:{ type:'LineString', coordinates: OCEAN_ROUTE } }
+  });
+  map.addLayer({
+    id: 'ocean-route', type: 'line', source: 'oceanRoute',
+    paint: { 'line-color':'rgba(10,126,110,0.4)', 'line-width':2, 'line-dasharray':[6,4] }
+  });
+
+  // ── Brazilian Coastline Glow ──
+  map.addSource('brCoast', {
+    type: 'geojson',
+    data: { type:'Feature', geometry:{ type:'LineString', coordinates: BR_COAST } }
+  });
+  map.addLayer({
+    id: 'br-coast-glow', type: 'line', source: 'brCoast',
+    paint: { 'line-color':'rgba(10,126,110,0.06)', 'line-width':18, 'line-blur':12 }
+  });
+  map.addLayer({
+    id: 'br-coast-inner', type: 'line', source: 'brCoast',
+    paint: { 'line-color':'rgba(10,126,110,0.12)', 'line-width':3, 'line-blur':2 }
+  });
+  map.addLayer({
+    id: 'br-coast-line', type: 'line', source: 'brCoast',
+    paint: {
+      'line-color':'rgba(212,165,74,0.18)',
+      'line-width':1,
+      'line-dasharray':[8,6],
+    }
+  });
+
+  // ── Port Markers (DOM) ──
+  PORTS.forEach(port => {
+    const el = document.createElement('div');
+    // Use special Brazilian styling when port has br:true flag
+    if (port.br) {
+      el.className = `port-marker brazil-${port.size}`;
+      // Add diamond accent on major Brazilian ports
+      if (port.size === 'major') {
+        const diamond = document.createElement('div');
+        diamond.className = 'br-diamond';
+        el.appendChild(diamond);
+      }
+    } else {
+      el.className = `port-marker ${port.size}`;
+    }
+    const label = document.createElement('span');
+    label.className = 'port-label';
+    label.textContent = port.name;
+    el.appendChild(label);
+
+    const marker = new maplibregl.Marker({ element:el, anchor:'center' })
+      .setLngLat([port.lon, port.lat])
+      .addTo(map);
+    portMarkers.push({ marker, data: port });
+
+    el.addEventListener('click', () => flyToPort(port));
+  });
+
+  // ── Vessel Markers (DOM) ──
+  VESSELS.forEach(v => {
+    const el = document.createElement('div');
+    el.className = `vessel-marker ${v.status.toLowerCase()}`;
+
+    const heading = document.createElement('div');
+    heading.className = 'v-heading';
+    heading.style.transform = `rotate(${v.heading}deg)`;
+    el.appendChild(heading);
+
+    const dot = document.createElement('div');
+    dot.className = 'v-dot';
+    el.appendChild(dot);
+
+    const label = document.createElement('span');
+    label.className = 'vessel-label';
+    label.textContent = v.name;
+    el.appendChild(label);
+
+    const marker = new maplibregl.Marker({ element:el, anchor:'center' })
+      .setLngLat([v.lon, v.lat])
+      .addTo(map);
+    vesselMarkers.push({ marker, data: v });
+
+    el.addEventListener('click', () => flyToVessel(v));
+  });
+
+  // ── Build Port Nav Bar ──
+  buildPortNav();
+  buildVesselRoster();
+
+  // ── Dismiss loading overlay ──
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.classList.add('fade-out');
+    setTimeout(() => loadingOverlay.remove(), 900);
+  }
+
+  // ── Opening animation — sweep from Santos up the coast ──
+  setTimeout(() => {
+    map.flyTo({
+      center:[-43,-18], zoom:4.2, pitch:25, bearing:8, duration:4000,
+      easing: t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2,
+    });
+  }, 500);
+});
+
+/* ═══════════════════════════════════════════
+   PART 6 — UI INTERACTIONS
+   ═══════════════════════════════════════════ */
+
+function buildPortNav() {
+  const nav = document.getElementById('portNav');
+  // Group: Brazilian, Caribbean, US
+  const groups = [
+    { label:'Brazil', ports: PORTS.filter(p=>p.region&&p.region.includes('Brazil')), dotClass:'br' },
+    { label:'Caribbean', ports: PORTS.filter(p=>p.region&&p.region.includes('Caribbean')), dotClass:'cb' },
+    { label:'USA', ports: PORTS.filter(p=>p.region&&p.region.includes('USA')), dotClass:'us' },
+  ];
+  groups.forEach((g, gi) => {
+    // Region label
+    const label = document.createElement('span');
+    label.className = 'port-nav-label';
+    label.textContent = g.label;
+    nav.appendChild(label);
+
+    g.ports.forEach(p => {
+      const btn = document.createElement('button');
+      const brMajor = p.br && p.size === 'major' ? ' br-major' : '';
+      btn.className = `port-btn ${p.size}${brMajor}`;
+      btn.innerHTML = `<span class="dot ${g.dotClass}"></span>${p.name}`;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.port-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        btn.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+        flyToPort(p);
+      });
+      nav.appendChild(btn);
+    });
+
+    // Separator between groups (not after last)
+    if (gi < groups.length - 1) {
+      const sep = document.createElement('div');
+      sep.className = 'port-nav-sep';
+      nav.appendChild(sep);
+    }
+  });
+}
+
+function buildVesselRoster() {
+  const list = document.getElementById('vesselList');
+  VESSELS.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'vessel-card';
+    card.innerHTML = `
+      <div class="v-name-row"><span class="v-status-dot ${v.status.toLowerCase()}"></span><div class="v-name">${v.name}</div></div>
+      <div class="v-type">${v.type}</div>
+      <span class="v-status ${v.status.toLowerCase()}">${v.status}</span>
+      <div class="v-catch">${v.catch}${v.captain ? ' · Capt. '+v.captain : ''}</div>
+      ${v.detail ? `<div class="v-detail">${v.detail}</div>` : ''}
+      <div class="v-speed">${v.speed} kn · ${v.heading}°</div>
+    `;
+    card.addEventListener('click', () => flyToVessel(v));
+    list.appendChild(card);
+  });
+}
+
+// Sidebar toggle
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+// Port info close
+document.getElementById('closePortInfo').addEventListener('click', () => {
+  document.getElementById('portInfo').classList.remove('open');
+});
+
+/* ═══════════════════════════════════════════
+   PART 7 — CINEMATIC FLY-TO ANIMATIONS
+   ═══════════════════════════════════════════ */
+
+let currentPort = null;
+
+function flyToPort(port) {
+  currentPort = port;
+  const panel = document.getElementById('portInfo');
+
+  // Cinematic camera move — smooth arc with gentle easing
+  map.flyTo({
+    center: [port.lon, port.lat],
+    zoom: port.zoom || 13,
+    pitch: port.pitch || 55,
+    bearing: port.bearing || 0,
+    duration: port.br ? 4000 : 3500,
+    essential: true,
+    curve: 1.42,
+    easing: t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2, // cubic ease-in-out
+  });
+
+  // Toggle Brazilian accent on panel
+  panel.classList.toggle('br-port', !!port.br);
+
+  // Update port info panel
+  document.getElementById('piName').textContent = port.name;
+  document.getElementById('piRegion').textContent = port.region || '';
+  document.getElementById('piDesc').textContent = port.desc || '';
+
+  const statsEl = document.getElementById('piStats');
+  statsEl.innerHTML = '';
+  if (port.stats) {
+    Object.entries(port.stats).forEach(([k,v]) => {
+      if (!v && v !== 0) return;
+      const d = document.createElement('div');
+      d.className = 'port-stat';
+      d.innerHTML = `<div class="ps-val">${v}</div><div class="ps-lbl">${k}</div>`;
+      statsEl.appendChild(d);
+    });
+  }
+
+  // Nearby vessels (within ~5 degrees lat/lon)
+  const nearbyEl = document.getElementById('piNearby');
+  const nearby = VESSELS.filter(v => Math.abs(v.lat - port.lat) < 5 && Math.abs(v.lon - port.lon) < 5);
+  if (nearby.length > 0) {
+    nearbyEl.innerHTML = '<h3>Nearby Vessels</h3>' + nearby.map(v =>
+      `<div class="nearby-vessel-item"><span class="nv-dot ${v.status.toLowerCase()}"></span>${v.name}<span class="nv-status">${v.status}</span></div>`
+    ).join('');
+    nearbyEl.style.display = '';
+  } else {
+    nearbyEl.style.display = 'none';
+  }
+
+  // Show panel after camera starts moving
+  setTimeout(() => panel.classList.add('open'), 800);
+
+  // Show tour status
+  showTourStatus(`→ ${port.name}`);
+}
+
+function flyToVessel(v) {
+  map.flyTo({
+    center: [v.lon, v.lat],
+    zoom: 11,
+    pitch: 55,
+    bearing: v.heading - 180,
+    duration: 3000,
+    essential: true,
+  });
+  showTourStatus(`→ ${v.name} · ${v.status}`);
+}
+
+function flyToOverview() {
+  document.getElementById('portInfo').classList.remove('open');
+  map.flyTo({ center:[-44,-15], zoom:3.8, pitch:20, bearing:5, duration:3000 });
+  showTourStatus('Overview');
+}
+
+/* ═══════════════════════════════════════════
+   PART 8 — AUTO TOUR
+   ═══════════════════════════════════════════ */
+
+let tourRunning = false;
+let tourIdx = 0;
+
+// Brazilian ports first, then Caribbean, then overview
+const TOUR_SEQUENCE = [
+  ...PORTS.filter(p=>p.region&&p.region.includes('Brazil')),
+  ...PORTS.filter(p=>p.region&&p.region.includes('Caribbean')),
+  { name:'Overview', _overview:true },
+];
+
+function startTour() {
+  tourRunning = true;
+  tourIdx = 0;
+  document.getElementById('toggleTour').innerHTML = '&#9724;'; // stop icon
+  runTourStep();
+}
+
+function stopTour() {
+  tourRunning = false;
+  document.getElementById('toggleTour').innerHTML = '&#9654;'; // play icon
+  showTourStatus('Tour stopped');
+  setTimeout(() => document.getElementById('tourStatus').classList.remove('visible'), 2000);
+}
+
+function runTourStep() {
+  if (!tourRunning) return;
+  const stop = TOUR_SEQUENCE[tourIdx % TOUR_SEQUENCE.length];
+  if (stop._overview) {
+    flyToOverview();
+  } else {
+    flyToPort(stop);
+  }
+  tourIdx++;
+  setTimeout(() => runTourStep(), 6000);
+}
+
+document.getElementById('toggleTour').addEventListener('click', () => {
+  tourRunning ? stopTour() : startTour();
+});
+
+function showTourStatus(msg) {
+  const el = document.getElementById('tourStatus');
+  el.textContent = msg;
+  el.classList.add('visible');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('visible'), 4000);
+}
+
+/* ═══════════════════════════════════════════
+   PART 9 — HOLOGRAPHIC OVERLAY (Canvas)
+   ═══════════════════════════════════════════ */
+
+(function initHoloOverlay() {
+  const canvas = document.getElementById('holoCanvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  function draw() {
+    t += 0.008;
+    ctx.clearRect(0, 0, w, h);
+
+    // Subtle holographic light bands
+    for (let i = 0; i < 5; i++) {
+      const y = (Math.sin(t * 0.5 + i * 1.3) * 0.5 + 0.5) * h;
+      const grad = ctx.createLinearGradient(0, y - 80, 0, y + 80);
+      grad.addColorStop(0, 'rgba(212,165,74,0)');
+      grad.addColorStop(0.3, 'rgba(10,126,110,0.04)');
+      grad.addColorStop(0.5, 'rgba(212,165,74,0.06)');
+      grad.addColorStop(0.7, 'rgba(78,205,196,0.03)');
+      grad.addColorStop(1, 'rgba(212,165,74,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, y - 80, w, 160);
+    }
+
+    // Vertical holographic streaks
+    for (let i = 0; i < 3; i++) {
+      const x = (Math.sin(t * 0.3 + i * 2.1) * 0.5 + 0.5) * w;
+      const grad = ctx.createLinearGradient(x - 40, 0, x + 40, 0);
+      grad.addColorStop(0, 'rgba(212,165,74,0)');
+      grad.addColorStop(0.5, 'rgba(212,165,74,0.03)');
+      grad.addColorStop(1, 'rgba(212,165,74,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x - 40, 0, 80, h);
+    }
+
+    // Prismatic edge glow (top & bottom)
+    const edgeH = 60;
+    const topGrad = ctx.createLinearGradient(0, 0, 0, edgeH);
+    topGrad.addColorStop(0, `rgba(212,165,74,${0.06 + Math.sin(t)*0.02})`);
+    topGrad.addColorStop(1, 'rgba(212,165,74,0)');
+    ctx.fillStyle = topGrad;
+    ctx.fillRect(0, 0, w, edgeH);
+
+    const botGrad = ctx.createLinearGradient(0, h - edgeH, 0, h);
+    botGrad.addColorStop(0, 'rgba(212,165,74,0)');
+    botGrad.addColorStop(1, `rgba(10,126,110,${0.05 + Math.sin(t*1.2)*0.02})`);
+    ctx.fillStyle = botGrad;
+    ctx.fillRect(0, h - edgeH, w, edgeH);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════
+   PART 10 — ANIMATED ROUTE PARTICLES
+   ═══════════════════════════════════════════ */
+
+(function initRouteParticles() {
+  // We'll animate small circles along the air routes using a canvas overlay
+  const overlay = document.createElement('canvas');
+  overlay.style.cssText = 'position:absolute;inset:0;z-index:4;pointer-events:none';
+  document.body.appendChild(overlay);
+  const ctx = overlay.getContext('2d');
+  let w, h;
+  function resize() { w = overlay.width = window.innerWidth; h = overlay.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Pre-compute arc points for each route
+  const arcs = AIR_ROUTES.map(r => greatCircleArc(r.from, r.to, 120));
+
+  // Each route has 2 particles at different phases
+  const particles = [];
+  arcs.forEach((arc, i) => {
+    particles.push({ arcIdx:i, phase: Math.random(), speed: 0.001 + Math.random()*0.001 });
+    particles.push({ arcIdx:i, phase: Math.random(), speed: 0.001 + Math.random()*0.001 });
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    const zoom = map.getZoom();
+    if (zoom < 2.5) { requestAnimationFrame(draw); return; }
+
+    particles.forEach(p => {
+      p.phase = (p.phase + p.speed) % 1;
+      const arc = arcs[p.arcIdx];
+      const idx = Math.floor(p.phase * (arc.length - 1));
+      const coord = arc[idx];
+      const point = map.project(coord);
+      if (point.x < -20 || point.x > w+20 || point.y < -20 || point.y > h+20) return;
+
+      const size = Math.max(1.5, Math.min(4, zoom * 0.5));
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, size, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(212,165,74,0.7)';
+      ctx.fill();
+
+      // Glow
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, size * 3, 0, Math.PI*2);
+      const g = ctx.createRadialGradient(point.x,point.y,0,point.x,point.y,size*3);
+      g.addColorStop(0, 'rgba(212,165,74,0.15)');
+      g.addColorStop(1, 'rgba(212,165,74,0)');
+      ctx.fillStyle = g;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════════
+   PART 11 — THREE.JS HOLOGRAPHIC GLASS LAYER
+   ═══════════════════════════════════════════ */
+
+(function initThreeOverlay() {
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  const renderer = new THREE.WebGLRenderer({ alpha:true, antialias:false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.domElement.style.cssText = 'position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:screen;opacity:0.07';
+  document.body.appendChild(renderer.domElement);
+
+  window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Holographic refraction plane with custom shader
+  const holoMat = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {
+      uTime: { value:0 },
+      uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec2 uResolution;
+      varying vec2 vUv;
+
+      // Simple noise
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453);
+      }
+
+      void main() {
+        vec2 uv = vUv;
+
+        // Holographic iridescence bands
+        float band1 = sin(uv.y * 120.0 + uTime * 0.8) * 0.5 + 0.5;
+        float band2 = sin(uv.y * 80.0 - uTime * 0.5 + uv.x * 20.0) * 0.5 + 0.5;
+        float band3 = sin((uv.x + uv.y) * 60.0 + uTime * 0.3) * 0.5 + 0.5;
+
+        // Chromatic separation
+        float r = band1 * 0.3;
+        float g = band2 * 0.5;
+        float b = band3 * 0.4;
+
+        // Edge vignette — stronger holographic effect at edges
+        float vignette = 1.0 - smoothstep(0.2, 0.8, length(uv - 0.5) * 1.4);
+        float edgeGlow = 1.0 - vignette;
+
+        // Subtle noise grain
+        float noise = hash(uv * uResolution + uTime) * 0.08;
+
+        // Combine
+        vec3 color = vec3(
+          r * 0.6 + edgeGlow * 0.15,
+          g * 0.8 + edgeGlow * 0.2,
+          b * 0.5 + edgeGlow * 0.1
+        ) + noise;
+
+        // Scanline modulation
+        float scan = sin(uv.y * 400.0) * 0.5 + 0.5;
+        color *= mix(0.85, 1.0, scan);
+
+        float alpha = (r + g + b) * 0.15 + edgeGlow * 0.05 + noise * 0.02;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+  });
+
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), holoMat);
+  scene.add(plane);
+
+  function animate() {
+    holoMat.uniforms.uTime.value += 0.016;
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ═══════════════════════════════════════════
+   PART 12 — AIS INTEGRATION (Live Vessel Tracking)
+   ═══════════════════════════════════════════ */
+
+// AIS configuration — set aisEndpoint to your API URL to enable live tracking.
+// When null, simulated drift runs instead (sinusoidal GPS wobble).
+// Expected API: GET {aisEndpoint}?mmsi=710012345,710012346,...
+// Response: [{ mmsi, lat, lon, heading, speed, status?, timestamp? }]
+const AIS_CONFIG = {
+  aisEndpoint: null,       // e.g. 'https://your-api.com/v1/vessels'
+  aisRefreshMs: 60000,     // Poll every 60s
+  fetchTimeoutMs: 10000,
+};
+
+class AISClient {
+  constructor(config, vessels, onUpdate) {
+    this.endpoint  = config.aisEndpoint || null;
+    this.refreshMs = config.aisRefreshMs || 60000;
+    this.timeoutMs = config.fetchTimeoutMs || 10000;
+    this.vessels   = vessels;
+    this.onUpdate  = onUpdate;
+    this.timer     = null;
+    this.lastFetch = null;
+    this.fetchCount = 0;
+    this.errorCount = 0;
+  }
+
+  start() {
+    this.fetch();
+    this.timer = setInterval(() => this.fetch(), this.refreshMs);
+    console.log(`[AIS] Polling started — ${this.refreshMs/1000}s interval → ${this.endpoint}`);
+  }
+
+  stop() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  }
+
+  fetch() {
+    if (!this.endpoint) return;
+
+    const mmsiList = this.vessels.filter(v => v.mmsi).map(v => v.mmsi);
+    let url = this.endpoint;
+    if (mmsiList.length) {
+      url += (url.includes('?') ? '&' : '?') + 'mmsi=' + mmsiList.join(',');
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    window.fetch(url, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        clearTimeout(timeout);
+        if (!Array.isArray(data)) return;
+
+        // Build lookup by MMSI
+        const incoming = {};
+        data.forEach(rec => { if (rec.mmsi) incoming[String(rec.mmsi)] = rec; });
+
+        // Merge into local vessels
+        let updated = 0;
+        this.vessels.forEach(v => {
+          if (!v.mmsi) return;
+          const u = incoming[String(v.mmsi)];
+          if (!u) return;
+          if (u.lat != null)     v.lat     = u.lat;
+          if (u.lon != null)     v.lon     = u.lon;
+          if (u.heading != null) v.heading = u.heading;
+          if (u.speed != null)   v.speed   = u.speed;
+          if (u.status)          v.status  = u.status;
+          v.lastUpdate = u.timestamp || new Date().toISOString();
+          updated++;
+        });
+
+        this.lastFetch = new Date();
+        this.fetchCount++;
+        updateAISStatus(true, this.fetchCount, updated);
+
+        if (this.onUpdate) this.onUpdate(this.vessels);
+      })
+      .catch(err => {
+        clearTimeout(timeout);
+        this.errorCount++;
+        console.warn('[AIS] Fetch error:', err.message);
+        updateAISStatus(false, this.fetchCount, 0);
+      });
+  }
+
+  destroy() {
+    this.stop();
+    this.vessels = null;
+    this.onUpdate = null;
+  }
+}
+
+// Simulated drift when no AIS endpoint configured
+// (sinusoidal wobble so vessels appear alive on the map)
+let driftFrame = 0;
+function simulateVesselDrift() {
+  driftFrame++;
+  VESSELS.forEach((v, i) => {
+    const phase = driftFrame * 0.01 + i * 1.7;
+    v.lat += Math.sin(phase) * 0.00008;
+    v.lon += Math.cos(phase * 0.7) * 0.00008;
+    v.heading = (v.heading + Math.sin(phase * 0.3) * 0.2 + 360) % 360;
+    v.speed = Math.max(0, v.speed + Math.sin(phase * 0.5) * 0.02);
+  });
+  refreshVesselMarkers();
+}
+
+// Update vessel marker positions on the map
+function refreshVesselMarkers() {
+  vesselMarkers.forEach(({ marker, data }) => {
+    marker.setLngLat([data.lon, data.lat]);
+    const headingEl = marker.getElement().querySelector('.v-heading');
+    if (headingEl) headingEl.style.transform = `rotate(${data.heading}deg)`;
+  });
+  // Update roster speed values
+  document.querySelectorAll('.vessel-card .v-speed').forEach((el, i) => {
+    if (VESSELS[i]) el.textContent = `${VESSELS[i].speed.toFixed(1)} kn · ${Math.round(VESSELS[i].heading)}°`;
+  });
+}
+
+// AIS status indicator (updates top bar)
+function updateAISStatus(ok, count, updated) {
+  let el = document.getElementById('aisStatus');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'aisStatus';
+    el.style.cssText = 'font:300 .55rem var(--font-mono);color:var(--blade);text-align:right';
+    document.querySelector('.top-stats').appendChild(el);
+  }
+  const tsEl = document.getElementById('lastUpdate');
+  if (ok) {
+    el.innerHTML = `<span style="color:#4ECDC4">● LIVE</span> ${updated}v · #${count}`;
+    if (tsEl) tsEl.textContent = 'AIS: ' + new Date().toLocaleTimeString();
+  } else {
+    el.innerHTML = `<span style="color:#E74C3C">● ERR</span> retry...`;
+    if (tsEl) tsEl.textContent = 'AIS: Error';
+  }
+}
+
+// Initialize AIS or simulated drift
+let aisClient = null;
+map.on('load', () => {
+  if (AIS_CONFIG.aisEndpoint) {
+    // Live AIS mode
+    aisClient = new AISClient(AIS_CONFIG, VESSELS, (updatedVessels) => {
+      refreshVesselMarkers();
+    });
+    aisClient.start();
+  } else {
+    // Simulated drift mode — update every 2s
+    console.log('[AIS] No endpoint configured — simulated drift active');
+    updateAISStatus(true, 0, 0);
+    let statusEl = document.getElementById('aisStatus');
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--ouro)">● SIM</span> drift';
+    document.getElementById('lastUpdate').textContent = 'AIS: Simulated';
+    setInterval(simulateVesselDrift, 2000);
+  }
+});
+
+/* ═══════════════════════════════════════════
+   PART 13 — KEYBOARD SHORTCUTS
+   ═══════════════════════════════════════════ */
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    flyToOverview();
+    document.getElementById('sidebar').classList.remove('open');
+    stopTour();
+  }
+  if (e.key === 't' || e.key === 'T') {
+    tourRunning ? stopTour() : startTour();
+  }
+  if (e.key === 'r' || e.key === 'R') {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+  // Number keys 1-9,0 fly to Brazilian ports
+  const brPorts = PORTS.filter(p=>p.br);
+  const num = e.key === '0' ? 10 : parseInt(e.key);
+  if (num >= 1 && num <= brPorts.length) {
+    flyToPort(brPorts[num-1]);
+  }
+  // 'B' key — cinematic Brazilian coast flyover
+  if (e.key === 'b' || e.key === 'B') {
+    startBrazilTour();
+  }
+});
+
+// ── Brazilian Coast Flyover ──
+let brTourRunning = false;
+function startBrazilTour() {
+  if (brTourRunning) return;
+  brTourRunning = true;
+  const brPorts = PORTS.filter(p=>p.br);
+  let i = 0;
+  showTourStatus('🇧🇷 Brazilian Coast Flyover');
+  // First: zoom out to see the whole coast
+  map.flyTo({ center:[-45,-18], zoom:4.5, pitch:35, bearing:10, duration:2500 });
+  setTimeout(function step() {
+    if (i >= brPorts.length) {
+      // End: sweep back to overview of Brazilian coast
+      map.flyTo({ center:[-43,-16], zoom:4.2, pitch:30, bearing:15, duration:3000 });
+      showTourStatus('Brazilian Coast — 10 Ports');
+      brTourRunning = false;
+      return;
+    }
+    flyToPort(brPorts[i]);
+    i++;
+    setTimeout(step, 5000);
+  }, 3000);
+}
+
+console.log('%c D\'Ascola Fleet Console ', 'background:#030810;color:#D4A54A;font-size:14px;padding:8px 16px;border:1px solid #D4A54A;border-radius:4px;font-family:serif');
+console.log('Keys: [1-0] Brazilian ports · [B] Brazil flyover · [T] Auto tour · [R] Roster · [Esc] Overview');
+</script>
+
+</body>
+</html>

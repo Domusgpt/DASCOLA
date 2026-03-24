@@ -1,0 +1,7 @@
+node_modules/
+screenshots/
+test-scroll.mjs
+package.json
+package-lock.json
+test-console.mjs
+test-results/
