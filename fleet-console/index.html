@@ -85,6 +85,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   background:rgba(212,165,74,.15);border-color:var(--ouro);color:var(--ouro);
   box-shadow:0 0 12px rgba(212,165,74,.2);
 }
+.port-btn.br-major:hover,.port-btn.br-major.active{
+  background:linear-gradient(135deg,rgba(10,126,110,.2),rgba(212,165,74,.2));
+  border-color:var(--verde);color:var(--ouro);
+  box-shadow:0 0 12px rgba(10,126,110,.25),0 0 20px rgba(212,165,74,.15);
+}
 .port-btn.major{font-weight:500}
 .port-btn .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .port-btn .dot.br{background:var(--verde);box-shadow:0 0 4px rgba(10,126,110,.5)}
@@ -124,6 +129,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   transform:translateX(300px);transition:transform .5s cubic-bezier(.4,0,.2,1);
 }
 #portInfo.open{transform:translateX(0)}
+#portInfo.br-port{border-left:2px solid var(--verde);box-shadow:0 0 30px rgba(10,126,110,.08),inset 0 1px 0 rgba(212,165,74,.08)}
 #portInfo h2{font:600 1.1rem var(--font-display);color:var(--creme);margin-bottom:4px}
 #portInfo .port-region{font:300 .65rem var(--font-sans);color:var(--ouro);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px}
 #portInfo .port-desc{font:300 .75rem var(--font-sans);color:var(--blade);line-height:1.5;margin-bottom:14px}
@@ -172,6 +178,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   width:18px;height:18px;
   background:radial-gradient(circle,#D4A54A 35%,#0A7E6E 100%);
   box-shadow:0 0 12px rgba(212,165,74,.6),0 0 30px rgba(10,126,110,.35),0 0 60px rgba(212,165,74,.15);
+  animation:br-glow-breathe 4s ease-in-out infinite;
 }
 .port-marker.brazil-major::after{
   inset:-6px;
@@ -187,6 +194,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   width:12px;height:12px;
   background:radial-gradient(circle,#4ECDC4 30%,#0A7E6E 100%);
   box-shadow:0 0 10px rgba(10,126,110,.5),0 0 25px rgba(78,205,196,.2);
+  animation:br-glow-breathe-minor 4s ease-in-out infinite;
 }
 .port-marker.brazil-minor::after{
   inset:-5px;
@@ -198,6 +206,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   50%{transform:scale(1.8);opacity:.3}
   100%{transform:scale(2.8);opacity:0}
 }
+@keyframes br-glow-breathe{
+  0%,100%{box-shadow:0 0 12px rgba(212,165,74,.5),0 0 30px rgba(10,126,110,.3),0 0 60px rgba(212,165,74,.1)}
+  50%{box-shadow:0 0 18px rgba(212,165,74,.7),0 0 40px rgba(10,126,110,.45),0 0 80px rgba(212,165,74,.2)}
+}
+@keyframes br-glow-breathe-minor{
+  0%,100%{box-shadow:0 0 8px rgba(10,126,110,.4),0 0 20px rgba(78,205,196,.15)}
+  50%{box-shadow:0 0 14px rgba(10,126,110,.6),0 0 30px rgba(78,205,196,.25)}
+}
 
 /* Brazilian port labels — golden accent */
 .port-marker.brazil-major .port-label{
@@ -206,8 +222,9 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   letter-spacing:.12em;
 }
 .port-marker.brazil-minor .port-label{
-  color:#4ECDC4;
+  font:500 .58rem var(--font-sans);color:#4ECDC4;
   text-shadow:0 0 8px rgba(10,126,110,.4),0 0 16px rgba(0,0,0,.9);
+  letter-spacing:.08em;
 }
 
 /* Brazilian flag diamond accent on major BR ports */
@@ -215,6 +232,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(45deg);
   width:6px;height:6px;background:var(--verde);border:1px solid rgba(212,165,74,.5);
   box-shadow:0 0 6px rgba(10,126,110,.5);
+  animation:diamond-spin 8s linear infinite;
+}
+@keyframes diamond-spin{
+  0%{transform:translateX(-50%) rotate(45deg)}
+  100%{transform:translateX(-50%) rotate(405deg)}
 }
 
 .port-label{
@@ -311,12 +333,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
 .nearby-vessel-item .nv-status{font:300 .5rem var(--font-mono);color:rgba(156,197,201,.4);margin-left:auto}
 
 /* ─── Port Marker Hover Scale ─── */
-.port-marker{transition:transform .3s ease}
+.port-marker{transition:transform .3s cubic-bezier(.2,0,.2,1)}
 .port-marker:hover{transform:scale(1.5);z-index:5}
+.port-marker.brazil-major:hover{transform:scale(1.6);z-index:6;filter:brightness(1.2)}
+.port-marker.brazil-minor:hover{transform:scale(1.5);z-index:6;filter:brightness(1.15)}
 
 /* ─── Vessel Label Fade on Hover ─── */
 .vessel-label{opacity:0;transition:opacity .3s ease}
 .vessel-marker:hover .vessel-label{opacity:1}
+.vessel-marker{transition:transform .2s ease}
+.vessel-marker:hover{transform:scale(1.2);z-index:5}
 
 /* ─── Map Attribution Dark Theme ─── */
 .maplibregl-ctrl-attrib{
@@ -364,6 +390,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
 <!-- ─── Loading Overlay ─── -->
 <div id="loadingOverlay">
   <h2>D'Ascola Fleet Console</h2>
+  <div style="font:300 .6rem var(--font-sans);color:var(--blade);letter-spacing:.2em;text-transform:uppercase;margin-bottom:16px">Santos &middot; Itajaí &middot; South Atlantic</div>
   <div class="load-bar"></div>
 </div>
 
@@ -699,9 +726,12 @@ map.on('load', () => {
     setTimeout(() => loadingOverlay.remove(), 900);
   }
 
-  // ── Opening animation ──
+  // ── Opening animation — sweep from Santos up the coast ──
   setTimeout(() => {
-    map.flyTo({ center:[-44,-15], zoom:3.8, pitch:20, bearing:5, duration:3000 });
+    map.flyTo({
+      center:[-43,-18], zoom:4.2, pitch:25, bearing:8, duration:4000,
+      easing: t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2,
+    });
   }, 500);
 });
 
@@ -732,6 +762,7 @@ function buildPortNav() {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.port-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
+        btn.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
         flyToPort(p);
       });
       nav.appendChild(btn);
@@ -784,16 +815,20 @@ function flyToPort(port) {
   currentPort = port;
   const panel = document.getElementById('portInfo');
 
-  // Cinematic camera move
+  // Cinematic camera move — smooth arc with gentle easing
   map.flyTo({
     center: [port.lon, port.lat],
     zoom: port.zoom || 13,
     pitch: port.pitch || 55,
     bearing: port.bearing || 0,
-    duration: 3500,
+    duration: port.br ? 4000 : 3500,
     essential: true,
-    curve: 1.5,
+    curve: 1.42,
+    easing: t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2, // cubic ease-in-out
   });
+
+  // Toggle Brazilian accent on panel
+  panel.classList.toggle('br-port', !!port.br);
 
   // Update port info panel
   document.getElementById('piName').textContent = port.name;
