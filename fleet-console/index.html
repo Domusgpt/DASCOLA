@@ -87,9 +87,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
 }
 .port-btn.major{font-weight:500}
 .port-btn .dot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.port-btn .dot.br{background:var(--verde)}
+.port-btn .dot.br{background:var(--verde);box-shadow:0 0 4px rgba(10,126,110,.5)}
 .port-btn .dot.us{background:var(--ouro)}
 .port-btn .dot.cb{background:var(--blade)}
+.port-btn.br-major .dot.br{background:linear-gradient(135deg,var(--ouro),var(--verde));box-shadow:0 0 6px rgba(212,165,74,.4)}
 
 /* ─── Sidebar: Vessel Roster ─── */
 #sidebar{
@@ -165,6 +166,56 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
 .port-marker.major::after{border-color:rgba(212,165,74,.25)}
 .port-marker.minor::after{border-color:rgba(10,126,110,.2)}
 @keyframes pulse-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(2.2);opacity:0}}
+
+/* ─── Brazilian Port Markers — Special Glory ─── */
+.port-marker.brazil-major{
+  width:18px;height:18px;
+  background:radial-gradient(circle,#D4A54A 35%,#0A7E6E 100%);
+  box-shadow:0 0 12px rgba(212,165,74,.6),0 0 30px rgba(10,126,110,.35),0 0 60px rgba(212,165,74,.15);
+}
+.port-marker.brazil-major::after{
+  inset:-6px;
+  border:2px solid rgba(10,126,110,.35);
+  animation:br-pulse 2.5s ease-out infinite;
+}
+.port-marker.brazil-major::before{
+  content:'';position:absolute;inset:-12px;border-radius:50%;
+  border:1px solid rgba(212,165,74,.12);
+  animation:br-pulse 2.5s ease-out infinite .6s;
+}
+.port-marker.brazil-minor{
+  width:12px;height:12px;
+  background:radial-gradient(circle,#4ECDC4 30%,#0A7E6E 100%);
+  box-shadow:0 0 10px rgba(10,126,110,.5),0 0 25px rgba(78,205,196,.2);
+}
+.port-marker.brazil-minor::after{
+  inset:-5px;
+  border:1.5px solid rgba(10,126,110,.3);
+  animation:br-pulse 2.5s ease-out infinite;
+}
+@keyframes br-pulse{
+  0%{transform:scale(1);opacity:.8}
+  50%{transform:scale(1.8);opacity:.3}
+  100%{transform:scale(2.8);opacity:0}
+}
+
+/* Brazilian port labels — golden accent */
+.port-marker.brazil-major .port-label{
+  font:600 .65rem var(--font-sans);color:var(--ouro);
+  text-shadow:0 0 10px rgba(212,165,74,.5),0 0 20px rgba(0,0,0,.9);
+  letter-spacing:.12em;
+}
+.port-marker.brazil-minor .port-label{
+  color:#4ECDC4;
+  text-shadow:0 0 8px rgba(10,126,110,.4),0 0 16px rgba(0,0,0,.9);
+}
+
+/* Brazilian flag diamond accent on major BR ports */
+.port-marker.brazil-major .br-diamond{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(45deg);
+  width:6px;height:6px;background:var(--verde);border:1px solid rgba(212,165,74,.5);
+  box-shadow:0 0 6px rgba(10,126,110,.5);
+}
 
 .port-label{
   font:500 .6rem var(--font-sans);color:var(--creme);text-transform:uppercase;
@@ -332,7 +383,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--deep);color:va
   </div>
   <div class="top-stats">
     <div class="top-stat"><div class="val" id="statVessels">5</div><div class="lbl">Vessels</div></div>
-    <div class="top-stat"><div class="val" id="statPorts">16</div><div class="lbl">Ports</div></div>
+    <div class="top-stat"><div class="val" id="statPorts">22</div><div class="lbl">Ports</div></div>
     <div class="top-stat"><div class="val" id="statRoutes">10</div><div class="lbl">Air Routes</div></div>
     <div class="top-stat"><div class="val" id="statActive">4</div><div class="lbl">Fishing</div></div>
   </div>
@@ -379,22 +430,46 @@ const VESSELS = [
 
 const PORTS = [
   // Brazilian ports (south → north) — featured with cinematic zooms
-  { name:'Florianópolis', lat:-27.59, lon:-48.55, size:'minor', region:'Southern Brazil',
+  { name:'Rio Grande', lat:-32.05, lon:-52.10, size:'minor', region:'Rio Grande do Sul, Brazil', br:true,
+    desc:'Southernmost D\'Ascola staging port. Gateway to the cold Falkland Current fisheries. Major sardine and anchovy landings.',
+    stats:{ depth:'18m', vessels:0, species:'Sardine, Anchovy', established:'2021' },
+    zoom:13, pitch:50, bearing:15 },
+  { name:'Itajaí',       lat:-26.91, lon:-48.67, size:'major', region:'Santa Catarina, Brazil', br:true,
+    desc:'Brazil\'s premier fishing port — largest tonnage landings in the nation. Home to the D\'Ascola tuna & swordfish cold-storage facility. Fleet fueling and ice production on-site.',
+    stats:{ depth:'14m', vessels:2, species:'Tuna, Swordfish, Grouper', established:'2008', capacity:'4,200t' },
+    zoom:14, pitch:60, bearing:-20 },
+  { name:'Navegantes',   lat:-26.88, lon:-48.65, size:'minor', region:'Santa Catarina, Brazil', br:true,
+    desc:'Sister port to Itajaí across the river. Vessel maintenance and dry-dock facility. Net repair and gear fabrication workshops.',
+    stats:{ depth:'10m', vessels:0, species:'Maintenance', established:'2015' },
+    zoom:14.5, pitch:55, bearing:10 },
+  { name:'Florianópolis', lat:-27.59, lon:-48.55, size:'minor', region:'Southern Brazil', br:true,
     desc:'Southern fleet staging area. Deep-water access for trawlers working the continental shelf. Home port for cold-water species operations.',
     stats:{ depth:'28m', vessels:1, species:'Monkfish, Grouper', established:'2019' },
     zoom:13, pitch:55, bearing:-30 },
-  { name:'Santos',        lat:-23.96, lon:-46.33, size:'major', region:'São Paulo, Brazil',
+  { name:'Paranaguá',    lat:-25.52, lon:-48.51, size:'minor', region:'Paraná, Brazil', br:true,
+    desc:'Paraná state port. Protected bay access for storm shelter. Secondary cold-storage overflow from Itajaí operations.',
+    stats:{ depth:'12m', vessels:0, species:'Transit, Storage', established:'2018' },
+    zoom:13, pitch:50, bearing:-10 },
+  { name:'Santos',        lat:-23.96, lon:-46.33, size:'major', region:'São Paulo, Brazil', br:true,
     desc:'Company headquarters since 1893. Primary fish packing facility and air freight hub. All catch is graded, packed, and shipped from here within hours of landing.',
     stats:{ depth:'16m', vessels:3, species:'All species', established:'1893' },
     zoom:14, pitch:60, bearing:-15 },
-  { name:'Rio de Janeiro', lat:-22.91, lon:-43.17, size:'minor', region:'Rio de Janeiro, Brazil',
+  { name:'Rio de Janeiro', lat:-22.91, lon:-43.17, size:'minor', region:'Rio de Janeiro, Brazil', br:true,
     desc:'Secondary inspection port. Quality control checkpoint for northbound catch. Emergency diversion harbor.',
     stats:{ depth:'22m', vessels:0, species:'Transit only', established:'2005' },
     zoom:13, pitch:50, bearing:20 },
-  { name:'Vitória',       lat:-20.32, lon:-40.34, size:'minor', region:'Espírito Santo, Brazil',
+  { name:'Vitória',       lat:-20.32, lon:-40.34, size:'minor', region:'Espírito Santo, Brazil', br:true,
     desc:'Northern operations base. Deep-water access for the Trindade grounds route. Key staging point for carabineros and deep-sea species.',
     stats:{ depth:'32m', vessels:1, species:'Carabineros, Deep-sea', established:'2012' },
     zoom:13, pitch:55, bearing:-40 },
+  { name:'Salvador',      lat:-12.97, lon:-38.51, size:'minor', region:'Bahia, Brazil', br:true,
+    desc:'Bahia operations base. All Saints Bay — one of the world\'s largest natural harbors. Lobster and red snapper distribution for the Northeast.',
+    stats:{ depth:'25m', vessels:0, species:'Lobster, Red Snapper', established:'2020' },
+    zoom:13, pitch:50, bearing:30 },
+  { name:'Recife',        lat:-8.05, lon:-34.87, size:'minor', region:'Pernambuco, Brazil', br:true,
+    desc:'Northeast Brazil distribution hub. Strategic refueling stop for northbound fleet operations. Reef fish and lobster market.',
+    stats:{ depth:'11m', vessels:0, species:'Reef Fish, Lobster', established:'2022' },
+    zoom:13, pitch:45, bearing:0 },
   // Caribbean
   { name:"St. George's",  lat:12.05, lon:-61.75, size:'minor', region:'Grenada, Caribbean',
     desc:'Caribbean yellowfin tuna base. Prudence operates from here year-round. NOAA SIMP verified supply chain.',
@@ -428,6 +503,13 @@ const AIR_ROUTES = [
 ];
 
 const OCEAN_ROUTE = [[-46.33,-23.96],[-42,-22],[-35,-20.5],[-29.3,-20.5]];
+
+// Brazilian coastline path (south → north, simplified key waypoints)
+const BR_COAST = [
+  [-52.10,-32.05],[-51.20,-30.00],[-49.70,-29.30],[-48.67,-26.91],[-48.55,-27.59],
+  [-48.51,-25.52],[-46.33,-23.96],[-44.30,-23.00],[-43.17,-22.91],[-40.34,-20.32],
+  [-39.00,-17.00],[-38.51,-12.97],[-35.20,-9.00],[-34.87,-8.05],[-34.85,-7.12],
+];
 
 /* ═══════════════════════════════════════════
    PART 3 — MAP INITIALIZATION
@@ -529,10 +611,43 @@ map.on('load', () => {
     paint: { 'line-color':'rgba(10,126,110,0.4)', 'line-width':2, 'line-dasharray':[6,4] }
   });
 
+  // ── Brazilian Coastline Glow ──
+  map.addSource('brCoast', {
+    type: 'geojson',
+    data: { type:'Feature', geometry:{ type:'LineString', coordinates: BR_COAST } }
+  });
+  map.addLayer({
+    id: 'br-coast-glow', type: 'line', source: 'brCoast',
+    paint: { 'line-color':'rgba(10,126,110,0.06)', 'line-width':18, 'line-blur':12 }
+  });
+  map.addLayer({
+    id: 'br-coast-inner', type: 'line', source: 'brCoast',
+    paint: { 'line-color':'rgba(10,126,110,0.12)', 'line-width':3, 'line-blur':2 }
+  });
+  map.addLayer({
+    id: 'br-coast-line', type: 'line', source: 'brCoast',
+    paint: {
+      'line-color':'rgba(212,165,74,0.18)',
+      'line-width':1,
+      'line-dasharray':[8,6],
+    }
+  });
+
   // ── Port Markers (DOM) ──
   PORTS.forEach(port => {
     const el = document.createElement('div');
-    el.className = `port-marker ${port.size}`;
+    // Use special Brazilian styling when port has br:true flag
+    if (port.br) {
+      el.className = `port-marker brazil-${port.size}`;
+      // Add diamond accent on major Brazilian ports
+      if (port.size === 'major') {
+        const diamond = document.createElement('div');
+        diamond.className = 'br-diamond';
+        el.appendChild(diamond);
+      }
+    } else {
+      el.className = `port-marker ${port.size}`;
+    }
     const label = document.createElement('span');
     label.className = 'port-label';
     label.textContent = port.name;
@@ -611,7 +726,8 @@ function buildPortNav() {
 
     g.ports.forEach(p => {
       const btn = document.createElement('button');
-      btn.className = `port-btn ${p.size}`;
+      const brMajor = p.br && p.size === 'major' ? ' br-major' : '';
+      btn.className = `port-btn ${p.size}${brMajor}`;
       btn.innerHTML = `<span class="dot ${g.dotClass}"></span>${p.name}`;
       btn.addEventListener('click', () => {
         document.querySelectorAll('.port-btn').forEach(b=>b.classList.remove('active'));
@@ -1175,16 +1291,44 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') {
     document.getElementById('sidebar').classList.toggle('open');
   }
-  // Number keys 1-4 fly to Brazilian ports
-  const brPorts = PORTS.filter(p=>p.region&&p.region.includes('Brazil'));
-  const num = parseInt(e.key);
+  // Number keys 1-9,0 fly to Brazilian ports
+  const brPorts = PORTS.filter(p=>p.br);
+  const num = e.key === '0' ? 10 : parseInt(e.key);
   if (num >= 1 && num <= brPorts.length) {
     flyToPort(brPorts[num-1]);
   }
+  // 'B' key — cinematic Brazilian coast flyover
+  if (e.key === 'b' || e.key === 'B') {
+    startBrazilTour();
+  }
 });
 
+// ── Brazilian Coast Flyover ──
+let brTourRunning = false;
+function startBrazilTour() {
+  if (brTourRunning) return;
+  brTourRunning = true;
+  const brPorts = PORTS.filter(p=>p.br);
+  let i = 0;
+  showTourStatus('🇧🇷 Brazilian Coast Flyover');
+  // First: zoom out to see the whole coast
+  map.flyTo({ center:[-45,-18], zoom:4.5, pitch:35, bearing:10, duration:2500 });
+  setTimeout(function step() {
+    if (i >= brPorts.length) {
+      // End: sweep back to overview of Brazilian coast
+      map.flyTo({ center:[-43,-16], zoom:4.2, pitch:30, bearing:15, duration:3000 });
+      showTourStatus('Brazilian Coast — 10 Ports');
+      brTourRunning = false;
+      return;
+    }
+    flyToPort(brPorts[i]);
+    i++;
+    setTimeout(step, 5000);
+  }, 3000);
+}
+
 console.log('%c D\'Ascola Fleet Console ', 'background:#030810;color:#D4A54A;font-size:14px;padding:8px 16px;border:1px solid #D4A54A;border-radius:4px;font-family:serif');
-console.log('Keys: [1-4] Brazilian ports · [T] Auto tour · [R] Roster · [Esc] Overview');
+console.log('Keys: [1-0] Brazilian ports · [B] Brazil flyover · [T] Auto tour · [R] Roster · [Esc] Overview');
 </script>
 
 </body>
