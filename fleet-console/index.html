@@ -864,7 +864,165 @@ function showTourStatus(msg) {
 })();
 
 /* ═══════════════════════════════════════════
-   PART 12 — KEYBOARD SHORTCUTS
+   PART 12 — AIS INTEGRATION (Live Vessel Tracking)
+   ═══════════════════════════════════════════ */
+
+// AIS configuration — set aisEndpoint to your API URL to enable live tracking.
+// When null, simulated drift runs instead (sinusoidal GPS wobble).
+// Expected API: GET {aisEndpoint}?mmsi=710012345,710012346,...
+// Response: [{ mmsi, lat, lon, heading, speed, status?, timestamp? }]
+const AIS_CONFIG = {
+  aisEndpoint: null,       // e.g. 'https://your-api.com/v1/vessels'
+  aisRefreshMs: 60000,     // Poll every 60s
+  fetchTimeoutMs: 10000,
+};
+
+class AISClient {
+  constructor(config, vessels, onUpdate) {
+    this.endpoint  = config.aisEndpoint || null;
+    this.refreshMs = config.aisRefreshMs || 60000;
+    this.timeoutMs = config.fetchTimeoutMs || 10000;
+    this.vessels   = vessels;
+    this.onUpdate  = onUpdate;
+    this.timer     = null;
+    this.lastFetch = null;
+    this.fetchCount = 0;
+    this.errorCount = 0;
+  }
+
+  start() {
+    this.fetch();
+    this.timer = setInterval(() => this.fetch(), this.refreshMs);
+    console.log(`[AIS] Polling started — ${this.refreshMs/1000}s interval → ${this.endpoint}`);
+  }
+
+  stop() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+  }
+
+  fetch() {
+    if (!this.endpoint) return;
+
+    const mmsiList = this.vessels.filter(v => v.mmsi).map(v => v.mmsi);
+    let url = this.endpoint;
+    if (mmsiList.length) {
+      url += (url.includes('?') ? '&' : '?') + 'mmsi=' + mmsiList.join(',');
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    window.fetch(url, { signal: controller.signal })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => {
+        clearTimeout(timeout);
+        if (!Array.isArray(data)) return;
+
+        // Build lookup by MMSI
+        const incoming = {};
+        data.forEach(rec => { if (rec.mmsi) incoming[String(rec.mmsi)] = rec; });
+
+        // Merge into local vessels
+        let updated = 0;
+        this.vessels.forEach(v => {
+          if (!v.mmsi) return;
+          const u = incoming[String(v.mmsi)];
+          if (!u) return;
+          if (u.lat != null)     v.lat     = u.lat;
+          if (u.lon != null)     v.lon     = u.lon;
+          if (u.heading != null) v.heading = u.heading;
+          if (u.speed != null)   v.speed   = u.speed;
+          if (u.status)          v.status  = u.status;
+          v.lastUpdate = u.timestamp || new Date().toISOString();
+          updated++;
+        });
+
+        this.lastFetch = new Date();
+        this.fetchCount++;
+        updateAISStatus(true, this.fetchCount, updated);
+
+        if (this.onUpdate) this.onUpdate(this.vessels);
+      })
+      .catch(err => {
+        clearTimeout(timeout);
+        this.errorCount++;
+        console.warn('[AIS] Fetch error:', err.message);
+        updateAISStatus(false, this.fetchCount, 0);
+      });
+  }
+
+  destroy() {
+    this.stop();
+    this.vessels = null;
+    this.onUpdate = null;
+  }
+}
+
+// Simulated drift when no AIS endpoint configured
+// (sinusoidal wobble so vessels appear alive on the map)
+let driftFrame = 0;
+function simulateVesselDrift() {
+  driftFrame++;
+  VESSELS.forEach((v, i) => {
+    const phase = driftFrame * 0.01 + i * 1.7;
+    v.lat += Math.sin(phase) * 0.00008;
+    v.lon += Math.cos(phase * 0.7) * 0.00008;
+    v.heading = (v.heading + Math.sin(phase * 0.3) * 0.2 + 360) % 360;
+    v.speed = Math.max(0, v.speed + Math.sin(phase * 0.5) * 0.02);
+  });
+  refreshVesselMarkers();
+}
+
+// Update vessel marker positions on the map
+function refreshVesselMarkers() {
+  vesselMarkers.forEach(({ marker, data }) => {
+    marker.setLngLat([data.lon, data.lat]);
+    const headingEl = marker.getElement().querySelector('.v-heading');
+    if (headingEl) headingEl.style.transform = `rotate(${data.heading}deg)`;
+  });
+  // Update roster speed values
+  document.querySelectorAll('.vessel-card .v-speed').forEach((el, i) => {
+    if (VESSELS[i]) el.textContent = `${VESSELS[i].speed.toFixed(1)} kn · ${Math.round(VESSELS[i].heading)}°`;
+  });
+}
+
+// AIS status indicator (updates top bar)
+function updateAISStatus(ok, count, updated) {
+  let el = document.getElementById('aisStatus');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'aisStatus';
+    el.style.cssText = 'font:300 .55rem var(--font-mono);color:var(--blade);text-align:right';
+    document.querySelector('.top-stats').appendChild(el);
+  }
+  if (ok) {
+    el.innerHTML = `<span style="color:#4ECDC4">● LIVE</span> ${updated}v · #${count}`;
+  } else {
+    el.innerHTML = `<span style="color:#E74C3C">● ERR</span> retry...`;
+  }
+}
+
+// Initialize AIS or simulated drift
+let aisClient = null;
+map.on('load', () => {
+  if (AIS_CONFIG.aisEndpoint) {
+    // Live AIS mode
+    aisClient = new AISClient(AIS_CONFIG, VESSELS, (updatedVessels) => {
+      refreshVesselMarkers();
+    });
+    aisClient.start();
+  } else {
+    // Simulated drift mode — update every 2s
+    console.log('[AIS] No endpoint configured — simulated drift active');
+    updateAISStatus(true, 0, 0);
+    let statusEl = document.getElementById('aisStatus');
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--ouro)">● SIM</span> drift';
+    setInterval(simulateVesselDrift, 2000);
+  }
+});
+
+/* ═══════════════════════════════════════════
+   PART 13 — KEYBOARD SHORTCUTS
    ═══════════════════════════════════════════ */
 
 document.addEventListener('keydown', (e) => {
