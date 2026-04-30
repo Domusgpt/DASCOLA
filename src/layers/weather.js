@@ -1,14 +1,8 @@
 /**
  * Fleet Map — Weather Layer
  * ==========================
- * Renders dynamic weather visualization driven by vib3 weather data:
- *   - Wind field arrows
- *   - Animated rain/drizzle particles
- *   - Storm cell indicators
- *   - Barometric pressure contours
- *   - Visibility gradient overlay
- *
- * Canvas: fleetCanvasWeather (z-index: 3.5, between coast and vessels)
+ * Dynamic weather visualization driven by vib3 weather data.
+ * Canvas: fleetCanvasWeather (between coast and vessels)
  * Redraws every frame when weather data is present.
  */
 
@@ -19,181 +13,158 @@ export function drawWeather(ctx, w, h, projFn, config, t, weatherData) {
   if (!weatherData || !weatherData.regional) return;
 
   var regional = weatherData.regional;
-
   _drawWindField(ctx, w, h, regional, config, t);
-  _drawPrecipitation(ctx, w, h, regional, config, t);
-  _drawVisibilityOverlay(ctx, w, h, regional, config);
-  _drawWeatherIndicator(ctx, w, h, regional, config, t);
+  _drawPrecip(ctx, w, h, regional, t);
+  _drawFogOverlay(ctx, w, h, regional);
+  _drawWeatherHUD(ctx, w, h, regional, config, t);
 
   if (weatherData.zones && weatherData.zones.length) {
-    _drawZoneConditions(ctx, w, h, projFn, weatherData.zones, config, t);
+    _drawLocalZones(ctx, w, h, projFn, weatherData.zones, config, t);
   }
 }
 
-function _drawWindField(ctx, w, h, regional, config, t) {
-  var windSpeed = regional.windSpeed || 0;
-  var windDeg = regional.windDeg || 0;
-  var angle = windDeg * Math.PI / 180;
-
-  var intensity = Math.min(windSpeed / 25, 1.0);
+function _drawWindField(ctx, w, h, r, config, t) {
+  var speed = r.windSpeed || 0;
+  var deg = r.windDeg || 0;
+  var angle = deg * Math.PI / 180;
+  var intensity = Math.min(speed / 20, 1.0);
   if (intensity < 0.05) return;
 
-  var cols = 8, rows = 6;
-  var cellW = w / cols, cellH = h / rows;
-  var arrowLen = 8 + intensity * 16;
+  var cols = 10, rows = 7;
+  var cw = w / cols, ch = h / rows;
+  var len = 10 + intensity * 20;
 
   ctx.save();
-  ctx.globalAlpha = intensity * 0.18;
   ctx.strokeStyle = config.colors.creme || '#F0EBE0';
   ctx.lineWidth = 1.2;
 
-  for (var r = 0; r < rows; r++) {
-    for (var c = 0; c < cols; c++) {
-      var cx = cellW * (c + 0.5);
-      var cy = cellH * (r + 0.5);
+  for (var row = 0; row < rows; row++) {
+    for (var col = 0; col < cols; col++) {
+      var cx = cw * (col + 0.5);
+      var cy = ch * (row + 0.5);
+      var localA = angle + Math.sin(t * 0.4 + row * 0.9 + col * 0.7) * 0.25;
+      var localL = len * (0.6 + Math.sin(t * 0.3 + col * 1.1 + row * 0.8) * 0.4);
 
-      var localAngle = angle + Math.sin(t * 0.5 + r * 0.8 + c * 0.6) * 0.2;
-      var localLen = arrowLen * (0.7 + Math.sin(t * 0.3 + c * 1.2 + r) * 0.3);
+      ctx.globalAlpha = intensity * (0.15 + Math.sin(t * 0.2 + row + col) * 0.05);
 
-      var ex = cx + Math.cos(localAngle) * localLen;
-      var ey = cy + Math.sin(localAngle) * localLen;
+      var ex = cx + Math.cos(localA) * localL;
+      var ey = cy + Math.sin(localA) * localL;
 
-      // Shaft
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(ex, ey);
       ctx.stroke();
 
       // Arrowhead
-      var headLen = 4;
-      var headAngle = 0.5;
+      var hl = 5;
       ctx.beginPath();
       ctx.moveTo(ex, ey);
-      ctx.lineTo(
-        ex - Math.cos(localAngle - headAngle) * headLen,
-        ey - Math.sin(localAngle - headAngle) * headLen
-      );
+      ctx.lineTo(ex - Math.cos(localA - 0.45) * hl, ey - Math.sin(localA - 0.45) * hl);
       ctx.moveTo(ex, ey);
-      ctx.lineTo(
-        ex - Math.cos(localAngle + headAngle) * headLen,
-        ey - Math.sin(localAngle + headAngle) * headLen
-      );
+      ctx.lineTo(ex - Math.cos(localA + 0.45) * hl, ey - Math.sin(localA + 0.45) * hl);
       ctx.stroke();
     }
   }
-
   ctx.restore();
 }
 
-function _drawPrecipitation(ctx, w, h, regional, config, t) {
-  var condition = (regional.condition || '').toLowerCase();
-  var isRain = condition.indexOf('rain') >= 0 || condition.indexOf('drizzle') >= 0;
-  var isSquall = condition.indexOf('squall') >= 0;
+function _drawPrecip(ctx, w, h, r, t) {
+  var cond = (r.condition || '').toLowerCase();
+  var rain = cond.indexOf('rain') >= 0 || cond.indexOf('drizzle') >= 0;
+  var squall = cond.indexOf('squall') >= 0;
+  if (!rain && !squall) return;
 
-  if (!isRain && !isSquall) return;
-
-  var dropCount = isSquall ? 80 : 30;
-  var dropSpeed = isSquall ? 12 : 6;
-  var windDeg = regional.windDeg || 0;
-  var windAngle = windDeg * Math.PI / 180;
-  var windDrift = (regional.windSpeed || 5) * 0.3;
+  var count = squall ? 120 : 50;
+  var speed = squall ? 14 : 7;
+  var windA = (r.windDeg || 0) * Math.PI / 180;
+  var drift = (r.windSpeed || 5) * 0.4;
 
   ctx.save();
-  ctx.globalAlpha = isSquall ? 0.12 : 0.06;
-  ctx.strokeStyle = 'rgba(180,200,220,0.7)';
-  ctx.lineWidth = 0.6;
+  ctx.globalAlpha = squall ? 0.15 : 0.08;
+  ctx.strokeStyle = 'rgba(170,195,215,0.7)';
+  ctx.lineWidth = squall ? 0.8 : 0.5;
 
-  for (var i = 0; i < dropCount; i++) {
-    var phase = (t * dropSpeed + i * 13.7) % (h + 40);
-    var x = ((i * 37.1 + t * windDrift) % (w + 20)) - 10;
-    var y = phase - 20;
-    var len = 4 + (isSquall ? 6 : 2);
+  for (var i = 0; i < count; i++) {
+    var py = ((t * speed + i * 11.3) % (h + 50)) - 25;
+    var px = ((i * 31.7 + t * drift) % (w + 30)) - 15;
+    var dropL = 5 + (squall ? 8 : 3);
 
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + Math.cos(windAngle) * windDrift, y + len);
+    ctx.moveTo(px, py);
+    ctx.lineTo(px + Math.cos(windA) * drift * 0.5, py + dropL);
     ctx.stroke();
   }
-
   ctx.restore();
 }
 
-function _drawVisibilityOverlay(ctx, w, h, regional, config) {
-  var vis = regional.visibility;
+function _drawFogOverlay(ctx, w, h, r) {
+  var vis = r.visibility;
   if (vis === undefined || vis >= 10) return;
-
-  var fogIntensity = Math.max(0, 1 - vis / 10) * 0.15;
-
+  var fog = Math.max(0, 1 - vis / 10) * 0.2;
   ctx.save();
-  ctx.fillStyle = 'rgba(180,190,200,' + fogIntensity + ')';
+  ctx.fillStyle = 'rgba(160,175,190,' + fog + ')';
   ctx.fillRect(0, 0, w, h);
   ctx.restore();
 }
 
-function _drawWeatherIndicator(ctx, w, h, regional, config, t) {
-  var x = 24;
-  var y = h - 24;
+function _drawWeatherHUD(ctx, w, h, r, config, t) {
   var fonts = config.fonts;
+  var x = 20, y = h - 20;
+  var fs = Math.max(9, Math.round(w * 0.008));
 
   ctx.save();
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.55;
 
-  // Wind barb symbol
-  var windDeg = regional.windDeg || 0;
-  var windAngle = windDeg * Math.PI / 180;
-  var windSpeed = regional.windSpeed || 0;
-  var barbLen = 18;
-
+  // Wind barb
+  var wAngle = (r.windDeg || 0) * Math.PI / 180;
   ctx.beginPath();
   ctx.arc(x, y, 4, 0, TAU);
   ctx.strokeStyle = config.colors.creme || '#F0EBE0';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  var bx = x + Math.cos(windAngle - Math.PI / 2) * barbLen;
-  var by = y + Math.sin(windAngle - Math.PI / 2) * barbLen;
+  var bx = x + Math.cos(wAngle - Math.PI / 2) * 16;
+  var by = y + Math.sin(wAngle - Math.PI / 2) * 16;
   ctx.beginPath();
   ctx.moveTo(x, y);
   ctx.lineTo(bx, by);
   ctx.stroke();
 
-  // Wind speed text
-  var fontSize = Math.max(8, Math.round(w * 0.007));
-  ctx.font = fontSize + 'px ' + (fonts.sans || 'sans-serif');
+  // Text
+  ctx.font = fs + 'px ' + (fonts.sans || 'sans-serif');
   ctx.fillStyle = config.colors.creme || '#F0EBE0';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText(Math.round(windSpeed) + ' kts ' + (regional.windDirection || ''), x + 12, y);
+  ctx.fillText(Math.round(r.windSpeed || 0) + ' kts ' + (r.windDirection || ''), x + 14, y - 2);
 
-  // Sea state
-  ctx.globalAlpha = 0.25;
-  ctx.fillText((regional.seaState || '') + ' · ' + (regional.condition || ''), x + 12, y + fontSize + 4);
+  ctx.globalAlpha = 0.4;
+  ctx.fillText((r.seaState || '') + '  ·  ' + (r.condition || ''), x + 14, y + fs + 4);
+
+  // Wave height
+  ctx.globalAlpha = 0.3;
+  ctx.fillText('Waves ' + (r.waveHeight || 0) + 'm · ' + (r.wavePeriod || 0) + 's', x + 14, y + (fs + 4) * 2);
 
   ctx.restore();
 }
 
-function _drawZoneConditions(ctx, w, h, projFn, zones, config, t) {
+function _drawLocalZones(ctx, w, h, projFn, zones, config, t) {
   ctx.save();
-  ctx.globalAlpha = 0.08;
-
   for (var i = 0; i < zones.length; i++) {
     var z = zones[i];
     if (!z.lat || !z.lon) continue;
-
     var sp = projFn(z.lat, z.lon);
-    var windIntensity = Math.min((z.windSpeed || 0) / 20, 1.0);
-    var radius = 15 + windIntensity * 20;
+    var wi = Math.min((z.windSpeed || 0) / 18, 1.0);
+    if (wi < 0.3) continue;
 
-    if (windIntensity > 0.5) {
-      var grad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, radius);
-      grad.addColorStop(0, 'rgba(200,180,100,' + (windIntensity * 0.3) + ')');
-      grad.addColorStop(1, 'rgba(200,180,100,0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(sp.x, sp.y, radius, 0, TAU);
-      ctx.fill();
-    }
+    var radius = 20 + wi * 25;
+    ctx.globalAlpha = wi * 0.08;
+    var grad = ctx.createRadialGradient(sp.x, sp.y, 0, sp.x, sp.y, radius);
+    grad.addColorStop(0, 'rgba(180,160,80,' + (wi * 0.4) + ')');
+    grad.addColorStop(1, 'rgba(180,160,80,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(sp.x, sp.y, radius, 0, TAU);
+    ctx.fill();
   }
-
   ctx.restore();
 }

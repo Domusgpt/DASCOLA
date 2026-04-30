@@ -71,7 +71,6 @@ function hitTestPort(ports, projFn, mx, my) {
  * @returns {Function} Cleanup function that removes all event listeners.
  */
 export function setupInteraction(container, vessels, config) {
-  // Resolve DOM elements
   var canvas   = container.querySelector('#fleetCanvasVessels');
   var tooltip  = container.querySelector('#vesselInfo');
   var viName   = tooltip ? tooltip.querySelector('#viName')   : null;
@@ -81,6 +80,11 @@ export function setupInteraction(container, vessels, config) {
   var mapEl = container.classList.contains('fleet-map')
     ? container
     : container.querySelector('.fleet-map') || container;
+
+  // Roster items live in a sibling element, not inside the map
+  var rosterScope = config._rosterScope
+    || container.closest('.fleet-map-panel-wrap')
+    || container.parentElement || container;
 
   // ---- Mousemove ----
   function onMousemove(e) {
@@ -119,7 +123,7 @@ export function setupInteraction(container, vessels, config) {
         tooltip.classList.add('active');
       }
 
-      highlightRosterItem(container, hit.index);
+      highlightRosterItem(rosterScope, hit.index);
       mapEl.style.cursor = 'pointer';
 
       if (typeof config.onVesselHover === 'function') {
@@ -137,14 +141,14 @@ export function setupInteraction(container, vessels, config) {
 
       // No vessel hit — hide tooltip and clear roster highlight
       if (tooltip) tooltip.classList.remove('active');
-      clearRosterHighlight(container);
+      clearRosterHighlight(rosterScope);
     }
   }
 
   // ---- Mouseleave ----
   function onMouseleave() {
     if (tooltip) tooltip.classList.remove('active');
-    clearRosterHighlight(container);
+    clearRosterHighlight(rosterScope);
     mapEl.style.cursor = '';
   }
 

@@ -124,10 +124,16 @@ export class FleetMap {
       self._dismissPanels();
     };
 
-    // Build roster panel
-    this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    // The wrapper that contains both roster and map
+    this._wrapper = this.container.closest('.fleet-map-panel-wrap')
+      || this.container.parentElement || this.container;
 
-    // Setup mouse/touch interaction (pass DOM container, not CanvasManager)
+    // Build roster panel (search from wrapper so it finds the sibling #rosterList)
+    this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
+
+    // Setup mouse/touch interaction (pass map container for mouse events,
+    // but roster highlighting needs the wrapper scope)
+    this.config._rosterScope = this._wrapper;
     this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
 
     // Create expandable panels
@@ -234,8 +240,8 @@ export class FleetMap {
 
   updateVessels(arr) {
     this.vessels = prepareVessels(cloneArray(arr));
-    if (this.container && this.config) {
-      this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    if (this._wrapper && this.config) {
+      this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
     }
     this._updateStats();
     if (this.config && typeof this.config.onAISUpdate === 'function') {

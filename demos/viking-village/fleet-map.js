@@ -104,7 +104,10 @@ export class FleetMap {
       self._dismissPanels();
     };
 
-    this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    this._wrapper = this.container.closest('.fleet-map-panel-wrap')
+      || this.container.parentElement || this.container;
+    this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
+    this.config._rosterScope = this._wrapper;
     this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
 
     this._vesselPanel = createVesselDetailPanel(this.container);
@@ -201,8 +204,8 @@ export class FleetMap {
 
   updateVessels(arr) {
     this.vessels = prepareVessels(cloneArray(arr));
-    if (this.container && this.config) {
-      this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    if (this._wrapper && this.config) {
+      this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
     }
     this._updateStats();
     if (this.config && typeof this.config.onAISUpdate === 'function') {
