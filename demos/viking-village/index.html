@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet">
 
-  <!-- Fleet Map Styles -->
+  <!-- Fleet Map Styles (shared base + local overrides) -->
+  <link rel="stylesheet" href="../../src/styles.css">
   <link rel="stylesheet" href="styles.css">
 
   <style>
@@ -120,8 +121,10 @@
         <!-- Map -->
         <div class="fleet-map" id="fleetMap">
           <canvas id="fleetCanvasDepth"></canvas>
+          <canvas id="fleetCanvasWaterFx"></canvas>
           <canvas id="fleetCanvasCurrents"></canvas>
           <canvas id="fleetCanvasCoast"></canvas>
+          <canvas id="fleetCanvasWeather"></canvas>
           <canvas id="fleetCanvasVessels"></canvas>
           <canvas id="fleetCanvasAtmo"></canvas>
 

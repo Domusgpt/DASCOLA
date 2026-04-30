@@ -1,27 +1,31 @@
 /**
  * Fleet Map — Canvas Manager
- * Creates and manages the 5-canvas parallax stack.
+ * Creates and manages the 7-canvas parallax stack.
  * Handles DPR-aware resizing and the render loop.
  *
  * Layer stack (bottom to top):
- *   1. depth     — Bathymetry, fathom lines, grid (static)
- *   2. currents  — Particle ocean currents (60fps)
- *   3. coast     — Coastline, land, ports, routes, labels (static + port pulse)
- *   4. vessels   — Vessel triangles, trails, halos (60fps)
- *   5. atmosphere — Fog vignette (static)
+ *   1. depth      — Bathymetry, fathom lines, grid (static)
+ *   2. water-fx   — vib3 water surface effects (60fps)
+ *   3. currents   — Particle ocean currents (60fps)
+ *   4. coast      — Coastline, land, ports, routes, labels (static + port pulse)
+ *   5. weather    — Wind, rain, visibility overlay (60fps)
+ *   6. vessels    — Vessel triangles, trails, halos (60fps)
+ *   7. atmosphere — Fog vignette (static)
  */
 
 import { proj, invProj } from './projection.js';
 
 var LAYER_IDS = {
   depth:      'fleetCanvasDepth',
+  'water-fx': 'fleetCanvasWaterFx',
   currents:   'fleetCanvasCurrents',
   coast:      'fleetCanvasCoast',
+  weather:    'fleetCanvasWeather',
   vessels:    'fleetCanvasVessels',
   atmosphere: 'fleetCanvasAtmo',
 };
 
-var LAYER_NAMES = ['depth', 'currents', 'coast', 'vessels', 'atmosphere'];
+var LAYER_NAMES = ['depth', 'water-fx', 'currents', 'coast', 'weather', 'vessels', 'atmosphere'];
 
 export class CanvasManager {
   /**
@@ -40,18 +44,23 @@ export class CanvasManager {
     this._drawFn = null;
     this._rafId = null;
 
-    // Find each canvas by ID and build layer objects
     for (var i = 0; i < LAYER_NAMES.length; i++) {
       var name = LAYER_NAMES[i];
       var canvasId = LAYER_IDS[name];
       var canvas = container.querySelector('#' + canvasId);
       if (!canvas) {
-        // If canvas not found by ID, try finding it inside the container
-        // by data attribute as fallback
         canvas = container.querySelector('[data-layer="' + name + '"]');
       }
       if (!canvas) {
-        throw new Error('FleetMap: missing canvas #' + canvasId);
+        // Optional layers: create canvas dynamically if not in DOM
+        if (name === 'water-fx' || name === 'weather') {
+          canvas = document.createElement('canvas');
+          canvas.id = canvasId;
+          canvas.setAttribute('data-layer', name);
+          container.appendChild(canvas);
+        } else {
+          throw new Error('FleetMap: missing canvas #' + canvasId);
+        }
       }
       this.layers[name] = {
         canvas: canvas,
@@ -63,9 +72,6 @@ export class CanvasManager {
     this.resize();
   }
 
-  /**
-   * Resize all canvases to match container dimensions, respecting DPR.
-   */
   resize() {
     var rect = this.container.getBoundingClientRect();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -78,6 +84,7 @@ export class CanvasManager {
 
     for (var i = 0; i < LAYER_NAMES.length; i++) {
       var layer = this.layers[LAYER_NAMES[i]];
+      if (!layer || !layer.canvas) continue;
       var canvas = layer.canvas;
       var ctx = layer.ctx;
 
@@ -91,49 +98,24 @@ export class CanvasManager {
     }
   }
 
-  /**
-   * Project geographic coordinates to screen coordinates.
-   * @param {number} lat
-   * @param {number} lon
-   * @returns {{ x: number, y: number }}
-   */
   proj(lat, lon) {
     return proj(lat, lon, this.config.bounds, this.w, this.h);
   }
 
-  /**
-   * Inverse project screen coordinates to geographic.
-   * @param {number} x
-   * @param {number} y
-   * @returns {{ lat: number, lon: number }}
-   */
   invProj(x, y) {
     return invProj(x, y, this.config.bounds, this.w, this.h);
   }
 
-  /**
-   * Get a layer object by name.
-   * @param {string} name — one of: depth, currents, coast, vessels, atmosphere
-   * @returns {{ canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, dirty: boolean }}
-   */
   getLayer(name) {
     return this.layers[name];
   }
 
-  /**
-   * Mark a layer as needing redraw.
-   * @param {string} name
-   */
   markDirty(name) {
     if (this.layers[name]) {
       this.layers[name].dirty = true;
     }
   }
 
-  /**
-   * Start the render loop.
-   * @param {function} drawFn — called each frame with (t)
-   */
   startLoop(drawFn) {
     this._drawFn = drawFn;
     this.running = true;
@@ -148,9 +130,6 @@ export class CanvasManager {
     self._rafId = requestAnimationFrame(tick);
   }
 
-  /**
-   * Stop the render loop.
-   */
   stopLoop() {
     this.running = false;
     if (this._rafId) {
@@ -159,9 +138,6 @@ export class CanvasManager {
     }
   }
 
-  /**
-   * Clean up all resources.
-   */
   destroy() {
     this.stopLoop();
     this._drawFn = null;

@@ -1,19 +1,10 @@
 /**
- * Viking Village Fleet Map — Main Entry Point
- * ==============================================
+ * Viking Village Fleet Map — Main Entry Point (v2.0)
+ * ====================================================
  * Interactive fleet tracking map for Viking Village,
  * Barnegat Light, Long Beach Island, New Jersey.
- *
- * Usage:
- *   import { FleetMap } from './viking-village-map/index.js';
- *
- *   var map = new FleetMap('#fleetMap', {
- *     title: 'Viking Village',
- *     vessels: [...],
- *     ports: [...],
- *   });
- *
- *   map.start();
+ * Now with vib3 water effects, weather overlay, expandable
+ * vessel/port panels, and fleet coordination.
  */
 
 import { mergeConfig } from './config.js';
@@ -23,9 +14,15 @@ import { drawCurrents, initParticles } from './layers/currents.js';
 import { drawCoast } from './layers/coast.js';
 import { drawVessels } from './layers/vessels.js';
 import { drawAtmosphere } from './layers/atmosphere.js';
+import { drawWeather } from '../../src/layers/weather.js';
+import { drawWaterSurface, initWaterState, updateWaterFromWeather } from '../../src/vib3/water.js';
+import { Vib3Adapter, EVENT_TYPES } from '../../src/vib3/adapter.js';
 import { buildRoster } from '../../src/roster.js';
 import { setupInteraction } from '../../src/interaction.js';
 import { AISClient } from '../../src/ais.js';
+import { createVesselDetailPanel, showVesselDetail, hideVesselDetail } from '../../src/panels/vessel-detail.js';
+import { createPortDetailPanel, showPortDetail, hidePortDetail } from '../../src/panels/port-detail.js';
+import { createCoordinationPanel, updateCoordMessages, updateCoordAlerts, updateCoordWeather, updateCoordBadge } from '../../src/panels/coordination.js';
 import { LBI_COAST } from '../../src/data/lbi-coast.js';
 import { NJ_CURRENTS } from '../../src/data/currents-nj.js';
 
@@ -36,9 +33,7 @@ function cloneArray(arr) {
     var obj = arr[i];
     var copy = {};
     for (var k in obj) {
-      if (obj.hasOwnProperty(k)) {
-        copy[k] = obj[k];
-      }
+      if (obj.hasOwnProperty(k)) copy[k] = obj[k];
     }
     out.push(copy);
   }
@@ -72,28 +67,58 @@ export class FleetMap {
     this.ports = cloneArray(this.config.ports);
     this.routes = cloneArray(this.config.routes);
 
-    // Resolve coast data — LBI is the built-in default
     if (this.config.coastData === 'lbi') {
       this.coastData = LBI_COAST;
     } else if (Array.isArray(this.config.coastData)) {
       this.coastData = this.config.coastData;
     } else {
-      this.coastData = LBI_COAST; // fallback to LBI
+      this.coastData = LBI_COAST;
     }
 
-    // Resolve current flow data
     if (this.config.currentData === 'nj-atlantic') {
       this.currentData = NJ_CURRENTS;
     } else if (Array.isArray(this.config.currentData)) {
       this.currentData = this.config.currentData;
     } else {
-      this.currentData = NJ_CURRENTS; // fallback
+      this.currentData = NJ_CURRENTS;
     }
 
     this.cm = new CanvasManager(this.container, this.config);
     this.particles = initParticles(this.config);
-    this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    this.waterState = initWaterState();
+
+    this.vib3 = new Vib3Adapter(this.config);
+    this._weatherData = null;
+    this._unreadCoordCount = 0;
+
+    var self = this;
+    this.config._projFn = function(lat, lon) { return self.cm.proj(lat, lon); };
+
+    this.config.onVesselClick = function(vessel, screenPos) {
+      self._handleVesselClick(vessel, screenPos);
+    };
+    this.config.onPortClick = function(port, screenPos) {
+      self._handlePortClick(port, screenPos);
+    };
+    this.config.onMapClick = function() {
+      self._dismissPanels();
+    };
+
+    this._wrapper = this.container.closest('.fleet-map-panel-wrap')
+      || this.container.parentElement || this.container;
+    this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
+    this.config._rosterScope = this._wrapper;
     this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
+
+    this._vesselPanel = createVesselDetailPanel(this.container);
+    this._portPanel = createPortDetailPanel(this.container);
+    this._coordPanel = createCoordinationPanel(this.container);
+
+    if (this._coordPanel) {
+      this._coordPanel._onSend = function(msg) {
+        self.vib3.sendCoordMessage(msg);
+      };
+    }
 
     this.aisClient = null;
     if (this.config.aisEndpoint) {
@@ -116,11 +141,32 @@ export class FleetMap {
     });
 
     if (this.aisClient) {
-      var self2 = this;
       this.aisClient.start(function (updatedVessels) {
-        self2.updateVessels(updatedVessels);
+        self.updateVessels(updatedVessels);
       });
     }
+
+    this.vib3.on(EVENT_TYPES.WEATHER_UPDATE, function(data) {
+      self._weatherData = data;
+      updateWaterFromWeather(self.waterState, data);
+      if (self._coordPanel) updateCoordWeather(self._coordPanel, data);
+    });
+
+    this.vib3.on(EVENT_TYPES.COORD_MESSAGE, function() {
+      self._unreadCoordCount++;
+      if (self._coordPanel) {
+        updateCoordMessages(self._coordPanel, self.vib3.getCoordLog());
+        updateCoordBadge(self._coordPanel, self._unreadCoordCount);
+      }
+    });
+
+    this.vib3.on(EVENT_TYPES.ALERT, function() {
+      if (self._coordPanel) {
+        updateCoordAlerts(self._coordPanel, self.vib3.getAlerts());
+      }
+    });
+
+    this.vib3.start(this.vessels, this.ports);
 
     window.addEventListener('resize', this._resizeBound);
   }
@@ -129,41 +175,37 @@ export class FleetMap {
     if (!this.started) return;
     this.started = false;
     this.cm.stopLoop();
-    if (this.aisClient) {
-      this.aisClient.stop();
-    }
+    if (this.aisClient) this.aisClient.stop();
+    this.vib3.stop();
   }
 
   destroy() {
     this.stop();
     window.removeEventListener('resize', this._resizeBound);
-    if (this._interactionCleanup) {
-      this._interactionCleanup();
-      this._interactionCleanup = null;
-    }
-    if (this.cm) {
-      this.cm.destroy();
-      this.cm = null;
-    }
-    if (this.aisClient) {
-      this.aisClient.stop();
-      this.aisClient = null;
-    }
+    if (this._interactionCleanup) { this._interactionCleanup(); this._interactionCleanup = null; }
+    if (this.cm) { this.cm.destroy(); this.cm = null; }
+    if (this.aisClient) { this.aisClient.stop(); this.aisClient = null; }
+    if (this.vib3) { this.vib3.destroy(); this.vib3 = null; }
     this.vessels = null;
     this.ports = null;
     this.routes = null;
     this.coastData = null;
     this.currentData = null;
     this.particles = null;
+    this.waterState = null;
+    this._weatherData = null;
     this.rosterEl = null;
+    this._vesselPanel = null;
+    this._portPanel = null;
+    this._coordPanel = null;
     this.container = null;
     this.config = null;
   }
 
   updateVessels(arr) {
     this.vessels = prepareVessels(cloneArray(arr));
-    if (this.container && this.config) {
-      this.rosterEl = buildRoster(this.container, this.vessels, this.config);
+    if (this._wrapper && this.config) {
+      this.rosterEl = buildRoster(this._wrapper, this.vessels, this.config);
     }
     this._updateStats();
     if (this.config && typeof this.config.onAISUpdate === 'function') {
@@ -175,8 +217,10 @@ export class FleetMap {
     if (!this.cm) return;
     this.cm.resize();
     this.cm.markDirty('depth');
+    this.cm.markDirty('water-fx');
     this.cm.markDirty('currents');
     this.cm.markDirty('coast');
+    this.cm.markDirty('weather');
     this.cm.markDirty('vessels');
     this.cm.markDirty('atmosphere');
     this._drawStatic();
@@ -186,31 +230,48 @@ export class FleetMap {
     var cm = this.cm;
     if (!cm) return;
 
-    // Static layers: only redraw when dirty
+    var w = cm.w, h = cm.h;
+    var projFn = function(lat, lon) { return cm.proj(lat, lon); };
+
+    // Static layers — VV local layer files use (ctx, cm, ...) convention
     var depthLayer = cm.getLayer('depth');
-    if (depthLayer.dirty) {
+    if (depthLayer && depthLayer.dirty) {
       drawDepth(depthLayer.ctx, cm, this.config);
       depthLayer.dirty = false;
     }
 
     var coastLayer = cm.getLayer('coast');
-    if (coastLayer.dirty) {
+    if (coastLayer && coastLayer.dirty) {
       drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t);
       coastLayer.dirty = false;
     }
 
     var atmoLayer = cm.getLayer('atmosphere');
-    if (atmoLayer.dirty) {
+    if (atmoLayer && atmoLayer.dirty) {
       drawAtmosphere(atmoLayer.ctx, cm, this.config);
       atmoLayer.dirty = false;
     }
 
-    // Animated layers: always redraw
+    // Animated layers
+    var waterFxLayer = cm.getLayer('water-fx');
+    if (waterFxLayer) {
+      drawWaterSurface(waterFxLayer.ctx, w, h, this.waterState, this.config, t);
+    }
+
     var currLayer = cm.getLayer('currents');
-    drawCurrents(currLayer.ctx, cm, this.particles, this.currentData, this.config, t);
+    if (currLayer) {
+      drawCurrents(currLayer.ctx, cm, this.particles, this.currentData, this.config, t);
+    }
+
+    var weatherLayer = cm.getLayer('weather');
+    if (weatherLayer) {
+      drawWeather(weatherLayer.ctx, w, h, projFn, this.config, t, this._weatherData);
+    }
 
     var vesselLayer = cm.getLayer('vessels');
-    drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t);
+    if (vesselLayer) {
+      drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t);
+    }
 
     // Simulated vessel drift
     if (!this.config.aisEndpoint && this.vessels) {
@@ -232,15 +293,25 @@ export class FleetMap {
     this.cm.markDirty('atmosphere');
   }
 
+  _handleVesselClick(vessel, screenPos) {
+    hidePortDetail(this._portPanel);
+    showVesselDetail(this._vesselPanel, vessel, this._weatherData, screenPos);
+  }
+
+  _handlePortClick(port, screenPos) {
+    hideVesselDetail(this._vesselPanel);
+    var portData = this.vib3.getPortData(port.name);
+    showPortDetail(this._portPanel, port, portData, screenPos);
+  }
+
+  _dismissPanels() {
+    hideVesselDetail(this._vesselPanel);
+    hidePortDetail(this._portPanel);
+  }
+
   _updateStats() {
     if (!this.vessels || !this.container) return;
-    var counts = {
-      total: this.vessels.length,
-      fishing: 0,
-      transit: 0,
-      port: 0,
-      returning: 0,
-    };
+    var counts = { total: this.vessels.length, fishing: 0, transit: 0, port: 0, returning: 0 };
     for (var i = 0; i < this.vessels.length; i++) {
       var status = (this.vessels[i].status || '').toLowerCase();
       if (status === 'fishing' || status === 'scalloping') counts.fishing++;
@@ -251,9 +322,7 @@ export class FleetMap {
     var statKeys = ['total', 'fishing', 'transit', 'port', 'returning'];
     for (var j = 0; j < statKeys.length; j++) {
       var el = this.container.querySelector('.fleet-stat-' + j);
-      if (el) {
-        el.textContent = counts[statKeys[j]];
-      }
+      if (el) el.textContent = counts[statKeys[j]];
     }
   }
 }
