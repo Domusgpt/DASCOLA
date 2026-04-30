@@ -43,9 +43,9 @@ function _drawWindField(ctx, w, h, regional, config, t) {
   var arrowLen = 8 + intensity * 16;
 
   ctx.save();
-  ctx.globalAlpha = intensity * 0.12;
+  ctx.globalAlpha = intensity * 0.18;
   ctx.strokeStyle = config.colors.creme || '#F0EBE0';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
 
   for (var r = 0; r < rows; r++) {
     for (var c = 0; c < cols; c++) {
@@ -99,9 +99,9 @@ function _drawPrecipitation(ctx, w, h, regional, config, t) {
   var windDrift = (regional.windSpeed || 5) * 0.3;
 
   ctx.save();
-  ctx.globalAlpha = isSquall ? 0.08 : 0.04;
-  ctx.strokeStyle = 'rgba(180,200,220,0.6)';
-  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = isSquall ? 0.12 : 0.06;
+  ctx.strokeStyle = 'rgba(180,200,220,0.7)';
+  ctx.lineWidth = 0.6;
 
   for (var i = 0; i < dropCount; i++) {
     var phase = (t * dropSpeed + i * 13.7) % (h + 40);
@@ -136,7 +136,7 @@ function _drawWeatherIndicator(ctx, w, h, regional, config, t) {
   var fonts = config.fonts;
 
   ctx.save();
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.5;
 
   // Wind barb symbol
   var windDeg = regional.windDeg || 0;

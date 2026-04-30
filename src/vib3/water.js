@@ -20,7 +20,7 @@ export function initWaterState() {
     windSpeed: 8,
     windAngle: Math.PI * 0.5,
     seaStateIdx: 2,
-    causticNodes: _generateCausticNodes(40),
+    causticNodes: _generateCausticNodes(60),
   };
 }
 
@@ -85,8 +85,8 @@ export function drawWaterSurface(ctx, w, h, waterState, config, t) {
 function _drawWavePattern(ctx, w, h, waterState, config, t) {
   var waveH = waterState.waveHeight;
   var angle = waterState.waveAngle;
-  var intensity = Math.min(waveH / 3.0, 1.0) * 0.06;
-  var lineCount = 12 + Math.floor(waveH * 4);
+  var intensity = Math.min(waveH / 2.5, 1.0) * 0.12;
+  var lineCount = 16 + Math.floor(waveH * 6);
   var spacing = h / lineCount;
 
   ctx.save();
@@ -119,7 +119,7 @@ function _drawWavePattern(ctx, w, h, waterState, config, t) {
 
 function _drawCaustics(ctx, w, h, waterState, config, t) {
   var nodes = waterState.causticNodes;
-  var intensity = 0.025 + (waterState.seaStateIdx < 2 ? 0.015 : 0);
+  var intensity = 0.05 + (waterState.seaStateIdx < 2 ? 0.03 : 0);
 
   ctx.save();
   ctx.globalAlpha = intensity;
@@ -149,13 +149,13 @@ function _drawRipples(ctx, w, h, waterState, config, t) {
   var windIntensity = Math.min(waterState.windSpeed / 20, 1.0);
   if (windIntensity < 0.1) return;
 
-  var rippleCount = Math.floor(windIntensity * 30);
+  var rippleCount = Math.floor(windIntensity * 50);
   var angle = waterState.windAngle;
 
   ctx.save();
-  ctx.globalAlpha = windIntensity * 0.04;
-  ctx.strokeStyle = 'rgba(200,220,240,0.5)';
-  ctx.lineWidth = 0.5;
+  ctx.globalAlpha = windIntensity * 0.07;
+  ctx.strokeStyle = 'rgba(200,220,240,0.6)';
+  ctx.lineWidth = 0.7;
 
   for (var i = 0; i < rippleCount; i++) {
     var seedX = (Math.sin(i * 7.3 + t * 0.1) + 1) * 0.5 * w;

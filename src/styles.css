@@ -33,7 +33,7 @@
    • The roster panel scrolls vertically on desktop and horizontally on mobile
      (via writing-mode rotation of its title).
    • Colors that appear inside rgba() cannot use CSS custom properties directly.
-     These are marked with comments like  /* --fm-accent @ 0.04 */  so you can
+     These are marked with inline comments like [--fm-accent @ 0.04] so you can
      find and update them when rebranding.
 
    ============================================================================= */
@@ -609,6 +609,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(201, 168, 76, 0.15);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 60px rgba(201, 168, 76, 0.04);
   opacity: 0;
   transform: translateX(-12px);
   transition: opacity 0.35s, transform 0.35s;
@@ -770,6 +771,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(0, 104, 71, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), 0 0 40px rgba(0, 104, 71, 0.04);
   opacity: 0;
   transform: translateX(-12px);
   transition: opacity 0.35s, transform 0.35s;
@@ -1019,10 +1021,18 @@
 }
 
 .coord-toggle:hover {
-  background: rgba(201, 168, 76, 0.08);
+  background: rgba(201, 168, 76, 0.12);
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.1);
 }
 
 .coord-toggle-icon { font-size: 0.9rem; }
+
+@keyframes coord-pulse {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 8px rgba(201, 168, 76, 0.15); }
+}
+
+.coord-toggle { animation: coord-pulse 4s ease-in-out infinite; }
 
 .coord-badge {
   position: absolute;
@@ -1360,4 +1370,47 @@
   font-size: 0.4rem;
   color: var(--fm-text-warm);
   line-height: 1.6;
+}
+
+
+/* =============================================
+   Section 12: SCROLLBAR STYLING
+   Thin, themed scrollbars for panels.
+   ============================================= */
+
+.vessel-detail-panel::-webkit-scrollbar,
+.port-detail-panel::-webkit-scrollbar,
+.coord-messages::-webkit-scrollbar,
+.coord-alerts::-webkit-scrollbar,
+.coord-weather-summary::-webkit-scrollbar,
+.fleet-roster::-webkit-scrollbar {
+  width: 4px;
+}
+
+.vessel-detail-panel::-webkit-scrollbar-track,
+.port-detail-panel::-webkit-scrollbar-track,
+.coord-messages::-webkit-scrollbar-track,
+.coord-alerts::-webkit-scrollbar-track,
+.coord-weather-summary::-webkit-scrollbar-track,
+.fleet-roster::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vessel-detail-panel::-webkit-scrollbar-thumb,
+.port-detail-panel::-webkit-scrollbar-thumb,
+.coord-messages::-webkit-scrollbar-thumb,
+.coord-alerts::-webkit-scrollbar-thumb,
+.coord-weather-summary::-webkit-scrollbar-thumb,
+.fleet-roster::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.15);
+  border-radius: 2px;
+}
+
+.vessel-detail-panel::-webkit-scrollbar-thumb:hover,
+.port-detail-panel::-webkit-scrollbar-thumb:hover,
+.coord-messages::-webkit-scrollbar-thumb:hover,
+.coord-alerts::-webkit-scrollbar-thumb:hover,
+.coord-weather-summary::-webkit-scrollbar-thumb:hover,
+.fleet-roster::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.25);
 }

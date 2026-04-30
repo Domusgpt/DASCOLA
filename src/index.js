@@ -99,7 +99,7 @@ export class FleetMap {
     this.cm = new CanvasManager(this.container, this.config);
 
     // Particle system for ocean currents
-    this.particles = initParticles(this.config);
+    this.particles = initParticles(this.config, this.cm.w, this.cm.h, this.config.bounds);
 
     // vib3 water surface state
     this.waterState = initWaterState();
@@ -127,8 +127,8 @@ export class FleetMap {
     // Build roster panel
     this.rosterEl = buildRoster(this.container, this.vessels, this.config);
 
-    // Setup mouse/touch interaction
-    this._interactionCleanup = setupInteraction(this.cm, this.vessels, this.config);
+    // Setup mouse/touch interaction (pass DOM container, not CanvasManager)
+    this._interactionCleanup = setupInteraction(this.container, this.vessels, this.config);
 
     // Create expandable panels
     this._vesselPanel = createVesselDetailPanel(this.container);
