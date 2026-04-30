@@ -62,10 +62,20 @@ export var DEFAULTS = {
   // Built-in: 'south-atlantic'. Or provide custom array.
   currentData: 'south-atlantic',
 
+  // vib3 SDK integration
+  vib3Endpoint: null,    // URL string — null = use simulated data
+  vib3ApiKey: null,      // API key for vib3 endpoint
+  vib3PollMs: 30000,     // 30 seconds
+
   // Callbacks
   onVesselHover: null,   // function(vessel, screenPos) {}
-  onVesselClick: null,   // function(vessel) {}
+  onVesselClick: null,   // function(vessel, screenPos) {}
+  onPortClick: null,     // function(port, screenPos) {}
+  onMapClick: null,      // function(screenPos) {}
   onAISUpdate: null,     // function(vessels) {}
+
+  // Internal (set by FleetMap constructor)
+  _projFn: null,
 };
 
 /**

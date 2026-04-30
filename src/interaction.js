@@ -2,10 +2,11 @@
  * Fleet Map — Interaction Handler
  * =================================
  * Manages mouse/touch interaction with the fleet map:
- *   - Hover detection over vessel triangles
+ *   - Hover detection over vessel triangles and port markers
  *   - Tooltip positioning and content
  *   - Roster item highlighting on hover
- *   - Click callbacks
+ *   - Click callbacks for vessels, ports, and empty map area
+ *   - Expandable detail panel triggers
  *
  * Returns a cleanup function for proper teardown on destroy().
  */
@@ -13,16 +14,12 @@
 import { highlightRosterItem, clearRosterHighlight } from './roster.js';
 
 var HIT_RADIUS = 18;
+var PORT_HIT_RADIUS = 14;
 
 /**
  * Find the nearest vessel within HIT_RADIUS of (mx, my).
- *
- * @param {Array}  vessels - Vessel array (each must have _sx, _sy screen coords).
- * @param {number} mx      - Mouse X relative to the fleet-map element.
- * @param {number} my      - Mouse Y relative to the fleet-map element.
- * @returns {{ vessel: Object, index: number }|null}
  */
-function hitTest(vessels, mx, my) {
+function hitTestVessel(vessels, mx, my) {
   var best = null;
   var bestDist = HIT_RADIUS + 1;
 
@@ -34,6 +31,30 @@ function hitTest(vessels, mx, my) {
     var dist = Math.sqrt(dx * dx + dy * dy);
     if (dist < HIT_RADIUS && dist < bestDist) {
       best = { vessel: v, index: i };
+      bestDist = dist;
+    }
+  }
+
+  return best;
+}
+
+/**
+ * Find the nearest port within PORT_HIT_RADIUS of (mx, my).
+ */
+function hitTestPort(ports, projFn, mx, my) {
+  if (!ports || !ports.length || !projFn) return null;
+
+  var best = null;
+  var bestDist = PORT_HIT_RADIUS + 1;
+
+  for (var i = 0; i < ports.length; i++) {
+    var p = ports[i];
+    var sp = projFn(p.lat, p.lon);
+    var dx = mx - sp.x;
+    var dy = my - sp.y;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < PORT_HIT_RADIUS && dist < bestDist) {
+      best = { port: p, index: i, screenPos: sp };
       bestDist = dist;
     }
   }
@@ -67,15 +88,15 @@ export function setupInteraction(container, vessels, config) {
     var mx = e.clientX - rect.left;
     var my = e.clientY - rect.top;
 
-    var hit = hitTest(vessels, mx, my);
+    var hit = hitTestVessel(vessels, mx, my);
 
     if (hit) {
       // Update tooltip content
       if (viName)   viName.textContent   = hit.vessel.name;
       if (viDetail) {
-        var parts = hit.vessel.type + ' \u00b7 ' + hit.vessel.speed + ' kts';
-        if (hit.vessel.catch && hit.vessel.catch !== '\u2014') {
-          parts += ' \u00b7 ' + hit.vessel.catch;
+        var parts = hit.vessel.type + ' · ' + hit.vessel.speed + ' kts';
+        if (hit.vessel.catch && hit.vessel.catch !== '—') {
+          parts += ' · ' + hit.vessel.catch;
         }
         viDetail.textContent = parts;
       }
@@ -99,12 +120,22 @@ export function setupInteraction(container, vessels, config) {
       }
 
       highlightRosterItem(container, hit.index);
+      mapEl.style.cursor = 'pointer';
 
       if (typeof config.onVesselHover === 'function') {
         config.onVesselHover(hit.vessel, { x: mx, y: my });
       }
     } else {
-      // No hit — hide tooltip and clear roster highlight
+      // Check port hover
+      var portHit = hitTestPort(config.ports, config._projFn, mx, my);
+
+      if (portHit) {
+        mapEl.style.cursor = 'pointer';
+      } else {
+        mapEl.style.cursor = '';
+      }
+
+      // No vessel hit — hide tooltip and clear roster highlight
       if (tooltip) tooltip.classList.remove('active');
       clearRosterHighlight(container);
     }
@@ -114,6 +145,7 @@ export function setupInteraction(container, vessels, config) {
   function onMouseleave() {
     if (tooltip) tooltip.classList.remove('active');
     clearRosterHighlight(container);
+    mapEl.style.cursor = '';
   }
 
   // ---- Click ----
@@ -122,10 +154,27 @@ export function setupInteraction(container, vessels, config) {
     var mx = e.clientX - rect.left;
     var my = e.clientY - rect.top;
 
-    var hit = hitTest(vessels, mx, my);
+    // Vessel click — expand detail panel
+    var vesselHit = hitTestVessel(vessels, mx, my);
+    if (vesselHit) {
+      if (typeof config.onVesselClick === 'function') {
+        config.onVesselClick(vesselHit.vessel, { x: mx, y: my });
+      }
+      return;
+    }
 
-    if (hit && typeof config.onVesselClick === 'function') {
-      config.onVesselClick(hit.vessel);
+    // Port click — expand port panel
+    var portHit = hitTestPort(config.ports, config._projFn, mx, my);
+    if (portHit) {
+      if (typeof config.onPortClick === 'function') {
+        config.onPortClick(portHit.port, portHit.screenPos);
+      }
+      return;
+    }
+
+    // Click on empty area — dismiss panels
+    if (typeof config.onMapClick === 'function') {
+      config.onMapClick({ x: mx, y: my });
     }
   }
 

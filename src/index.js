@@ -1,7 +1,9 @@
 /**
- * Fleet Map — Main Entry Point
- * =============================
- * A reusable, configurable fleet tracking map for the fishing industry.
+ * Fleet Map — Main Entry Point (v2.0 with vib3 Integration)
+ * ===========================================================
+ * A reusable, configurable fleet tracking map with integrated
+ * water visualization, weather overlay, expandable detail panels,
+ * and real-time coordination backbone via the vib3 SDK adapter.
  *
  * Usage:
  *   import { FleetMap } from './fleet-map/index.js';
@@ -9,37 +11,12 @@
  *   var map = new FleetMap('#fleetMap', {
  *     title: 'My Fleet',
  *     bounds: { latN: -15, latS: -35, lonW: -55, lonE: -25 },
- *     vessels: [ { name: 'Boat 1', lat: -24, lon: -44, heading: 135, speed: 7, type: 'Longliner', status: 'Fishing', catch: 'Swordfish' } ],
- *     ports: [ { name: 'Santos', lat: -23.96, lon: -46.33, size: 'major' } ],
- *     routes: [ { name: 'US East Coast', points: [[-23.96,-46.33],[-22,-42],[5,-40],[40.7,-74]] } ],
+ *     vessels: [...],
+ *     ports: [...],
+ *     routes: [...],
  *   });
  *
- *   map.start();  // Begin rendering
- *   map.stop();   // Pause
- *   map.destroy(); // Clean up
- *   map.updateVessels([...]); // Update vessel data (e.g., from dashboard)
- *
- * Configuration:
- *   See config.js for all available options including colors, fonts,
- *   AIS endpoint, particle count, and more.
- *
- * Vessel Data Format:
- *   Each vessel object: {
- *     name: string,         — Display name
- *     mmsi: string|null,    — AIS MMSI number (for live tracking)
- *     lat: number,          — Latitude (decimal degrees, negative = south)
- *     lon: number,          — Longitude (decimal degrees, negative = west)
- *     heading: number,      — Heading in degrees (0 = north, 90 = east)
- *     speed: number,        — Speed in knots
- *     type: string,         — Vessel type ('Longliner', 'Trawler', etc.)
- *     status: string,       — 'Fishing' | 'In Transit' | 'In Port' | 'Returning'
- *     catch: string,        — Current catch description
- *   }
- *
- * Adding/Removing Vessels:
- *   Simply call map.updateVessels(newArray) with the updated list.
- *   The roster panel, stats, and map all update automatically.
- *   For a future dashboard UI, this method is the integration point.
+ *   map.start();
  */
 
 import { mergeConfig } from './config.js';
@@ -49,15 +26,18 @@ import { drawCurrents, initParticles } from './layers/currents.js';
 import { drawCoast } from './layers/coast.js';
 import { drawVessels } from './layers/vessels.js';
 import { drawAtmosphere } from './layers/atmosphere.js';
+import { drawWeather } from './layers/weather.js';
+import { drawWaterSurface, initWaterState, updateWaterFromWeather } from './vib3/water.js';
+import { Vib3Adapter, EVENT_TYPES } from './vib3/adapter.js';
 import { buildRoster } from './roster.js';
 import { setupInteraction } from './interaction.js';
 import { AISClient } from './ais.js';
+import { createVesselDetailPanel, showVesselDetail, hideVesselDetail } from './panels/vessel-detail.js';
+import { createPortDetailPanel, showPortDetail, hidePortDetail } from './panels/port-detail.js';
+import { createCoordinationPanel, updateCoordMessages, updateCoordAlerts, updateCoordWeather, updateCoordBadge } from './panels/coordination.js';
 import { BRAZIL_COAST } from './data/brazil-coast.js';
 import { SA_CURRENTS } from './data/currents-sa.js';
 
-/**
- * Deep-copy an array of plain objects (one level deep).
- */
 function cloneArray(arr) {
   if (!arr) return [];
   var out = [];
@@ -65,18 +45,13 @@ function cloneArray(arr) {
     var obj = arr[i];
     var copy = {};
     for (var k in obj) {
-      if (obj.hasOwnProperty(k)) {
-        copy[k] = obj[k];
-      }
+      if (obj.hasOwnProperty(k)) copy[k] = obj[k];
     }
     out.push(copy);
   }
   return out;
 }
 
-/**
- * Ensure each vessel in the array has a trail and screen-position fields.
- */
 function prepareVessels(vessels) {
   for (var i = 0; i < vessels.length; i++) {
     var v = vessels[i];
@@ -88,15 +63,9 @@ function prepareVessels(vessels) {
 }
 
 export class FleetMap {
-  /**
-   * @param {string|HTMLElement} selector — CSS selector or DOM element for the .fleet-map container
-   * @param {object} userConfig — configuration overrides (see config.js for defaults)
-   */
   constructor(selector, userConfig) {
-    // Merge user config with defaults
     this.config = mergeConfig(userConfig);
 
-    // Resolve container element
     if (typeof selector === 'string') {
       this.container = document.querySelector(selector);
     } else {
@@ -106,12 +75,10 @@ export class FleetMap {
       throw new Error('FleetMap: container not found — ' + selector);
     }
 
-    // Deep copy vessel, port, and route data so we don't mutate originals
     this.vessels = prepareVessels(cloneArray(this.config.vessels));
     this.ports = cloneArray(this.config.ports);
     this.routes = cloneArray(this.config.routes);
 
-    // Resolve coast data
     if (this.config.coastData === 'brazil') {
       this.coastData = BRAZIL_COAST;
     } else if (Array.isArray(this.config.coastData)) {
@@ -120,7 +87,6 @@ export class FleetMap {
       this.coastData = [];
     }
 
-    // Resolve current flow data
     if (this.config.currentData === 'south-atlantic') {
       this.currentData = SA_CURRENTS;
     } else if (Array.isArray(this.config.currentData)) {
@@ -129,11 +95,34 @@ export class FleetMap {
       this.currentData = [];
     }
 
-    // Create canvas manager
+    // Canvas manager (7 layers: depth, water-fx, currents, coast, weather, vessels, atmosphere)
     this.cm = new CanvasManager(this.container, this.config);
 
-    // Init current particles
+    // Particle system for ocean currents
     this.particles = initParticles(this.config);
+
+    // vib3 water surface state
+    this.waterState = initWaterState();
+
+    // vib3 adapter for live maritime data
+    this.vib3 = new Vib3Adapter(this.config);
+    this._weatherData = null;
+    this._unreadCoordCount = 0;
+
+    // Projection function for port hit-testing in interaction handler
+    var self = this;
+    this.config._projFn = function(lat, lon) { return self.cm.proj(lat, lon); };
+
+    // Wire click handlers
+    this.config.onVesselClick = function(vessel, screenPos) {
+      self._handleVesselClick(vessel, screenPos);
+    };
+    this.config.onPortClick = function(port, screenPos) {
+      self._handlePortClick(port, screenPos);
+    };
+    this.config.onMapClick = function() {
+      self._dismissPanels();
+    };
 
     // Build roster panel
     this.rosterEl = buildRoster(this.container, this.vessels, this.config);
@@ -141,81 +130,91 @@ export class FleetMap {
     // Setup mouse/touch interaction
     this._interactionCleanup = setupInteraction(this.cm, this.vessels, this.config);
 
+    // Create expandable panels
+    this._vesselPanel = createVesselDetailPanel(this.container);
+    this._portPanel = createPortDetailPanel(this.container);
+    this._coordPanel = createCoordinationPanel(this.container);
+
+    // Wire coordination send handler
+    if (this._coordPanel) {
+      this._coordPanel._onSend = function(msg) {
+        self.vib3.sendCoordMessage(msg);
+      };
+    }
+
     // AIS live-tracking client
     this.aisClient = null;
     if (this.config.aisEndpoint) {
       this.aisClient = new AISClient(this.config.aisEndpoint, this.config.aisRefreshMs);
     }
 
-    // State
     this.started = false;
     this._resizeBound = this.resize.bind(this);
   }
 
-  /**
-   * Begin rendering and (optionally) AIS polling.
-   */
   start() {
     if (this.started) return;
     this.started = true;
 
-    // Draw static layers once — they'll render on the next frame
     this._drawStatic();
 
-    // Start the animation loop
     var self = this;
     this.cm.startLoop(function (t) {
       self._draw(t);
     });
 
-    // Start AIS polling if configured
+    // AIS polling
     if (this.aisClient) {
-      var self2 = this;
       this.aisClient.start(function (updatedVessels) {
-        self2.updateVessels(updatedVessels);
+        self.updateVessels(updatedVessels);
       });
     }
 
-    // Listen for window resize
+    // vib3 event subscriptions
+    this.vib3.on(EVENT_TYPES.WEATHER_UPDATE, function(data) {
+      self._weatherData = data;
+      updateWaterFromWeather(self.waterState, data);
+      if (self._coordPanel) updateCoordWeather(self._coordPanel, data);
+    });
+
+    this.vib3.on(EVENT_TYPES.COORD_MESSAGE, function() {
+      self._unreadCoordCount++;
+      if (self._coordPanel) {
+        updateCoordMessages(self._coordPanel, self.vib3.getCoordLog());
+        updateCoordBadge(self._coordPanel, self._unreadCoordCount);
+      }
+    });
+
+    this.vib3.on(EVENT_TYPES.ALERT, function() {
+      if (self._coordPanel) {
+        updateCoordAlerts(self._coordPanel, self.vib3.getAlerts());
+      }
+    });
+
+    this.vib3.start(this.vessels, this.ports);
+
     window.addEventListener('resize', this._resizeBound);
   }
 
-  /**
-   * Pause rendering and AIS polling.
-   */
   stop() {
     if (!this.started) return;
     this.started = false;
-
     this.cm.stopLoop();
-
-    if (this.aisClient) {
-      this.aisClient.stop();
-    }
+    if (this.aisClient) this.aisClient.stop();
+    this.vib3.stop();
   }
 
-  /**
-   * Clean up all resources. Call this when removing the map from the page.
-   */
   destroy() {
     this.stop();
-
     window.removeEventListener('resize', this._resizeBound);
 
     if (this._interactionCleanup) {
       this._interactionCleanup();
       this._interactionCleanup = null;
     }
-
-    if (this.cm) {
-      this.cm.destroy();
-      this.cm = null;
-    }
-
-    if (this.aisClient) {
-      this.aisClient.stop();
-      this.aisClient = null;
-    }
+    if (this.cm) { this.cm.destroy(); this.cm = null; }
+    if (this.aisClient) { this.aisClient.stop(); this.aisClient = null; }
+    if (this.vib3) { this.vib3.destroy(); this.vib3 = null; }
 
     this.vessels = null;
     this.ports = null;
@@ -223,111 +222,107 @@ export class FleetMap {
     this.coastData = null;
     this.currentData = null;
     this.particles = null;
+    this.waterState = null;
+    this._weatherData = null;
     this.rosterEl = null;
+    this._vesselPanel = null;
+    this._portPanel = null;
+    this._coordPanel = null;
     this.container = null;
     this.config = null;
   }
 
-  /**
-   * Replace the vessel list. Rebuilds the roster and updates stats.
-   * This is the main integration point for dashboard UIs.
-   *
-   * @param {Array} arr — new array of vessel objects
-   */
   updateVessels(arr) {
     this.vessels = prepareVessels(cloneArray(arr));
-
-    // Rebuild the roster panel
     if (this.container && this.config) {
       this.rosterEl = buildRoster(this.container, this.vessels, this.config);
     }
-
-    // Update stats display
     this._updateStats();
-
-    // Fire callback
     if (this.config && typeof this.config.onAISUpdate === 'function') {
       this.config.onAISUpdate(this.vessels);
     }
   }
 
-  /**
-   * Handle container resize.
-   */
   resize() {
     if (!this.cm) return;
-
     this.cm.resize();
-
-    // All layers need redraw after resize
     this.cm.markDirty('depth');
+    this.cm.markDirty('water-fx');
     this.cm.markDirty('currents');
     this.cm.markDirty('coast');
+    this.cm.markDirty('weather');
     this.cm.markDirty('vessels');
     this.cm.markDirty('atmosphere');
-
-    // Redraw static layers
     this._drawStatic();
   }
 
-  /**
-   * Main per-frame draw function. Called by the canvas manager loop.
-   * @param {number} t — elapsed time counter
-   * @private
-   */
   _draw(t) {
     var cm = this.cm;
     if (!cm) return;
 
+    var w = cm.w, h = cm.h;
+    var projFn = function(lat, lon) { return cm.proj(lat, lon); };
+    var bounds = this.config.bounds;
+
     // --- Static layers: only redraw when dirty ---
 
     var depthLayer = cm.getLayer('depth');
-    if (depthLayer.dirty) {
-      drawDepth(depthLayer.ctx, cm, this.config);
+    if (depthLayer && depthLayer.dirty) {
+      drawDepth(depthLayer.ctx, w, h, projFn, this.config, t);
       depthLayer.dirty = false;
     }
 
     var coastLayer = cm.getLayer('coast');
-    if (coastLayer.dirty) {
-      drawCoast(coastLayer.ctx, cm, this.coastData, this.ports, this.routes, this.config, t);
+    if (coastLayer && coastLayer.dirty) {
+      drawCoast(coastLayer.ctx, w, h, projFn, this.config, t, this.coastData, this.ports, this.routes);
       coastLayer.dirty = false;
     }
 
     var atmoLayer = cm.getLayer('atmosphere');
-    if (atmoLayer.dirty) {
-      drawAtmosphere(atmoLayer.ctx, cm, this.config);
+    if (atmoLayer && atmoLayer.dirty) {
+      drawAtmosphere(atmoLayer.ctx, w, h, this.config);
       atmoLayer.dirty = false;
     }
 
     // --- Animated layers: always redraw (60fps) ---
 
-    var currLayer = cm.getLayer('currents');
-    drawCurrents(currLayer.ctx, cm, this.particles, this.currentData, this.config, t);
+    // vib3 water surface effects
+    var waterFxLayer = cm.getLayer('water-fx');
+    if (waterFxLayer) {
+      drawWaterSurface(waterFxLayer.ctx, w, h, this.waterState, this.config, t);
+    }
 
+    // Ocean currents
+    var currLayer = cm.getLayer('currents');
+    if (currLayer) {
+      drawCurrents(currLayer.ctx, w, h, projFn, this.config, t, this.particles, this.currentData, bounds);
+    }
+
+    // Weather overlay
+    var weatherLayer = cm.getLayer('weather');
+    if (weatherLayer) {
+      drawWeather(weatherLayer.ctx, w, h, projFn, this.config, t, this._weatherData);
+    }
+
+    // Vessels
     var vesselLayer = cm.getLayer('vessels');
-    drawVessels(vesselLayer.ctx, cm, this.vessels, this.config, t);
+    if (vesselLayer) {
+      drawVessels(vesselLayer.ctx, w, h, projFn, this.config, t, this.vessels);
+    }
 
     // --- Simulated vessel drift (when no AIS endpoint) ---
-
     if (!this.config.aisEndpoint && this.vessels) {
       for (var i = 0; i < this.vessels.length; i++) {
         var v = this.vessels[i];
-        // Small sin/cos wobble to simulate GPS drift
         var phase = i * 1.7 + t * 0.3;
         v.lat += Math.sin(phase) * 0.00004;
         v.lon += Math.cos(phase * 0.7) * 0.00005;
-
-        // Slowly rotate heading
         v.heading = (v.heading + Math.sin(t + i) * 0.15) % 360;
         if (v.heading < 0) v.heading += 360;
       }
     }
   }
 
-  /**
-   * Mark static layers dirty so they redraw on the next frame.
-   * @private
-   */
   _drawStatic() {
     if (!this.cm) return;
     this.cm.markDirty('depth');
@@ -335,23 +330,25 @@ export class FleetMap {
     this.cm.markDirty('atmosphere');
   }
 
-  /**
-   * Update the fleet stats display elements if they exist in the DOM.
-   * Looks for elements with class `fleet-stat-n` where n is 0-based.
-   * @private
-   */
+  _handleVesselClick(vessel, screenPos) {
+    hidePortDetail(this._portPanel);
+    showVesselDetail(this._vesselPanel, vessel, this._weatherData, screenPos);
+  }
+
+  _handlePortClick(port, screenPos) {
+    hideVesselDetail(this._vesselPanel);
+    var portData = this.vib3.getPortData(port.name);
+    showPortDetail(this._portPanel, port, portData, screenPos);
+  }
+
+  _dismissPanels() {
+    hideVesselDetail(this._vesselPanel);
+    hidePortDetail(this._portPanel);
+  }
+
   _updateStats() {
     if (!this.vessels || !this.container) return;
-
-    // Count vessels by status
-    var counts = {
-      total: this.vessels.length,
-      fishing: 0,
-      transit: 0,
-      port: 0,
-      returning: 0,
-    };
-
+    var counts = { total: this.vessels.length, fishing: 0, transit: 0, port: 0, returning: 0 };
     for (var i = 0; i < this.vessels.length; i++) {
       var status = (this.vessels[i].status || '').toLowerCase();
       if (status === 'fishing') counts.fishing++;
@@ -359,14 +356,10 @@ export class FleetMap {
       else if (status === 'in port') counts.port++;
       else if (status === 'returning') counts.returning++;
     }
-
-    // Update stat elements if they exist
     var statKeys = ['total', 'fishing', 'transit', 'port', 'returning'];
     for (var j = 0; j < statKeys.length; j++) {
       var el = this.container.querySelector('.fleet-stat-' + j);
-      if (el) {
-        el.textContent = counts[statKeys[j]];
-      }
+      if (el) el.textContent = counts[statKeys[j]];
     }
   }
 }
